@@ -47,9 +47,11 @@ test('argumentos textuais de data-click/data-change usam escArg', () => {
 test('campos de texto livre não entram crus em linhas com HTML', () => {
   const campos = 'descricao|obs|observacao|observacaoGeral|motivo|produto|suite|prestador|especificacao|feitoPor|criadoPor|por|login|telefone|documento|excluidoPor|foto|dataUrl|nome|item';
   const crua = new RegExp(`\\$\\{(?!esc\\(|escArg\\()[^{}]*\\.(?:${campos})\\b[^{}]*\\}`);
+  // categoria de suíte é texto livre (nomeCategoria() é só catálogo e não entra aqui)
+  const categoriaCrua = /\$\{[a-z]+\.categoria\}/;
   for (const modulo of modulos) {
     ler(`modulos/${modulo}/${modulo}.js`).split('\n').forEach((linha, i) => {
-      if (/<[a-zA-Z]/.test(linha) && crua.test(linha)) {
+      if (/<[a-zA-Z]/.test(linha) && (crua.test(linha) || categoriaCrua.test(linha))) {
         assert.fail(`${modulo}.js:${i + 1} interpola campo de texto livre sem esc(): ${linha.trim().slice(0, 120)}`);
       }
     });

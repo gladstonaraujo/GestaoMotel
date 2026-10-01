@@ -594,7 +594,7 @@ function desenharConfigSuites(){
   const lista=AppEstado.dados.suitesConfig.filter(s=>s.unidade===un);
   document.getElementById('tab-config-suites').innerHTML = lista.length ? lista.map(s=>`
     <tr>
-      <td>${s.categoria}</td>
+      <td>${esc(s.categoria)}</td>
       <td class="n num">${s.quantidade}</td>
       <td class="n">${podeEditar?`<button class="btn-mini" data-click="excluirCategoriaSuite('${escArg(s.id)}')">Excluir</button>`:'—'}</td>
     </tr>`).join('') : '<tr><td colspan="3" class="vazio">Nenhuma categoria cadastrada ainda.</td></tr>';
@@ -613,7 +613,7 @@ function montarLinhasCategoriaRevpar(){
   cont.innerHTML = categorias.length ? categorias.map(c=>`
     <div class="form-linha" data-categoria-id="${c.id}">
       <div class="u-coluna-dupla">
-        <label>${c.categoria} (${c.quantidade} suíte${c.quantidade>1?'s':''})</label>
+        <label>${esc(c.categoria)} (${c.quantidade} suíte${c.quantidade>1?'s':''})</label>
       </div>
       <div>
         <input type="number" class="rp-cat-usos" data-id="${c.id}" min="0" step="1" placeholder="qt. de usos">
@@ -712,7 +712,7 @@ async function excluirRevpar(id){
 
 function linhaAnaliseRevparHTML(c){
   return `<tr>
-    <td>${c.categoria} (${c.quantidade})</td>
+    <td>${esc(c.categoria)} (${c.quantidade})</td>
     <td class="n num">${c.usos}</td>
     <td class="n num">${c.ocupacaoMedia.toFixed(2)}</td>
     <td class="n num">${fmt(c.faturado)}</td>
