@@ -16,11 +16,17 @@ npm run build
 
 | Saída                      | Conteúdo                                                                  |
 |----------------------------|---------------------------------------------------------------------------|
-| `frontend/dist/`           | `index.html` (copiado como está), `script.js` e `styles.css` minificados  |
+| `frontend/dist/`           | `index.html` (copiado), `styles.css`, `core/*.js` e `modulos/<nome>/` (JS, CSS e `view.html`) |
 | `backend/dist/server.js`   | Back-end + bibliotecas em um arquivo só, minificado (~1 MB)               |
 
 O script que faz isso é o `backend/build.js` (usa o esbuild, instalado como dependência
-de desenvolvimento). As duas pastas `dist/` estão no `.gitignore`: são geradas, não versionadas.
+de desenvolvimento). Ele descobre sozinho os arquivos de `frontend/core/` e as pastas de
+`frontend/modulos/`: para criar um módulo novo basta criar a pasta com `<nome>.js`,
+`<nome>.css` (opcional) e `view.html`, sem editar o `build.js`.
+
+O front-end é dividido em módulos carregados sob demanda (veja `frontend/README.md`). Os
+scripts são clássicos, com funções globais, então o build só tira espaços e simplifica a
+sintaxe; os nomes das funções não são renomeados. As duas pastas `dist/` estão no `.gitignore`: são geradas, não versionadas.
 
 Ficam de fora do pacote o `bcrypt` (módulo nativo) e o `pg-native` (opcional); o `bcrypt`
 continua vindo do `node_modules`.
@@ -33,10 +39,15 @@ continua vindo do `node_modules`.
 | Código-fonte          | `npm start`              | `server.js`                                                |
 | Produção (empacotado) | `npm run start:prod`     | `dist/server.js`                                           |
 
-O front-end é servido pelo próprio Express: se existir `frontend/dist`, serve essa pasta;
+O front-end é servido pelo próprio Express: se existir `frontend/dist`, serve essa pasta (as telas são buscadas por rota, ex.: `#/vistoria`);
 se não existir, serve o código-fonte de `frontend/`. Por isso o `dist` precisa ficar ao lado
 de `backend/` (em `frontend/dist`). O `dist` sozinho **não** sobe o back-end: a API roda em
 um processo Node separado, com o Postgres, e o front-end chama `/api` na mesma origem.
+
+## Testes
+
+`npm test` (em `backend/`) valida as regras do front-end (sem handlers inline nem `eval`,
+telas nas views dos módulos, build por descoberta de pastas). Rode antes do build.
 
 ## Instaladores
 
