@@ -1,0 +1,295 @@
+<section id="tela-boletos" class="oculto">
+  <h2 class="secao">Boletos e notas (Pix)</h2>
+  <p class="secao-sub">Contas e notas fiscais que não passam pelo caixa do turno — pagas direto via Pix, fora do movimento diário.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Adicionar boleto ou nota</h3>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fb-descricao">Descrição</label>
+        <input id="fb-descricao" placeholder="ex.: boleto fornecedor de enxoval, nota da manutenção do ar-condicionado">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label class="opcao-checkbox">
+          <input type="checkbox" id="fb-conjunta" data-change="alternarCompraConjunta()">
+          Essa nota é de uma compra conjunta, dividida entre unidades
+        </label>
+      </div>
+    </div>
+
+    <div class="form-linha" id="bloco-valor-simples">
+      <div>
+        <label for="fb-valor">Valor (R$)</label>
+        <input type="number" id="fb-valor" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div>
+        <label for="fb-vencimento">Vencimento</label>
+        <input type="date" id="fb-vencimento">
+      </div>
+    </div>
+
+    <div id="bloco-conjunta" class="oculto">
+      <div class="form-linha">
+        <div>
+          <label for="fb-valor-total-conjunta">Valor total da compra conjunta (R$)</label>
+          <input type="number" id="fb-valor-total-conjunta" min="0" step="0.01" placeholder="0,00" data-change="dividirValorConjunta()">
+        </div>
+        <div>
+          <label for="fb-vencimento-conjunta">Vencimento</label>
+          <input type="date" id="fb-vencimento-conjunta">
+        </div>
+      </div>
+      <label>Valor de cada unidade (dividido igual, mas dá pra editar por unidade)</label>
+      <div class="grupo-unidades-valor" id="fb-unidades-valores"></div>
+    </div>
+
+    <div class="form-linha">
+      <div>
+        <label for="fb-codigo-barras">Código de barras / linha digitável (opcional)</label>
+        <input id="fb-codigo-barras" placeholder="ex.: 34191.79001 01043.510047...">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fb-pix-copia-cola">Pix copia e cola (opcional)</label>
+        <textarea id="fb-pix-copia-cola" rows="2" placeholder="cole aqui o código Pix, se o pagamento for por Pix" class="campo-textarea"></textarea>
+      </div>
+    </div>
+
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label>Foto do boleto ou da nota (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fb-foto').click()">Anexar foto</button>
+          <input type="file" id="fb-foto" accept="image/*" capture="environment" data-change="prevejaFotoBoleto(this)">
+          <span id="previa-foto-boleto-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-boleto" class="previa-foto oculto">
+            <img id="previa-foto-boleto-img" alt="">
+            <span class="nome-arq" id="previa-foto-boleto-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoBoleto()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarBoleto()">Salvar boleto</button>
+      <span id="msg-boleto" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3 id="titulo-boletos">Boletos e notas</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Vencimento</th><th>Descrição</th><th>Foto</th><th>Código</th><th class="n">Valor</th><th class="n">Status</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-boletos"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-impostos" class="oculto">
+  <h2 class="secao">Impostos e Energia</h2>
+  <p class="secao-sub">Contas recorrentes separadas do movimento do turno — impostos, energia, água, internet e sistema.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Adicionar conta</h3>
+    <div class="form-linha">
+      <div>
+        <label for="fi-tipo">Tipo</label>
+        <select id="fi-tipo">
+          <option value="imposto">Imposto</option>
+          <option value="energia">Energia elétrica</option>
+          <option value="agua">Água</option>
+          <option value="internet">Internet / sistema</option>
+          <option value="outra">Outra conta fixa</option>
+        </select>
+      </div>
+      <div>
+        <label for="fi-competencia">Competência (mês de referência)</label>
+        <input type="month" id="fi-competencia">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fi-descricao">Descrição</label>
+        <input id="fi-descricao" placeholder="ex.: IPTU 2026, conta de luz Equatorial, ISS mensal">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fi-valor">Valor (R$)</label>
+        <input type="number" id="fi-valor" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div>
+        <label for="fi-vencimento">Vencimento</label>
+        <input type="date" id="fi-vencimento">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label>Foto da guia ou da conta (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fi-foto').click()">Anexar foto</button>
+          <input type="file" id="fi-foto" accept="image/*" capture="environment" data-change="prevejaFotoImposto(this)">
+          <span id="previa-foto-imposto-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-imposto" class="previa-foto oculto">
+            <img id="previa-foto-imposto-img" alt="">
+            <span class="nome-arq" id="previa-foto-imposto-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoImposto()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarImposto()">Salvar conta</button>
+      <span id="msg-imposto" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3 id="titulo-impostos">Contas de impostos e energia</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Competência</th><th>Vencimento</th><th>Tipo</th><th>Descrição</th><th>Foto</th>
+        <th class="n">Valor</th><th class="n">Status</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-impostos"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-boletos-admin" class="oculto">
+  <h2 class="secao">Boletos Administrativo</h2>
+  <p class="secao-sub">Cadastro central do diretor — depois é lançado pras unidades que devem pagar.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Adicionar boleto central</h3>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fba-descricao">Descrição</label>
+        <input id="fba-descricao" placeholder="ex.: contrato de internet da rede, seguro predial">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fba-valor">Valor (R$)</label>
+        <input type="number" id="fba-valor" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div>
+        <label for="fba-vencimento">Vencimento</label>
+        <input type="date" id="fba-vencimento">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fba-codigo-barras">Código de barras / linha digitável (opcional)</label>
+        <input id="fba-codigo-barras" placeholder="opcional">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fba-pix-copia-cola">Pix copia e cola (opcional)</label>
+        <textarea id="fba-pix-copia-cola" rows="2" placeholder="opcional" class="campo-textarea"></textarea>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label>Foto do boleto (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fba-foto').click()">Anexar foto</button>
+          <input type="file" id="fba-foto" accept="image/*" capture="environment" data-change="prevejaFotoBoletoAdmin(this)">
+          <span id="previa-foto-boleto-admin-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-boleto-admin" class="previa-foto oculto">
+            <img id="previa-foto-boleto-admin-img" alt="">
+            <span class="nome-arq" id="previa-foto-boleto-admin-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoBoletoAdmin()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarBoletoAdmin()">Salvar</button>
+      <span id="msg-boleto-admin" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Boletos centrais</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Vencimento</th><th>Descrição</th><th class="n">Valor</th><th>Foto</th><th>Status</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-boletos-admin"></tbody>
+    </table>
+  </div>
+
+  <div class="painel oculto" id="painel-lancar-boleto-admin">
+    <h3>Lançar "<span id="nome-boleto-lancando"></span>" pras unidades</h3>
+    <p class="secao-sub">O valor é dividido igual entre as unidades marcadas, mas dá pra editar por unidade.</p>
+    <div class="grupo-unidades-valor" id="unidades-lancar-boleto-admin"></div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="confirmarLancamentoBoletoAdmin()">Confirmar lançamento</button>
+      <button class="btn-cancelar" data-click="cancelarLancamentoBoletoAdmin()">Cancelar</button>
+      <span id="msg-lancar-boleto-admin" class="aviso-ok"></span>
+    </div>
+  </div>
+</section>
+
+<section id="tela-notas-fiscais" class="oculto">
+  <h2 class="secao">Notas Fiscais</h2>
+  <p class="secao-sub">Só o administrativo/diretor lança — o valor é dividido entre as unidades escolhidas.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Adicionar nota fiscal</h3>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fnf-descricao">Descrição</label>
+        <input id="fnf-descricao" placeholder="ex.: compra de enxoval pra rede toda, contrato de dedetização">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fnf-valor-total">Valor total da nota (R$)</label>
+        <input type="number" id="fnf-valor-total" min="0" step="0.01" placeholder="0,00" data-change="dividirValorNotaFiscal()">
+      </div>
+      <div>
+        <label for="fnf-data">Data da nota</label>
+        <input type="date" id="fnf-data">
+      </div>
+    </div>
+    <label>Divida entre as unidades (dividido igual, mas dá pra editar por unidade)</label>
+    <div class="grupo-unidades-valor" id="fnf-unidades-valores"></div>
+    <div class="form-linha u-mt-12">
+      <div class="u-coluna-inteira">
+        <label>Foto da nota fiscal (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fnf-foto').click()">Anexar foto</button>
+          <input type="file" id="fnf-foto" accept="image/*" capture="environment" data-change="prevejaFotoNotaFiscal(this)">
+          <span id="previa-foto-nf-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-nf" class="previa-foto oculto">
+            <img id="previa-foto-nf-img" alt="">
+            <span class="nome-arq" id="previa-foto-nf-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoNotaFiscal()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarNotaFiscal()">Salvar e ratear</button>
+      <span id="msg-nota-fiscal" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Notas fiscais lançadas</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Descrição</th><th class="n">Valor total</th><th>Unidades</th><th>Foto</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-notas-fiscais"></tbody>
+    </table>
+  </div>
+</section>

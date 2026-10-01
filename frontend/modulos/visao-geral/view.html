@@ -1,0 +1,106 @@
+<section id="tela-painel">
+  <h2 class="secao" id="titulo-painel"></h2>
+  <p class="secao-sub" id="sub-painel"></p>
+
+  <div class="destaque">
+    <div class="rotulo">Saldo do período</div>
+    <div class="valorao num" id="saldo-grande">R$ 0,00</div>
+    <div class="apoio">
+      <div><span>Entradas</span><strong class="num verde" id="tot-entradas">R$ 0,00</strong></div>
+      <div><span>Saídas</span><strong class="num vermelho" id="tot-saidas">R$ 0,00</strong></div>
+      <div><span>Dinheiro em caixa</span><strong class="num" id="tot-dinheiro">R$ 0,00</strong></div>
+      <div><span>A receber de cartões</span><strong class="num" id="tot-cartoes">R$ 0,00</strong></div>
+    </div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3>Alertas de despesas<span class="contagem-badge" id="contagem-alertas">0</span></h3>
+    <p class="subtitulo-painel">Despesas repetidas ou com valor fora do padrão, olhando as 6 unidades nos últimos 30 dias. Clique num item pra abrir o extrato do dia.</p>
+    <div id="lista-alertas"></div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3>Tendência do mês e projeção</h3>
+    <p class="subtitulo-painel">Saldo diário acumulado, e uma projeção de fim de mês com base na média diária até hoje.</p>
+    <div id="grafico-tendencia"></div>
+    <div class="grade-stats-vistoria u-mt-14" id="grade-projecao"></div>
+  </div>
+
+  <div class="grade">
+    <div class="painel">
+      <h3>Entradas por forma de pagamento</h3>
+      <div id="graf-entradas"></div>
+    </div>
+    <div class="painel">
+      <h3>Saídas por categoria</h3>
+      <div id="graf-saidas"></div>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Movimento por dia</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th class="n">Entradas</th><th class="n">Saídas</th><th class="n">Saldo</th>
+      </tr></thead>
+      <tbody id="tab-dias"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-relatorio" class="oculto">
+  <h2 class="secao">Relatório para o diretor</h2>
+  <p class="secao-sub">Resumo consolidado da rede, pronto pra copiar e enviar.</p>
+
+  <div class="barra-unidade barra-filtro-modulo">
+    <label for="sel-periodo-relatorio">Período</label>
+    <select id="sel-periodo-relatorio" data-change="mudarPeriodoRelatorio()">
+      <option value="1">Diário (relatório completo de hoje)</option>
+      <option value="30">Mensal</option>
+      <option value="90">Trimestral</option>
+      <option value="custom" selected>Personalizado</option>
+    </select>
+    <button class="btn-mini u-ml-auto" data-click="copiarRelatorio()">Copiar relatório</button>
+    <button class="btn-mini" data-click="baixarRelatorioResumido()">Baixar resumido</button>
+    <span id="msg-relatorio-copia" class="aviso-ok"></span>
+  </div>
+
+  <div class="barra-unidade barra-filtro-modulo" id="bloco-periodo-personalizado">
+    <label for="rel-de">De</label>
+    <input type="date" id="rel-de" data-change="desenharRelatorio()">
+    <label for="rel-ate" class="u-ml-8">Até</label>
+    <input type="date" id="rel-ate" data-change="desenharRelatorio()">
+  </div>
+
+  <div class="painel u-mb-16">
+    <label class="rotulo-relatorio">O que incluir no relatório</label>
+    <div class="grupo-unidades">
+      <label><input type="checkbox" class="chk-secao-relatorio" value="faturamento" checked data-change="desenharRelatorio()"> Faturamento</label>
+      <label><input type="checkbox" class="chk-secao-relatorio" value="revpar" checked data-change="desenharRelatorio()"> RevPAR</label>
+      <label><input type="checkbox" class="chk-secao-relatorio" value="faltas" checked data-change="desenharRelatorio()"> Faltas</label>
+      <label><input type="checkbox" class="chk-secao-relatorio" value="trocas" checked data-change="desenharRelatorio()"> Trocas de plantão</label>
+      <label><input type="checkbox" class="chk-secao-relatorio" value="vencidos" checked data-change="desenharRelatorio()"> Produtos vencidos</label>
+      <label><input type="checkbox" class="chk-secao-relatorio" value="vistorias" checked data-change="desenharRelatorio()"> Vistorias e alertas</label>
+    </div>
+  </div>
+
+  <div id="corpo-relatorio"></div>
+</section>
+
+<section id="tela-rede" class="oculto">
+  <h2 class="secao">Comparativo da rede</h2>
+  <p class="secao-sub" id="sub-rede"></p>
+  <div class="painel u-mb-16">
+    <table class="dados">
+      <thead><tr>
+        <th>Unidade</th><th class="n">Entradas</th><th class="n">Saídas</th>
+        <th class="n">Saldo</th><th class="n">Dinheiro em caixa</th>
+      </tr></thead>
+      <tbody id="tab-rede"></tbody>
+    </table>
+  </div>
+  <div class="painel">
+    <h3>Saldo por unidade</h3>
+    <div id="graf-rede"></div>
+  </div>
+</section>

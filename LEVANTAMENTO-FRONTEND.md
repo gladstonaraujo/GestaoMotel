@@ -1,24 +1,42 @@
-# Levantamento do front-end atual e plano de modularização
+# Levantamento e resultado da modularização do front-end
 
-Data: 2026-10-01. Base: `frontend/index.html` (1.626 linhas), `frontend/script.js` (5.059 linhas), `frontend/styles.css` (322 linhas).
+Data: 2026-10-01.
 
-## Como o front funciona hoje
+## Situação atual
+
+- `index.html` é somente a casca da aplicação; as 19 telas ficam nos `view.html` dos módulos.
+- O antigo `script.js` de 5.059 linhas foi removido.
+- O núcleo foi separado em API, estado, UI, catálogo de módulos, carregador de views, aplicação, erros e bootstrap.
+- Os domínios estão em `modulos/caixa`, `operacao`, `financeiro`, `gestao`, `sistema` e `visao-geral`.
+- Cada domínio possui JavaScript, CSS, view HTML e documentação próprios.
+- A navegação usa rotas hash, carrega view/CSS/JavaScript e dados por domínio sob demanda e redesenha somente a tela ativa.
+- Os 134 estilos estáticos inline foram convertidos em classes; restam somente duas larguras dinâmicas de gráficos.
+- Os handlers HTML inline foram substituídos por delegação declarativa com lista explícita de ações e sem `eval`.
+- O estado mutável foi centralizado em `AppEstado`.
+- O HTML dinâmico passa por sanitização central contra tags, atributos e URLs perigosos.
+- Build de produção, 7 testes automatizados e carregamento em navegador headless foram validados.
+
+## Como o front funcionava antes da migração
 
 - **Uma página só.** O `index.html` contém as 19 telas (`<section id="tela-...">`) e o login. A troca de aba (`abrir()`) só mostra/esconde as seções.
 - **Um script global.** Tudo é função e variável global (`let LANCAMENTOS`, `let BOLETOS`… 20+ arrays de estado). ~230 funções, sem módulos.
 - **Redesenho total.** `desenhar()` redesenha **todas as abas** a cada mudança, inclusive as que não estão visíveis (as de admin também). Isso pesa e acopla tudo.
 - **Handlers inline.** 71 `onclick=` no HTML e 41 dentro de strings de template no script; as funções precisam ser globais.
-- **Estilo inline.** 134 atributos `style="..."` no HTML. O `styles.css` tem só 322 linhas e variáveis de cor (bom ponto de partida para tema).
+- **Estilo inline (resolvido em 2026-10-01).** Os 134 atributos estáticos foram migrados para classes em `styles.css`. Permanecem inline apenas larguras percentuais calculadas em tempo de execução nos gráficos.
 - **Duplicação de mapeamento.** Para cada entidade há um par `xApiParaLocal` / `recarregarX` (lançamentos, boletos, funcionários, faltas, vistorias…) com o mesmo padrão repetido ~16 vezes.
 - **Sessão.** Token JWT em `localStorage`; o cliente da API (`api()`) já é isolado e reaproveitável.
 
-## Problema novo encontrado: falta de escape de HTML (XSS)
+## Problema encontrado e corrigido: falta de escape de HTML (XSS)
 
-O script monta a tela com `innerHTML` e templates, e **não existe nenhuma função de escape**. Há pelo menos 79 interpolações de texto digitado por usuários (descrição, observação, motivo, nome, produto, serviço) direto no HTML.
+O front original interpolava textos digitados por usuários diretamente em `innerHTML`.
 
 **Cenário:** um funcionário cadastra uma observação com código HTML/JavaScript; quando o diretor abre o extrato ou o relatório, o código roda no navegador dele, com o token de login disponível em `localStorage`. Isso permite agir como o diretor.
 
-**Correção:** no novo front, toda interpolação passa por uma função `esc()` (ou por `textContent`/`createElement`), e o backend limita o tamanho dos textos (já iniciado). Vale incluir no `ANALISE-PROBLEMAS.md` e no relatório do cliente como item de urgência alta.
+**Correção aplicada:** o setter usado pelos componentes sanitiza todo HTML dinâmico,
+remove elementos executáveis, atributos `on*`, destinos de formulário e URLs não
+permitidas. Ações de interface usam atributos `data-*` interpretados sem `eval`,
+limitados a uma lista explícita. Views estáticas do próprio repositório usam uma
+via separada de conteúdo confiável.
 
 ## Mapa das telas (módulos propostos)
 

@@ -1,0 +1,49 @@
+/* Módulo Operação */
+
+/* ---------- CONSUMO DO PLANTÃO ---------- */
+  .item-pendente{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--paper);border-radius:4px;margin-bottom:6px;font-size:13.5px}
+  .item-pendente button{background:none;border:0;color:var(--saida);font-size:12px;cursor:pointer;text-decoration:underline}
+
+.linha-quantidade-consumo{display:flex;align-items:center;gap:8px;margin:12px 0}
+.btn-qtd-consumo{width:42px;height:42px;flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:20px;font-weight:600;color:var(--ink)}
+.btn-qtd-consumo:hover{border-color:var(--acento);color:var(--acento)}
+.linha-quantidade-consumo input[type=number]{width:64px;flex-shrink:0;text-align:center;padding:10px 6px;border:1px solid var(--line);border-radius:6px;font-size:15px}
+
+/* ---------- VISTORIA DE SUÍTES ---------- */
+.linha-checklist{padding:10px 2px;border-bottom:1px solid var(--paper)}
+.linha-checklist:last-child{border-bottom:0}
+.linha-checklist .topo-item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.linha-checklist .nome-item{font-size:13.5px}
+.opcoes-item{display:flex;gap:8px;flex-shrink:0}
+.opcoes-item button{padding:5px 13px;border:1px solid var(--line);background:#fff;border-radius:4px;font-size:12.5px;color:var(--slate)}
+.opcoes-item button.on-ok{background:var(--entrada-fraca);border-color:var(--entrada);color:var(--entrada);font-weight:600}
+.opcoes-item button.on-problema{background:var(--saida-fraca);border-color:var(--saida);color:var(--saida);font-weight:600}
+.detalhe-problema{margin-top:7px}
+.detalhe-problema input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px}
+
+.grupo-checklist{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;overflow:hidden}
+.titulo-grupo-checklist{
+  width:100%;display:flex;justify-content:space-between;align-items:center;
+  padding:12px 14px;background:var(--paper);border:0;font-weight:600;font-size:14px;color:var(--ink);
+}
+.titulo-grupo-checklist .contagem-grupo{font-weight:400;font-size:12.5px;color:var(--slate)}
+.corpo-grupo-checklist{padding:2px 14px}
+
+.grade-stats-vistoria{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat-vistoria{background:var(--paper);border-radius:6px;padding:13px 15px}
+.stat-vistoria .num-stat{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.stat-vistoria .rotulo-stat{font-size:11.5px;color:var(--slate);margin-top:3px}
+
+.grade-fotos-anexadas{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.foto-anexada{position:relative;width:56px;height:56px}
+.foto-anexada img{width:100%;height:100%;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
+.foto-anexada button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--saida);color:#fff;border:0;font-size:11px;line-height:1;cursor:pointer;padding:0}
+
+.cartao-vistoria{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:12px}
+.cartao-vistoria .topo-vistoria{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.cartao-vistoria .titulo-vistoria{font-weight:600;font-size:14.5px}
+.cartao-vistoria .sub-vistoria{font-size:12.5px;color:var(--slate);margin-top:2px}
+.lista-problemas{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--saida)}
+.lista-problemas li{margin-bottom:3px}
+.grade-fotos-cartao{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.grade-fotos-cartao img{width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--line);cursor:zoom-in}

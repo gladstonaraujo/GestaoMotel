@@ -1,0 +1,95 @@
+<section id="tela-usuarios" class="oculto">
+  <h2 class="secao">Usuários e acessos</h2>
+  <p class="secao-sub">Só o diretor cria e edita usuários. Cada um só entra nas unidades marcadas aqui.</p>
+
+  <div class="painel u-mb-16">
+    <table class="dados">
+      <thead><tr>
+        <th>Nome</th><th>Usuário</th><th>Nível</th><th>Unidades</th><th>Abas</th><th class="n">Dashboards</th><th class="n">Financeiro</th><th class="n">Ações</th>
+      </tr></thead>
+      <tbody id="tab-usuarios"></tbody>
+    </table>
+  </div>
+
+  <div class="form-lanc">
+    <h3 id="titulo-form-usuario" class="titulo-form">Adicionar usuário</h3>
+    <input type="hidden" id="fu-login-original">
+    <div class="form-linha">
+      <div>
+        <label for="fu-nome">Nome</label>
+        <input id="fu-nome" placeholder="ex.: Ana Souza">
+      </div>
+      <div>
+        <label for="fu-login">Usuário (login)</label>
+        <input id="fu-login" placeholder="ex.: ana.beirol1">
+      </div>
+      <div>
+        <label for="fu-senha">Senha</label>
+        <input id="fu-senha" type="text" placeholder="defina uma senha">
+      </div>
+      <div>
+        <label for="fu-papel">Nível de acesso</label>
+        <select id="fu-papel" data-change="mudarPapelForm()">
+          <option value="funcionario">Funcionário — lança, não exclui</option>
+          <option value="inspetor">Vistoria de suítes — só a aba de vistoria</option>
+          <option value="gerente">Gerente — lança e exclui na(s) unidade(s)</option>
+          <option value="admin">Administrador geral — vê todas as unidades</option>
+        </select>
+      </div>
+    </div>
+    <div id="bloco-unidades-form">
+      <label>Unidades com acesso</label>
+      <div class="grupo-unidades" id="fu-unidades"></div>
+    </div>
+    <div>
+      <label>Abas visíveis <button type="button" class="btn-mini" data-click="usarAbasPadrao()">usar padrão do nível</button></label>
+      <div class="grupo-unidades" id="fu-abas"></div>
+    </div>
+    <div>
+      <label>Comprovantes visíveis (por setor)</label>
+      <div class="grupo-unidades" id="fu-setores-comprovantes"></div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fu-escopo-comprovantes">Período de comprovantes que a pessoa enxerga</label>
+        <select id="fu-escopo-comprovantes">
+          <option value="dia">Só o dia atual</option>
+          <option value="tudo">Todos os períodos</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label>Permissões financeiras (excluir/editar dados já salvos)</label>
+      <div class="grupo-unidades" id="fu-permissoes-financeiras"></div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label class="opcao-checkbox">
+          <input type="checkbox" id="fu-ve-dashboards">
+          Pode ver os dashboards (produtos vencidos, faltas e trocas de funcionário)
+        </label>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-add-usuario" data-click="salvarUsuario()">Salvar usuário</button>
+      <button class="btn-cancelar oculto" id="btn-cancelar-usuario" data-click="limparFormUsuario()">Cancelar edição</button>
+      <span id="msg-usuario" class="aviso-ok"></span>
+    </div>
+  </div>
+</section>
+
+<section id="tela-historico-exclusoes" class="oculto">
+  <h2 class="secao">Histórico de Exclusões</h2>
+  <p class="secao-sub">Só o diretor vê essa aba — todo dado apagado no sistema fica registrado aqui, com quem apagou e quando.</p>
+
+  <div class="grade-stats-vistoria u-mb-16" id="grade-stats-exclusoes"></div>
+
+  <div class="painel">
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Quem excluiu</th><th>Tipo</th><th>O que era</th><th>Unidade</th>
+      </tr></thead>
+      <tbody id="tab-historico-exclusoes"></tbody>
+    </table>
+  </div>
+</section>

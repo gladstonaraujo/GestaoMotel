@@ -1,0 +1,277 @@
+<section id="tela-lancar" class="oculto">
+  <h2 class="secao">Lançar movimento</h2>
+  <p class="secao-sub" id="sub-lancar"></p>
+
+  <div class="form-lanc">
+    <div class="form-linha">
+      <div>
+        <label>Tipo</label>
+        <div class="escolha-tipo">
+          <button id="bt-entrada" class="on-e" data-click="mudarTipo('entrada')">Entrada</button>
+          <button id="bt-saida" data-click="mudarTipo('saida')">Saída</button>
+        </div>
+      </div>
+      <div>
+        <label for="f-turno">Turno</label>
+        <select id="f-turno">
+          <option value="dia">Dia — 08:00 às 20:00</option>
+          <option value="noite">Noite — 20:00 às 08:00</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-categoria" id="lbl-categoria">Forma de pagamento</label>
+        <select id="f-categoria" data-change="atualizarDicaCategoria()"></select>
+      </div>
+      <div>
+        <label for="f-valor" id="lbl-valor">Valor (R$)</label>
+        <input type="number" id="f-valor" min="0" step="0.01" placeholder="0,00">
+      </div>
+    </div>
+
+    <div id="bloco-modo-despesa" class="oculto">
+      <div class="form-linha">
+        <div>
+          <label for="f-modo-despesa">Este lançamento é</label>
+          <select id="f-modo-despesa" data-change="mudarModoDespesa()">
+            <option value="normal">Normal (padrão)</option>
+            <option value="parcelada">Parte de uma compra parcelada</option>
+            <option value="rateada">Nota rateada entre unidades</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="bloco-parcelada-lancar" class="oculto">
+        <div class="form-linha">
+          <div>
+            <label for="f-parc-valor-total">Valor total da compra (R$)</label>
+            <input type="number" id="f-parc-valor-total" min="0" step="0.01" placeholder="0,00" data-change="recalcularValorParcelaLancar()">
+          </div>
+          <div>
+            <label for="f-parc-parcelas">Total de parcelas</label>
+            <input type="number" id="f-parc-parcelas" min="1" step="1" value="1" data-change="ajustarParcelaAtualLancar()">
+          </div>
+          <div>
+            <label for="f-parc-atual">Esta é a parcela nº</label>
+            <select id="f-parc-atual"></select>
+          </div>
+        </div>
+        <p class="aviso-data-campo">O valor lançado nesta saída é o valor desta parcela (calculado a partir do total, dá pra editar no campo Valor acima).</p>
+      </div>
+
+      <div id="bloco-rateio-lancar" class="oculto">
+        <div class="form-linha">
+          <div>
+            <label for="f-rateio-valor-total">Valor total da nota (R$)</label>
+            <input type="number" id="f-rateio-valor-total" min="0" step="0.01" placeholder="0,00">
+          </div>
+        </div>
+        <p class="aviso-data-campo">Só o valor de <strong id="txt-unidade-rateio">—</strong> (campo Valor acima) entra no caixa e no fechamento desta unidade. As outras unidades não recebem nada automaticamente — o valor total acima é só pra referência.</p>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="f-obs" id="lbl-obs">Descrição (opcional)</label>
+        <input id="f-obs" placeholder="ex.: diária suíte 12, compra de sabonete, adiantamento">
+        <div id="dica-obs" class="aviso-data-campo oculto"></div>
+      </div>
+    </div>
+    <div class="form-linha oculto" id="bloco-forma-pagamento-saida">
+      <div>
+        <label for="f-forma-pagamento-saida">Como essa saída foi paga</label>
+        <select id="f-forma-pagamento-saida">
+          <option value="dinheiro">Dinheiro (saiu do caixa físico)</option>
+          <option value="pix">Pix / transferência (não mexe no caixa físico)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-linha" id="bloco-foto-lancar">
+      <div class="u-coluna-inteira">
+        <label id="lbl-foto">Foto da nota fiscal ou comprovante (só gerente e diretor)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('f-foto').click()">Anexar foto</button>
+          <input type="file" id="f-foto" accept="image/*" capture="environment" data-change="prevejaFoto(this)">
+          <span id="previa-foto-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto" class="previa-foto oculto">
+            <img id="previa-foto-img" alt="">
+            <span class="nome-arq" id="previa-foto-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFoto()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarLancamento()">Salvar lançamento</button>
+      <span id="msg-lanc" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Últimos lançamentos que você registrou</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Turno</th><th>Categoria</th><th>Descrição</th><th class="n">Valor</th>
+      </tr></thead>
+      <tbody id="tab-meus"></tbody>
+    </table>
+  </div>
+
+  <div class="painel oculto" id="painel-notas-rateadas">
+    <h3>Notas rateadas — fechamento</h3>
+    <p class="secao-sub" id="sub-notas-rateadas"></p>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Categoria</th><th>Descrição</th><th class="n">Valor total da nota</th><th class="n">Valor desta unidade</th>
+      </tr></thead>
+      <tbody id="tab-notas-rateadas"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-extrato" class="oculto">
+  <h2 class="secao">Extrato do dia</h2>
+  <p class="secao-sub" id="sub-extrato"></p>
+
+  <div class="destaque">
+    <div class="rotulo">Saldo do dia</div>
+    <div class="valorao num" id="ex-saldo-dia">R$ 0,00</div>
+    <div class="apoio">
+      <div><span>Entradas</span><strong class="num verde" id="ex-total-entradas">R$ 0,00</strong></div>
+      <div><span>Saídas</span><strong class="num vermelho" id="ex-total-saidas">R$ 0,00</strong></div>
+      <div><span>Lançamentos</span><strong class="num" id="ex-qtd-lancamentos">0</strong></div>
+      <div><span>Dinheiro em caixa</span><strong class="num" id="ex-dinheiro-caixa">R$ 0,00</strong></div>
+    </div>
+  </div>
+
+  <div class="grade u-mb-16">
+    <div class="painel">
+      <h3>Por turno</h3>
+      <table class="dados">
+        <thead><tr><th>Turno</th><th class="n">Entradas</th><th class="n">Saídas</th><th class="n">Saldo</th></tr></thead>
+        <tbody id="tab-ex-turno"></tbody>
+      </table>
+    </div>
+    <div class="painel">
+      <h3>Entradas por forma de pagamento</h3>
+      <div id="ex-graf-entradas"></div>
+    </div>
+  </div>
+
+  <div class="painel">
+    <table class="dados">
+      <thead><tr>
+        <th>Turno</th><th>Categoria</th><th>Descrição</th><th>Lançado por</th>
+        <th>Foto</th><th class="n">Valor</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-extrato"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-comprovantes" class="oculto">
+  <h2 class="secao">Comprovantes</h2>
+  <p class="secao-sub" id="sub-comprovantes"></p>
+
+  <div class="painel oculto u-mb-16" id="setor-comp-lancamentos">
+    <h3>Lançamentos do dia a dia</h3>
+    <div id="grade-comprovantes" class="grade-comprovantes"></div>
+  </div>
+
+  <div class="painel oculto u-mb-16" id="setor-comp-boletos">
+    <h3>Boletos e Pix</h3>
+    <div id="grade-comprovantes-boletos" class="grade-comprovantes"></div>
+  </div>
+
+  <div class="painel oculto u-mb-16" id="setor-comp-boletos-admin">
+    <h3>Boletos Administrativo</h3>
+    <div id="grade-comprovantes-boletos-admin" class="grade-comprovantes"></div>
+  </div>
+
+  <div class="painel oculto" id="setor-comp-impostos">
+    <h3>Impostos e Energia</h3>
+    <div id="grade-comprovantes-impostos" class="grade-comprovantes"></div>
+  </div>
+</section>
+
+<section id="tela-fechamento" class="oculto">
+  <h2 class="secao">Fechamento — compras parceladas</h2>
+  <p class="secao-sub">Para notas pagas aos poucos, tipo "roupa de cama 1/3 de R$ 500,00". Cada parcela lançada aqui também entra como saída do caixa.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar parcela paga</h3>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fp-descricao">Descrição da compra</label>
+        <input id="fp-descricao" placeholder="ex.: roupa de cama, colchões novos, reforma do quarto 5">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fp-valor-total">Valor total da compra (R$)</label>
+        <input type="number" id="fp-valor-total" min="0" step="0.01" placeholder="0,00" data-change="recalcularValorParcela()">
+      </div>
+      <div>
+        <label for="fp-parcelas">Total de parcelas</label>
+        <input type="number" id="fp-parcelas" min="1" step="1" value="1" data-change="ajustarParcelaAtual()">
+      </div>
+      <div>
+        <label for="fp-parcela-atual">Esta é a parcela nº</label>
+        <select id="fp-parcela-atual"></select>
+      </div>
+      <div>
+        <label for="fp-valor-parcela">Valor desta parcela (R$)</label>
+        <input type="number" id="fp-valor-parcela" min="0" step="0.01" placeholder="0,00">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fp-data">Data do pagamento</label>
+        <input type="date" id="fp-data">
+      </div>
+      <div>
+        <label for="fp-forma-pagamento">Como foi pago</label>
+        <select id="fp-forma-pagamento">
+          <option value="dinheiro">Dinheiro (saiu do caixa físico)</option>
+          <option value="pix">Pix / transferência</option>
+        </select>
+      </div>
+      <div class="u-coluna-tripla">
+        <label>Foto da nota (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fp-foto').click()">Anexar foto</button>
+          <input type="file" id="fp-foto" accept="image/*" capture="environment" data-change="prevejaFotoParcela(this)">
+          <span id="previa-foto-parcela-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-parcela" class="previa-foto oculto">
+            <img id="previa-foto-parcela-img" alt="">
+            <span class="nome-arq" id="previa-foto-parcela-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoParcela()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fp-obs">Observação (opcional)</label>
+        <input id="fp-obs" placeholder="ex.: comprado na loja X, aguardando nota fiscal do fornecedor">
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarParcela()">Salvar parcela</button>
+      <span id="msg-parcela" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3>Compras em andamento</h3>
+    <div id="lista-compras-parceladas"></div>
+  </div>
+
+  <div class="painel">
+    <h3>Parcelas lançadas</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Descrição</th><th>Parcela</th><th>Foto</th><th class="n">Valor da parcela</th>
+      </tr></thead>
+      <tbody id="tab-parcelas"></tbody>
+    </table>
+  </div>
+</section>

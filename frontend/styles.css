@@ -68,13 +68,24 @@
   .btn-sair{background:transparent;border:1px solid #3D465C;color:#C2CADB;padding:6px 12px;border-radius:4px}
   .btn-sair:hover{background:#232B3C;color:#fff}
 
-  nav.abas{background:#1B2231;padding:0 20px;display:flex;gap:2px;overflow-x:auto}
+  nav.abas{background:#1B2231;padding:0 20px;display:flex;align-items:center;gap:2px;overflow-x:auto}
+  nav.abas .grupo-menu{
+    color:#66728b;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:0 8px 0 14px;white-space:nowrap;border-left:1px solid #30394b;
+  }
+  nav.abas .grupo-menu:first-child{padding-left:0;border-left:0}
   nav.abas button{
     background:transparent;border:0;color:#9AA6BF;padding:11px 16px;
     border-bottom:3px solid transparent;white-space:nowrap;
   }
   nav.abas button:hover{color:#fff}
   nav.abas button.ativa{color:#fff;border-bottom-color:var(--acento);background:#232B3C}
+
+  @media (max-width:720px){
+    nav.abas{padding:0 10px}
+    nav.abas .grupo-menu{padding-left:10px;font-size:9px}
+    nav.abas button{padding:10px 12px}
+  }
 
   .barra-unidade{
     background:var(--card);border-bottom:1px solid var(--line);
@@ -85,23 +96,61 @@
 
   main{padding:22px 20px 60px;max-width:1180px;margin:0 auto}
   .oculto{display:none !important}
+  #caixa-erro-visivel{
+    position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;
+    background:#B3261E;color:#fff;padding:12px 14px;border-radius:6px;
+    font:12.5px monospace;box-shadow:0 8px 24px rgba(0,0,0,.4);
+    max-height:40vh;overflow:auto;white-space:pre-wrap;
+  }
+  .linha-erro-visivel{margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:6px}
+
+  /* Utilitários de composição — substituem estilos que antes ficavam no HTML. */
+  body .u-coluna-inteira{grid-column:1/-1}
+  body .u-coluna-tripla{grid-column:span 3}
+  body .u-coluna-dupla{grid-column:span 2}
+  body .u-flex-1{flex:1}
+  body .u-m-0{margin:0}
+  body .u-mt-0{margin-top:0}
+  body .u-mt-12{margin-top:12px}
+  body .u-mt-14{margin-top:14px}
+  body .u-mt-16{margin-top:16px}
+  body .u-mt-18{margin-top:18px}
+  body .u-mb-6{margin-bottom:6px}
+  body .u-mb-8{margin-bottom:8px}
+  body .u-mb-10{margin-bottom:10px}
+  body .u-mb-14{margin-bottom:14px}
+  body .u-mb-16{margin-bottom:16px}
+  body .u-ml-8{margin-left:8px}
+  body .u-ml-auto{margin-left:auto}
+  body .u-texto-direita{text-align:right}
+  body .u-padding-top-10{padding-top:10px}
+  body .painel-sem-borda{border:0;padding:0}
+  body .titulo-form{margin:0 0 14px;font-size:14px}
+  body .titulo-form-destaque{margin:0 0 14px;font-size:15px}
+  body .titulo-subsecao{font-size:17px;margin:24px 0 4px}
+  body .titulo-dashboard{margin:0 0 8px;font-size:13px;color:var(--slate);font-weight:600}
+  body .cabecalho-flex{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px}
+  body .opcao-checkbox{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px}
+  body .rotulo-bloco{display:block;margin:6px 0 2px}
+  body .rotulo-relatorio{display:block;margin-bottom:8px}
+  body .secao-sub-compacta{margin:-4px 0 12px}
+  body .aviso-compacto{margin:-6px 0 12px}
+  body .barra-filtro-modulo{margin:0 0 12px;border:1px solid var(--line);border-radius:6px}
+  body .bloco-com-borda{margin:0 0 12px;border:1px solid var(--line);border-radius:6px}
+  body .campo-textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:4px;font-family:inherit;font-size:13px;resize:vertical}
+  body .campo-prompt{width:100%;padding:10px;border:1px solid var(--line);border-radius:4px;margin:10px 0;font-size:15px}
+  body .modal-edicao{max-width:440px}
+  body .grafico-svg{width:100%;height:auto;font-family:inherit}
+  body .cursor-padrao{cursor:default}
+  body .separador-superior{border-top:2px solid var(--line)}
+  body .espaco-miniatura{margin-right:3px}
+  body .espaco-vertical{margin:16px 0}
+  body .espaco-bloco{margin:20px 0 10px}
 
   h2.secao{font-size:17px;margin:0 0 4px;letter-spacing:-.01em}
   p.secao-sub{margin:0 0 18px;color:var(--slate);font-size:13.5px}
 
   /* ---------- DASHBOARD ---------- */
-  .destaque{
-    background:var(--card);border:1px solid var(--line);border-radius:6px;
-    padding:22px 24px;margin-bottom:16px;
-  }
-  .destaque .rotulo{color:var(--slate);font-size:13px;margin-bottom:2px}
-  .destaque .valorao{font-size:44px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
-  .destaque .valorao.positivo{color:var(--entrada)}
-  .destaque .valorao.negativo{color:var(--saida)}
-  .destaque .apoio{margin-top:14px;display:flex;gap:28px;flex-wrap:wrap;font-size:14px}
-  .destaque .apoio div span{display:block;color:var(--slate);font-size:12.5px}
-  .destaque .apoio div strong{font-size:19px;font-weight:600}
-
   .grade{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:16px}
   .painel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
   .painel h3{margin:0 0 14px;font-size:14px;font-weight:600}
@@ -168,14 +217,6 @@
   .miniatura-tab:hover{border-color:var(--acento)}
   .tracinho{color:var(--slate)}
 
-  .grade-comprovantes{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-  .cartao-comprovante{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in}
-  .cartao-comprovante:hover{border-color:var(--acento)}
-  .cartao-comprovante img{width:100%;height:120px;object-fit:cover;display:block;background:var(--paper)}
-  .cartao-comprovante .info{padding:8px 10px}
-  .cartao-comprovante .info .val{font-weight:600;font-size:13.5px}
-  .cartao-comprovante .info .meta{font-size:11.5px;color:var(--slate);margin-top:2px}
-
   .lightbox{
     position:fixed;inset:0;background:rgba(10,12,18,.82);display:none;
     align-items:center;justify-content:center;padding:24px;z-index:50;
@@ -186,22 +227,7 @@
   .lightbox .legenda-lb{color:#fff;font-size:13.5px;text-align:center}
   .lightbox .fechar-lb{background:#fff;border:0;border-radius:4px;padding:7px 16px;font-size:13px;font-weight:600}
 
-  /* ---------- USUÁRIOS E ACESSOS ---------- */
-  .aviso-restrito{
-    background:#EDE9F7;color:var(--noite);border-left:3px solid var(--noite);
-    padding:9px 12px;border-radius:3px;font-size:13.5px;margin-bottom:16px;
-  }
-  .grupo-unidades{display:flex;flex-wrap:wrap;gap:8px 16px;padding:9px 0 2px}
-  .grupo-unidades label{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink);cursor:pointer}
-  .selo-papel{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
-  .selo-papel.admin{background:#EDE9F7;color:var(--noite)}
-  .selo-papel.gerente{background:#FDF3DF;color:var(--dia)}
-  .selo-papel.funcionario{background:#E4F3EC;color:var(--entrada)}
-  .selo-papel.inspetor{background:#DCEEFB;color:var(--acento)}
-  .btn-add-usuario{background:var(--acento);color:#fff;border:0;border-radius:4px;padding:9px 16px;font-weight:600;font-size:13.5px}
-  .btn-add-usuario:hover{background:#2342BC}
   .btn-cancelar{background:transparent;border:1px solid var(--line);border-radius:4px;padding:9px 16px;font-size:13.5px;color:var(--slate)}
-  .voce-selo{font-size:11.5px;color:var(--slate);margin-left:6px}
 
   /* ---------- ALERTAS DE DESPESAS ---------- */
   .painel h3 .contagem-badge{
@@ -218,19 +244,11 @@
   .selo-alerta.quebra{background:var(--saida);color:#fff}
   .selo-alerta.retirada{background:var(--noite);color:#fff}
 
-  /* ---------- CONSUMO DO PLANTÃO ---------- */
-  .item-pendente{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--paper);border-radius:4px;margin-bottom:6px;font-size:13.5px}
-  .item-pendente button{background:none;border:0;color:var(--saida);font-size:12px;cursor:pointer;text-decoration:underline}
-
   /* ---------- MODAIS PRÓPRIOS (confirm/alert/prompt não funcionam neste sandbox) ---------- */
   .modal-overlay{position:fixed;inset:0;background:rgba(18,22,31,.55);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
   .modal-caixa{background:#fff;border-radius:8px;padding:22px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
   .modal-caixa p{margin:0 0 4px;font-size:14.5px;line-height:1.5;color:var(--ink);white-space:pre-line}
   .modal-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
-  .linha-quantidade-consumo{display:flex;align-items:center;gap:8px;margin:12px 0}
-  .btn-qtd-consumo{width:42px;height:42px;flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:20px;font-weight:600;color:var(--ink)}
-  .btn-qtd-consumo:hover{border-color:var(--acento);color:var(--acento)}
-  .linha-quantidade-consumo input[type=number]{width:64px;flex-shrink:0;text-align:center;padding:10px 6px;border:1px solid var(--line);border-radius:6px;font-size:15px}
   .alerta-corpo{flex:1;min-width:0}
   .alerta-titulo{font-size:13.5px;font-weight:600}
   .alerta-motivo{font-size:12.5px;color:var(--slate);margin-top:1px}
@@ -250,69 +268,10 @@
   .selo-status.pendente{background:#FDF3DF;color:var(--dia)}
   .selo-status.atrasado{background:var(--saida);color:#fff}
   .selo-status.pago{background:var(--entrada-fraca);color:var(--entrada)}
-  .selo-status.vencido{background:var(--saida);color:#fff}
-  .selo-status.avariado{background:#FDF3DF;color:var(--dia)}
-  .selo-status.perdido{background:#EDE9F7;color:var(--noite)}
-  .btn-marcar-pago{background:var(--entrada);color:#fff;border:0;border-radius:4px;padding:5px 11px;font-size:12.5px;font-weight:600}
-  .btn-marcar-pago:hover{background:#0B6849}
-
-  .cartao-parcela{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:12px}
-  .cartao-parcela .topo-parcela{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-  .cartao-parcela .titulo-compra{font-weight:600;font-size:14.5px}
-  .cartao-parcela .sub-compra{font-size:12.5px;color:var(--slate)}
-  .barra-progresso-parcela{height:8px;background:var(--paper);border-radius:4px;overflow:hidden;margin:8px 0}
-  .barra-progresso-parcela .preenchida{height:100%;background:var(--acento);border-radius:4px}
-  .linha-valores-parcela{display:flex;gap:22px;flex-wrap:wrap;font-size:12.5px;color:var(--slate)}
-  .linha-valores-parcela strong{color:var(--ink);font-weight:600}
-
-  .grupo-unidades-valor{display:flex;flex-direction:column;gap:8px;padding:9px 0 4px}
-  .linha-unidade-valor{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .linha-unidade-valor label{display:flex;align-items:center;gap:6px;font-size:13.5px;min-width:150px;cursor:pointer}
-  .linha-unidade-valor input[type=number]{width:130px;padding:7px 9px;border:1px solid var(--line);border-radius:4px}
   .aviso-editado.conjunta{background:#E4F3EC;color:var(--entrada)}
   .sub-boleto{font-size:11.5px;color:var(--slate);margin-top:2px}
 
-  /* ---------- VISTORIA DE SUÍTES ---------- */
-  .linha-checklist{padding:10px 2px;border-bottom:1px solid var(--paper)}
-  .linha-checklist:last-child{border-bottom:0}
-  .linha-checklist .topo-item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .linha-checklist .nome-item{font-size:13.5px}
-  .opcoes-item{display:flex;gap:8px;flex-shrink:0}
-  .opcoes-item button{padding:5px 13px;border:1px solid var(--line);background:#fff;border-radius:4px;font-size:12.5px;color:var(--slate)}
-  .opcoes-item button.on-ok{background:var(--entrada-fraca);border-color:var(--entrada);color:var(--entrada);font-weight:600}
-  .opcoes-item button.on-problema{background:var(--saida-fraca);border-color:var(--saida);color:var(--saida);font-weight:600}
-  .detalhe-problema{margin-top:7px}
-  .detalhe-problema input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px}
-
-  .grupo-checklist{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;overflow:hidden}
-  .titulo-grupo-checklist{
-    width:100%;display:flex;justify-content:space-between;align-items:center;
-    padding:12px 14px;background:var(--paper);border:0;font-weight:600;font-size:14px;color:var(--ink);
-  }
-  .titulo-grupo-checklist .contagem-grupo{font-weight:400;font-size:12.5px;color:var(--slate)}
-  .corpo-grupo-checklist{padding:2px 14px}
-
-  .grade-stats-vistoria{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-  .stat-vistoria{background:var(--paper);border-radius:6px;padding:13px 15px}
-  .stat-vistoria .num-stat{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
-  .stat-vistoria .rotulo-stat{font-size:11.5px;color:var(--slate);margin-top:3px}
-
-  .grade-fotos-anexadas{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .foto-anexada{position:relative;width:56px;height:56px}
-  .foto-anexada img{width:100%;height:100%;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
-  .foto-anexada button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--saida);color:#fff;border:0;font-size:11px;line-height:1;cursor:pointer;padding:0}
-
-  .cartao-vistoria{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:12px}
-  .cartao-vistoria .topo-vistoria{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px}
-  .cartao-vistoria .titulo-vistoria{font-weight:600;font-size:14.5px}
-  .cartao-vistoria .sub-vistoria{font-size:12.5px;color:var(--slate);margin-top:2px}
-  .lista-problemas{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--saida)}
-  .lista-problemas li{margin-bottom:3px}
-  .grade-fotos-cartao{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-  .grade-fotos-cartao img{width:52px;height:52px;object-fit:cover;border-radius:4px;border:1px solid var(--line);cursor:zoom-in}
-
   @media (max-width:640px){
-    .destaque .valorao{font-size:34px}
     main{padding:16px 12px 50px}
     header.topo{padding:10px 12px}
     .barra-unidade{padding:10px 12px}

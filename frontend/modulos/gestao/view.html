@@ -1,0 +1,398 @@
+<section id="tela-funcionarios" class="oculto">
+  <h2 class="secao">Funcionários</h2>
+  <p class="secao-sub">Dados da equipe e registro de faltas — separado do login de acesso ao sistema.</p>
+
+  <div class="painel u-mb-16">
+    <h3>Dashboard de faltas e trocas</h3>
+    <p class="secao-sub" id="sub-dashboard-funcionarios"></p>
+    <div class="grade-stats-vistoria" id="grade-stats-funcionarios"></div>
+
+    <div class="grade u-mt-16">
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Faltas por funcionário</h4>
+        <div id="ranking-faltas-funcionarios"></div>
+      </div>
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Trocas de plantão</h4>
+        <table class="dados">
+          <tbody id="tab-resumo-trocas-funcionarios"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Adicionar funcionário</h3>
+    <div class="form-linha">
+      <div>
+        <label for="ff-nome">Nome completo</label>
+        <input id="ff-nome" placeholder="ex.: Fernanda Rocha">
+      </div>
+      <div>
+        <label for="ff-cargo">Cargo</label>
+        <select id="ff-cargo">
+          <option value="recepcao">Recepção</option>
+          <option value="caixa_volante">Operador(a) de caixa volante</option>
+          <option value="cozinha">Cozinha</option>
+          <option value="camareira">Camareira</option>
+          <option value="fiscal_apoio">Fiscal de apoio</option>
+          <option value="lavanderia">Lavanderia</option>
+          <option value="manutencao">Manutenção</option>
+          <option value="gerente">Gerente</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="ff-telefone">Telefone</label>
+        <input id="ff-telefone" placeholder="ex.: (96) 99999-0000">
+      </div>
+      <div>
+        <label for="ff-documento">CPF</label>
+        <input id="ff-documento" placeholder="ex.: 000.000.000-00">
+      </div>
+      <div>
+        <label for="ff-admissao">Data de admissão</label>
+        <input type="date" id="ff-admissao">
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarFuncionario()">Salvar funcionário</button>
+      <span id="msg-funcionario" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3 id="titulo-funcionarios">Equipe</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Nome</th><th>Cargo</th><th>Telefone</th><th>Admissão</th>
+        <th class="n">Faltas (30 dias)</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-funcionarios"></tbody>
+    </table>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar falta</h3>
+    <div class="form-linha">
+      <div>
+        <label for="ffalta-funcionario">Funcionário</label>
+        <select id="ffalta-funcionario"></select>
+      </div>
+      <div>
+        <label for="ffalta-data">Data</label>
+        <input type="date" id="ffalta-data">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="ffalta-motivo">Motivo</label>
+        <input id="ffalta-motivo" placeholder="ex.: atestado médico, imprevisto pessoal">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label class="opcao-checkbox">
+          <input type="checkbox" id="ffalta-justificada" data-change="atualizarRotuloAtestado()">
+          Falta justificada (com atestado ou aviso prévio)
+        </label>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label id="lbl-atestado">Anexar atestado ou comprovante (opcional, pode anexar mais de uma foto)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('ffalta-foto').click()">Anexar fotos</button>
+          <input type="file" id="ffalta-foto" accept="image/*" capture="environment" multiple data-change="prevejaFotoAtestado(this)">
+          <span id="previa-foto-atestado-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+        </div>
+        <div id="fotos-pendentes-atestado" class="grade-fotos-anexadas"></div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarFalta()">Registrar falta</button>
+      <span id="msg-falta" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3>Últimas faltas</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Funcionário</th><th>Motivo</th><th>Atestado</th><th class="n">Justificada</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-faltas"></tbody>
+    </table>
+  </div>
+
+  <h3 class="secao titulo-subsecao">Troca de Plantão</h3>
+  <p class="secao-sub">Registro de troca entre dois funcionários — só gerente e diretor lançam. Só é permitido dia por dia ou noite por noite.</p>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar troca</h3>
+    <div class="form-linha">
+      <div>
+        <label for="ft-turno">Turno da troca</label>
+        <select id="ft-turno">
+          <option value="dia">Dia — 08:00 às 20:00</option>
+          <option value="noite">Noite — 20:00 às 08:00</option>
+        </select>
+      </div>
+    </div>
+    <p class="aviso-data-campo aviso-compacto">Esse turno vale pros dois plantões — não dá pra trocar dia por noite.</p>
+    <div class="form-linha">
+      <div>
+        <label for="ft-funcionario1">Funcionário 1</label>
+        <select id="ft-funcionario1"></select>
+      </div>
+      <div>
+        <label for="ft-data1">Data do plantão de Funcionário 1</label>
+        <input type="date" id="ft-data1">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="ft-funcionario2">Funcionário 2</label>
+        <select id="ft-funcionario2"></select>
+      </div>
+      <div>
+        <label for="ft-data2">Data do plantão de Funcionário 2</label>
+        <input type="date" id="ft-data2">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="ft-motivo">Motivo (obrigatório)</label>
+        <input id="ft-motivo" placeholder="ex.: consulta médica, compromisso pessoal">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label>Foto do documento de solicitação (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('ft-foto').click()">Anexar foto</button>
+          <input type="file" id="ft-foto" accept="image/*" capture="environment" data-change="prevejaFotoTroca(this)">
+          <span id="previa-foto-troca-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-troca" class="previa-foto oculto">
+            <img id="previa-foto-troca-img" alt="">
+            <span class="nome-arq" id="previa-foto-troca-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoTroca()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="registrarTroca()">Registrar troca</button>
+      <span id="msg-troca" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Trocas registradas</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Turno</th><th>Funcionário 1</th><th>Plantão 1</th><th>Funcionário 2</th><th>Plantão 2</th>
+        <th>Motivo</th><th>Foto</th><th>Lançado por</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-trocas"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-vencidos" class="oculto">
+  <h2 class="secao">Produtos Vencidos</h2>
+  <p class="secao-sub">Registro de produtos vencidos, avariados ou perdidos — separado do movimento do turno.</p>
+
+  <div class="painel u-mb-16">
+    <h3>Dashboard de produtos vencidos</h3>
+    <p class="secao-sub" id="sub-dashboard-vencidos"></p>
+    <div class="grade-stats-vistoria" id="grade-stats-vencidos"></div>
+    <div class="u-mt-16">
+      <h4 class="titulo-dashboard">Produtos que mais vencem</h4>
+      <div id="ranking-produtos-vencidos"></div>
+    </div>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar produto vencido/avariado/perdido</h3>
+    <div class="form-linha">
+      <div>
+        <label for="fv-produto">Produto</label>
+        <input id="fv-produto" placeholder="ex.: sabonete, preservativo, água mineral">
+      </div>
+      <div>
+        <label for="fv-motivo-tipo">Motivo</label>
+        <select id="fv-motivo-tipo">
+          <option value="vencido">Vencido</option>
+          <option value="avariado">Avariado</option>
+          <option value="perdido">Perdido</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fv-quantidade">Quantidade</label>
+        <input type="number" id="fv-quantidade" min="1" step="1" value="1">
+      </div>
+      <div>
+        <label for="fv-validade">Data de validade</label>
+        <input type="date" id="fv-validade">
+      </div>
+      <div>
+        <label for="fv-prejuizo">Valor do prejuízo (R$, opcional)</label>
+        <input type="number" id="fv-prejuizo" min="0" step="0.01" placeholder="0,00">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label>Foto (opcional)</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fv-foto-vencido').click()">Anexar foto</button>
+          <input type="file" id="fv-foto-vencido" accept="image/*" capture="environment" data-change="prevejaFotoVencido(this)">
+          <span id="previa-foto-vencido-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+          <div id="previa-foto-vencido" class="previa-foto oculto">
+            <img id="previa-foto-vencido-img" alt="">
+            <span class="nome-arq" id="previa-foto-vencido-nome"></span>
+            <button type="button" class="btn-remover-foto" data-click="removerFotoVencido()">remover</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarProdutoVencido()">Registrar</button>
+      <span id="msg-vencido" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Registros de produtos vencidos</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Produto</th><th>Motivo</th><th class="n">Qtd</th>
+        <th>Validade</th><th class="n">Prejuízo</th><th>Foto</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-vencidos"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-revpar" class="oculto">
+  <h2 class="secao">RevPAR e TrevPAR</h2>
+  <p class="secao-sub">Indicadores de desempenho por suíte disponível — preencha o período e compare entre as unidades.</p>
+
+  <div class="painel oculto u-mb-16" id="painel-comparativo-revpar">
+    <h3>Comparativo entre unidades</h3>
+    <p class="secao-sub" id="sub-comparativo-revpar"></p>
+    <table class="dados u-mb-14">
+      <thead><tr>
+        <th>Unidade</th><th class="n">Suítes</th><th class="n">Receita de diárias</th>
+        <th class="n">Receita total</th><th class="n">Ticket médio</th><th class="n">RevPAR</th><th class="n">TrevPAR</th>
+      </tr></thead>
+      <tbody id="tab-comparativo-revpar"></tbody>
+    </table>
+    <div class="grade">
+      <div>
+        <h4 class="titulo-dashboard">RevPAR por unidade</h4>
+        <div id="graf-revpar"></div>
+      </div>
+      <div>
+        <h4 class="titulo-dashboard">TrevPAR por unidade</h4>
+        <div id="graf-trevpar"></div>
+      </div>
+    </div>
+    <div class="grade u-mt-16">
+      <div>
+        <h4 class="titulo-dashboard">Ranking — mais usos</h4>
+        <div id="graf-ranking-usos-revpar"></div>
+      </div>
+      <div>
+        <h4 class="titulo-dashboard">Ranking — maior ticket médio</h4>
+        <div id="graf-ranking-ticket-revpar"></div>
+      </div>
+      <div>
+        <h4 class="titulo-dashboard">Ranking — maior faturamento</h4>
+        <div id="graf-ranking-faturamento-revpar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Configuração de suítes desta unidade</h3>
+    <p class="secao-sub secao-sub-compacta">Cadastre as categorias de suíte e a quantidade de cada uma — o total soma sozinho e já preenche o campo "Suítes disponíveis" abaixo.</p>
+    <div id="bloco-editar-suites" class="oculto">
+      <div class="form-linha">
+        <div>
+          <label for="rs-categoria">Categoria da suíte</label>
+          <input id="rs-categoria" placeholder="ex.: Standard, Luxo, Master">
+        </div>
+        <div>
+          <label for="rs-quantidade">Quantidade</label>
+          <input type="number" id="rs-quantidade" min="1" step="1" placeholder="ex.: 8">
+        </div>
+      </div>
+      <div class="acoes-form">
+        <button class="btn-salvar" data-click="salvarCategoriaSuite()">Adicionar categoria</button>
+        <span id="msg-config-suites" class="aviso-ok"></span>
+      </div>
+    </div>
+    <p class="secao-sub oculto" id="aviso-suites-somente-diretor">Só o diretor adiciona ou edita categorias de suíte.</p>
+    <table class="dados u-mt-14">
+      <thead><tr><th>Categoria</th><th class="n">Quantidade</th><th class="n">Ação</th></tr></thead>
+      <tbody id="tab-config-suites"></tbody>
+      <tfoot><tr><td class="neutro-forte">Total de suítes</td><td class="n neutro-forte num" id="total-suites-unidade">0</td><td></td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Preencher período</h3>
+    <div class="form-linha">
+      <div>
+        <label for="rp-inicio">Início do período</label>
+        <input type="date" id="rp-inicio">
+      </div>
+      <div>
+        <label for="rp-fim">Fim do período</label>
+        <input type="date" id="rp-fim">
+      </div>
+    </div>
+    <label class="rotulo-bloco">Usos e faturado por categoria de suíte</label>
+    <p class="secao-sub u-mb-10">Cadastre as categorias no bloco acima primeiro — os campos aparecem aqui sozinhos.</p>
+    <div id="linhas-categoria-revpar"></div>
+    <div class="form-linha u-mt-12">
+      <div>
+        <label for="rp-receita-extra">Receita extra da unidade (R$, opcional — frigobar, produtos, etc.)</label>
+        <input type="number" id="rp-receita-extra" min="0" step="0.01" placeholder="0,00">
+      </div>
+    </div>
+    <p class="aviso-data-campo aviso-compacto">A receita extra entra só no TrevPAR geral da unidade, somada ao faturado das suítes.</p>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarRevpar()">Calcular e salvar</button>
+      <span id="msg-revpar" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel u-mb-16">
+    <h3 id="titulo-analise-revpar">Análise dos usos registrados</h3>
+    <p class="secao-sub" id="sub-analise-revpar"></p>
+    <table class="dados">
+      <thead><tr>
+        <th>Tipo (Qt)</th><th class="n">Qt usos</th><th class="n">Ocup. média</th>
+        <th class="n">Faturado</th><th class="n">Ticket médio</th><th class="n">RevPAR</th>
+      </tr></thead>
+      <tbody id="tab-analise-revpar"></tbody>
+    </table>
+  </div>
+
+  <div class="painel">
+    <h3 id="titulo-revpar">Períodos registrados</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Período</th><th class="n">Suítes</th><th class="n">Faturado</th>
+        <th class="n">RevPAR geral</th><th class="n">TrevPAR</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-revpar"></tbody>
+    </table>
+  </div>
+</section>

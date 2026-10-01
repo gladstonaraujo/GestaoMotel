@@ -1,0 +1,276 @@
+<section id="tela-consumo-plantao" class="oculto">
+  <h2 class="secao">Consumo do Plantão</h2>
+  <p class="secao-sub">Registre o que foi consumido durante o turno — o gerente acompanha por aqui.</p>
+
+  <div class="painel oculto u-mb-16" id="painel-dashboard-consumo-plantao">
+    <h3>Dashboard de consumo</h3>
+    <p class="secao-sub" id="sub-dashboard-consumo-plantao"></p>
+    <div class="grade-stats-vistoria" id="grade-stats-consumo-plantao"></div>
+    <div class="u-mt-16">
+      <h4 class="titulo-dashboard">Produtos mais consumidos</h4>
+      <div id="ranking-consumo-plantao"></div>
+    </div>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar consumo do plantão</h3>
+    <div class="form-linha">
+      <div>
+        <label for="fcp-turno">Turno</label>
+        <select id="fcp-turno">
+          <option value="dia">Dia — 08:00 às 20:00</option>
+          <option value="noite">Noite — 20:00 às 08:00</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="fcp-produto">Produto</label>
+        <input id="fcp-produto" placeholder="ex.: água, coca cola, chocolate">
+      </div>
+    </div>
+    <div class="linha-quantidade-consumo">
+      <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(-1)">−</button>
+      <input type="number" id="fcp-quantidade" min="1" step="1" value="1">
+      <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(1)">+</button>
+      <button type="button" class="btn-salvar u-flex-1" data-click="adicionarItemConsumoPlantao()">Adicionar item</button>
+    </div>
+    <div id="lista-itens-consumo-pendente"></div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarConsumoPlantao()">Salvar registro do plantão</button>
+      <span id="msg-consumo-plantao" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <div class="cabecalho-flex">
+      <h3 id="titulo-consumo-plantao" class="u-m-0">Registros do plantão</h3>
+      <button class="btn-mini" data-click="baixarPdfConsumoPlantao()">Baixar PDF</button>
+    </div>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Turno</th><th>Itens</th><th>Registrado por</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-consumo-plantao"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-vistoria" class="oculto">
+  <h2 class="secao">Vistoria de suítes</h2>
+  <p class="secao-sub">Checklist rápido do estado da suíte, com fotos. Qualquer pessoa pode registrar, em qualquer turno.</p>
+
+  <div class="painel oculto u-mb-16" id="painel-dashboard-vistoria">
+    <h3>Dashboard geral de vistorias</h3>
+    <p class="secao-sub" id="sub-dashboard-vistoria"></p>
+    <div class="grade-stats-vistoria" id="grade-stats-vistoria"></div>
+
+    <div class="grade u-mt-16">
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Problemas por categoria</h4>
+        <div id="ranking-categoria-vistoria"></div>
+      </div>
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Suítes com mais problemas</h4>
+        <div id="ranking-suites-vistoria"></div>
+      </div>
+    </div>
+
+    <div class="u-mt-16">
+      <h4 class="titulo-dashboard">Itens mais reportados com problema</h4>
+      <div id="ranking-problemas-vistoria"></div>
+    </div>
+
+    <div class="u-mt-18">
+      <h4 class="titulo-dashboard">Últimas vistorias com problema</h4>
+      <table class="dados">
+        <thead><tr>
+          <th>Data</th><th>Suíte</th><th>Turno</th><th>Feita por</th><th>Tipo</th><th class="n">Itens com problema</th>
+        </tr></thead>
+        <tbody id="tab-ultimas-problemas-vistoria"></tbody>
+      </table>
+    </div>
+
+    <div class="u-mt-18">
+      <h4 class="titulo-dashboard">Alertas de prioridade — problema recorrente</h4>
+      <p class="secao-sub u-mb-8">Mesmo item, mesma suíte, marcado "Problema" 2 ou mais vezes em 30 dias.</p>
+      <div id="alertas-prioridade-vistoria"></div>
+    </div>
+  </div>
+
+  <div class="painel oculto u-mb-16" id="painel-dashboard-funcionario-vistoria">
+    <h3>Dashboard por funcionário</h3>
+    <p class="secao-sub" id="sub-dashboard-funcionario-vistoria"></p>
+    <table class="dados">
+      <thead><tr>
+        <th>Funcionário</th><th class="n">Vistorias</th><th class="n">Sem problema</th>
+        <th class="n">Com problema</th><th class="n">Última vistoria</th>
+      </tr></thead>
+      <tbody id="tab-dashboard-funcionario-vistoria"></tbody>
+    </table>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar vistoria</h3>
+    <p class="secao-sub secao-sub-compacta" id="aviso-tipo-vistoria"></p>
+    <div class="form-linha">
+      <div>
+        <label for="fv-suite">Suíte (número ou nome)</label>
+        <input id="fv-suite" placeholder="ex.: 12">
+      </div>
+      <div>
+        <label for="fv-turno">Turno</label>
+        <select id="fv-turno">
+          <option value="dia">Dia — 08:00 às 20:00</option>
+          <option value="noite">Noite — 20:00 às 08:00</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="rotulo-bloco">Checklist</label>
+    <div id="checklist-vistoria"></div>
+
+    <div class="form-linha u-mt-14">
+      <div class="u-coluna-inteira">
+        <label for="fv-obs">Observação geral (opcional)</label>
+        <input id="fv-obs" placeholder="ex.: hóspede avisou de barulho no ar-condicionado">
+      </div>
+    </div>
+
+    <div class="form-linha oculto" id="bloco-foto-vistoria">
+      <div class="u-coluna-inteira">
+        <label>Fotos da suíte (obrigatório se algum item for marcado "Problema") — só gerente e diretor anexam</label>
+        <div class="campo-foto">
+          <button type="button" class="btn-anexar" data-click="document.getElementById('fv-foto').click()">Anexar fotos</button>
+          <input type="file" id="fv-foto" accept="image/*" capture="environment" multiple data-change="prevejaFotoVistoria(this)">
+          <span id="vistoria-fotos-vazia" class="sem-foto-txt">Nenhuma foto anexada</span>
+        </div>
+        <div id="fotos-pendentes-vistoria" class="grade-fotos-anexadas"></div>
+      </div>
+    </div>
+
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarVistoria()">Salvar vistoria</button>
+      <span id="msg-vistoria" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3>Vistorias com problema</h3>
+    <p class="secao-sub" id="sub-vistorias"></p>
+    <div id="lista-vistorias"></div>
+  </div>
+
+  <div class="painel oculto" id="painel-gerenciar-checklist">
+    <h3>Gerenciar perguntas do checklist</h3>
+    <p class="secao-sub">Só o diretor mexe aqui — adiciona, edita ou remove perguntas de qualquer categoria.</p>
+
+    <div class="form-linha">
+      <div>
+        <label for="giv-nome">Pergunta</label>
+        <input id="giv-nome" placeholder="ex.: Persiana funcionando corretamente">
+      </div>
+      <div>
+        <label for="giv-categoria">Categoria</label>
+        <select id="giv-categoria">
+          <option value="garagem">Garagem</option>
+          <option value="banheiro">Banheiro</option>
+          <option value="quarto">Suíte</option>
+          <option value="consumo">Consumo</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label class="opcao-checkbox">
+          <input type="checkbox" id="giv-rapida">
+          Incluir também na vistoria rápida de início de plantão
+        </label>
+      </div>
+    </div>
+    <div class="acoes-form">
+      <input type="hidden" id="giv-id-original">
+      <button class="btn-salvar" data-click="salvarItemVistoria()">Salvar pergunta</button>
+      <button class="btn-cancelar oculto" id="btn-cancelar-item-vistoria" data-click="limparFormItemVistoria()">Cancelar edição</button>
+      <span id="msg-item-vistoria" class="aviso-ok"></span>
+    </div>
+
+    <table class="dados u-mt-14">
+      <thead><tr><th>Categoria</th><th>Pergunta</th><th class="n">Vistoria rápida</th><th class="n">Ação</th></tr></thead>
+      <tbody id="tab-itens-vistoria"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="tela-manutencao" class="oculto">
+  <h2 class="secao">Manutenção de Terceiros</h2>
+  <p class="secao-sub">Registro de chamados de manutenção — sem foto e sem valor, só pra acompanhar recorrência.</p>
+
+  <div class="painel oculto u-mb-16" id="painel-dashboard-manutencao">
+    <h3>Dashboard de manutenção</h3>
+    <p class="secao-sub" id="sub-dashboard-manutencao"></p>
+    <div class="grade-stats-vistoria" id="grade-stats-manutencao"></div>
+    <div class="grade u-mt-16">
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Serviço mais chamado</h4>
+        <div id="ranking-servico-manutencao"></div>
+      </div>
+      <div class="painel painel-sem-borda">
+        <h4 class="titulo-dashboard">Suítes com mais chamados</h4>
+        <div id="ranking-suite-manutencao"></div>
+      </div>
+    </div>
+    <div class="u-mt-16">
+      <h4 class="titulo-dashboard">Alertas de prioridade</h4>
+      <p class="secao-sub u-mb-8">Mesmo serviço, mesma suíte (ou mesma unidade), 2 ou mais vezes em 30 dias.</p>
+      <div id="alertas-manutencao"></div>
+    </div>
+  </div>
+
+  <div class="form-lanc">
+    <h3 class="titulo-form">Registrar chamado</h3>
+    <div class="form-linha">
+      <div>
+        <label for="fm-servico">Serviço</label>
+        <select id="fm-servico">
+          <option value="maquina_lavar">Máquina de lavar</option>
+          <option value="maquina_secar">Máquina de secar</option>
+          <option value="maquina_passar">Máquina de passar</option>
+          <option value="camera">Câmera</option>
+          <option value="banheira">Banheira</option>
+          <option value="ar_condicionado">Ar condicionado</option>
+          <option value="internet">Internet</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+      <div>
+        <label for="fm-suite">Número da suíte (se foi feito em suíte)</label>
+        <input id="fm-suite" placeholder="ex.: 12 (deixe em branco se não for numa suíte)">
+      </div>
+    </div>
+    <div class="form-linha">
+      <div>
+        <label for="fm-especificacao">Especificar o serviço</label>
+        <input id="fm-especificacao" placeholder="ex.: troca de correia, vazamento no cano">
+      </div>
+      <div>
+        <label for="fm-prestador">Prestador</label>
+        <input id="fm-prestador" placeholder="ex.: João Manutenção, empresa XPTO">
+      </div>
+    </div>
+    <div class="acoes-form">
+      <button class="btn-salvar" data-click="salvarManutencao()">Registrar</button>
+      <span id="msg-manutencao" class="aviso-ok"></span>
+    </div>
+  </div>
+
+  <div class="painel">
+    <h3 id="titulo-manutencao">Chamados registrados</h3>
+    <table class="dados">
+      <thead><tr>
+        <th>Data</th><th>Serviço</th><th>Especificação</th><th>Prestador</th><th>Suíte</th><th class="n">Ação</th>
+      </tr></thead>
+      <tbody id="tab-manutencao"></tbody>
+    </table>
+  </div>
+</section>
