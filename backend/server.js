@@ -22,11 +22,16 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '15mb' })); // limite maior por causa das fotos em base64, se enviadas assim
 
 // Fotos enviadas via /api/uploads ficam salvas aqui e são servidas como arquivo estático
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Quando roda empacotado (backend/dist/server.js), a raiz do backend é a pasta acima
+const RAIZ = path.basename(__dirname) === 'dist' ? path.join(__dirname, '..') : __dirname;
+app.use('/uploads', express.static(path.join(RAIZ, 'uploads')));
 
 // O front-end (HTML/CSS/JS) é servido pelo próprio back-end — um processo só, uma porta só,
 // sem precisar de outro servidor (nem sofrer com CORS, já que tudo vem da mesma origem)
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Em produção serve frontend/dist (gerado por `npm run build`); sem build, cai no código-fonte
+const fs = require('fs');
+const frontendDist = path.join(RAIZ, '..', 'frontend', 'dist');
+app.use(express.static(fs.existsSync(frontendDist) ? frontendDist : path.join(RAIZ, '..', 'frontend')));
 
 // Rotas
 app.use('/api/uploads', require('./routes/uploads'));

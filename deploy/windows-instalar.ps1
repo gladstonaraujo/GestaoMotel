@@ -130,6 +130,7 @@ CORS_ORIGIN=*
 Titulo "Instalando dependências (npm install)"
 Push-Location $backend
 npm install --no-fund --no-audit
+npm run build
 
 $temUsuario = & "$pgBin\psql.exe" -U postgres -h 127.0.0.1 -d gestao_motel -tAc "SELECT 1 FROM usuarios WHERE login='diretor'"
 if ($temUsuario -match '1') {
@@ -156,7 +157,7 @@ if ($servicoExistente) {
     Restart-Service $nomeServico
 } else {
     Write-Host "Criando o serviço '$nomeServico'..."
-    nssm install $nomeServico $nodeExe "server.js"
+    nssm install $nomeServico $nodeExe "dist\server.js"
     nssm set $nomeServico AppDirectory $backend
     nssm set $nomeServico AppStdout (Join-Path $backend 'servico.log')
     nssm set $nomeServico AppStderr (Join-Path $backend 'servico-erro.log')

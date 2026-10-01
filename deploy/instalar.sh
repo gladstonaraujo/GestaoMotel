@@ -112,7 +112,7 @@ fi
 
 # ---- 5. Dependências e usuário inicial ----
 titulo "Instalando dependências (npm install)"
-(cd "$BACKEND" && npm install --no-fund --no-audit)
+(cd "$BACKEND" && npm install --no-fund --no-audit && npm run build)
 
 TEM_USUARIO=$(sudo -u postgres psql -d gestao_motel -tAc "SELECT 1 FROM usuarios WHERE login='diretor'")
 if [ "$TEM_USUARIO" = "1" ]; then
@@ -138,7 +138,7 @@ After=network.target postgresql.service
 Type=simple
 User=$USUARIO_APP
 WorkingDirectory=$BACKEND
-ExecStart=$NODE_BIN server.js
+ExecStart=$NODE_BIN dist/server.js
 Restart=on-failure
 RestartSec=5
 Environment=NODE_ENV=production

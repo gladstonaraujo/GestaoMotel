@@ -4,3 +4,5 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 *.zip
 *.log
+frontend/dist/
+backend/dist/
