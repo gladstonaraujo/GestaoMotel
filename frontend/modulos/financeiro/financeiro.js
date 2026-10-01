@@ -144,12 +144,12 @@ function desenharBoletos(){
       : '';
     const temCodigo = b.pixCopiaCola || b.codigoBarras;
     const colCodigo = temCodigo
-      ? `<button class="btn-mini" data-click="copiarCodigoBoleto(${b.indiceReal})">${b.pixCopiaCola?'Copiar Pix':'Copiar código'}</button>`
+      ? `<button class="btn-mini" data-click="copiarCodigoBoleto(${b.indiceReal})">${esc(b.pixCopiaCola?'Copiar Pix':'Copiar código')}</button>`
       : '<span class="tracinho">—</span>';
     return `<tr>
       <td>${dataBr(b.vencimento)}</td>
-      <td>${b.descricao}${subConjunta}</td>
-      <td>${b.foto?`<img class="miniatura-tab" src="${b.foto}" alt="Boleto" data-click="abrirLightbox('${b.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${esc(b.descricao)}${subConjunta}</td>
+      <td>${b.foto?`<img class="miniatura-tab" src="${esc(b.foto)}" alt="Boleto" data-click="abrirLightbox('${escArg(b.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td>${colCodigo}</td>
       <td class="n num">${fmt(b.valor)}</td>
       <td class="n">${selo}</td>
@@ -300,8 +300,8 @@ function desenharImpostos(){
       <td>${competenciaBr(c.competencia)}</td>
       <td>${dataBr(c.vencimento)}</td>
       <td>${nomeTipoConta(c.tipo)}</td>
-      <td>${c.descricao}</td>
-      <td>${c.foto?`<img class="miniatura-tab" src="${c.foto}" alt="Conta" data-click="abrirLightbox('${c.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${esc(c.descricao)}</td>
+      <td>${c.foto?`<img class="miniatura-tab" src="${esc(c.foto)}" alt="Conta" data-click="abrirLightbox('${escArg(c.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td class="n num">${fmt(c.valor)}</td>
       <td class="n">${selo}</td>
       <td class="n">${c.status==='pendente'?`<button class="btn-marcar-pago" data-click="marcarImpostoPago(${c.indiceReal})">Marcar como paga</button>`:'—'}
@@ -335,7 +335,7 @@ async function excluirContaFixa(i){
 function montarUnidadesNotaFiscal(){
   document.getElementById('fnf-unidades-valores').innerHTML = UNIDADES.map(u=>`
     <div class="linha-unidade-valor">
-      <label><input type="checkbox" class="chk-unidade-nf" value="${u.id}" checked data-change="dividirValorNotaFiscal()"> ${u.nome}</label>
+      <label><input type="checkbox" class="chk-unidade-nf" value="${u.id}" checked data-change="dividirValorNotaFiscal()"> ${esc(u.nome)}</label>
       <input type="number" class="valor-unidade-nf" data-unidade="${u.id}" min="0" step="0.01" placeholder="0,00">
     </div>`).join('');
   dividirValorNotaFiscal();
@@ -442,11 +442,11 @@ function desenharNotasFiscais(){
     const unidadesTxt=n.unidades.map(u=>`${nomeUnidade(u.unidade)} (${fmt(u.valor)})`).join(', ');
     return `<tr>
       <td>${dataBr(n.data)}</td>
-      <td>${n.descricao}</td>
+      <td>${esc(n.descricao)}</td>
       <td class="n num">${fmt(n.valorTotal)}</td>
       <td>${unidadesTxt}</td>
-      <td>${n.foto?`<img class="miniatura-tab" src="${n.foto}" alt="Nota" data-click="abrirLightbox('${n.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirNotaFiscal('${n.id}')">Excluir</button></td>
+      <td>${n.foto?`<img class="miniatura-tab" src="${esc(n.foto)}" alt="Nota" data-click="abrirLightbox('${escArg(n.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
+      <td class="n"><button class="btn-mini" data-click="excluirNotaFiscal('${escArg(n.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="6" class="vazio">Nenhuma nota fiscal lançada ainda.</td></tr>';
 }
@@ -488,7 +488,7 @@ function baixarPdfConsumoPlantao(){
 </style></head>
 <body>
   <h1>Consumo do plantão — ${nomeUnidade(un)}</h1>
-  <p class="sub">Últimos 30 dias · gerado em ${dataBr(hoje())} por ${usuario.nome}</p>
+  <p class="sub">Últimos 30 dias · gerado em ${dataBr(hoje())} por ${esc(usuario.nome)}</p>
 
   <div class="destaque">
     <div><span>Registros</span><b>${lista.length}</b></div>
@@ -499,7 +499,7 @@ function baixarPdfConsumoPlantao(){
   <h2>Produtos mais consumidos</h2>
   <table>
     <thead><tr><th>Produto</th><th class="u-texto-direita">Quantidade</th></tr></thead>
-    <tbody>${ranking.length ? ranking.map(([nome,qtd])=>`<tr><td>${nome}</td><td class="u-texto-direita">${qtd}</td></tr>`).join('') : '<tr><td colspan="2">Sem dados.</td></tr>'}</tbody>
+    <tbody>${ranking.length ? ranking.map(([nome,qtd])=>`<tr><td>${esc(nome)}</td><td class="u-texto-direita">${qtd}</td></tr>`).join('') : '<tr><td colspan="2">Sem dados.</td></tr>'}</tbody>
   </table>
 
   <h2>Registros do período</h2>
@@ -509,8 +509,8 @@ function baixarPdfConsumoPlantao(){
       <tr>
         <td>${dataBr(c.data)}</td>
         <td><span class="selo ${c.turno}">${c.turno==='dia'?'Dia':'Noite'}</span></td>
-        <td>${c.itens.map(it=>`${it.quantidade}x ${it.produto}`).join(', ')}</td>
-        <td>${c.criadoPor}</td>
+        <td>${c.itens.map(it=>`${it.quantidade}x ${esc(it.produto)}`).join(', ')}</td>
+        <td>${esc(c.criadoPor)}</td>
       </tr>`).join('') : '<tr><td colspan="4">Nenhum registro no período.</td></tr>'}</tbody>
   </table>
 
@@ -679,13 +679,13 @@ function desenharBoletosAdmin(){
     }[b.status];
     return `<tr>
       <td>${dataBr(b.vencimento)}</td>
-      <td>${b.descricao}${b.unidadesLancadas.length?`<div class="sub-boleto">Já lançado em: ${b.unidadesLancadas.map(nomeUnidade).join(', ')}</div>`:''}</td>
+      <td>${esc(b.descricao)}${b.unidadesLancadas.length?`<div class="sub-boleto">Já lançado em: ${b.unidadesLancadas.map(nomeUnidade).join(', ')}</div>`:''}</td>
       <td class="n num">${fmt(b.valor)}</td>
-      <td>${b.foto?`<img class="miniatura-tab" src="${b.foto}" alt="Boleto" data-click="abrirLightbox('${b.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${b.foto?`<img class="miniatura-tab" src="${esc(b.foto)}" alt="Boleto" data-click="abrirLightbox('${escArg(b.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td>${rotuloStatus}</td>
       <td class="n">
-        ${b.status!=='lancado_completo'?`<button class="btn-marcar-pago" data-click="iniciarLancamentoBoletoAdmin('${b.id}')">Lançar</button>`:''}
-        <button class="btn-mini" data-click="excluirBoletoAdmin('${b.id}')">Excluir</button>
+        ${b.status!=='lancado_completo'?`<button class="btn-marcar-pago" data-click="iniciarLancamentoBoletoAdmin('${escArg(b.id)}')">Lançar</button>`:''}
+        <button class="btn-mini" data-click="excluirBoletoAdmin('${escArg(b.id)}')">Excluir</button>
       </td>
     </tr>`;
   }).join('') : '<tr><td colspan="6" class="vazio">Nenhum boleto central cadastrado ainda.</td></tr>';

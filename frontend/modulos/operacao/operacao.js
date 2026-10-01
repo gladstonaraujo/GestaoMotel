@@ -6,10 +6,10 @@
 function linhaChecklistHTML(it){
   return `<div class="linha-checklist" data-item="${it.id}" data-status="ok">
     <div class="topo-item">
-      <span class="nome-item">${it.nome}</span>
+      <span class="nome-item">${esc(it.nome)}</span>
       <div class="opcoes-item">
-        <button type="button" class="on-ok" data-click="marcarItemVistoria('${it.id}','ok')">OK</button>
-        <button type="button" data-click="marcarItemVistoria('${it.id}','problema')">Problema</button>
+        <button type="button" class="on-ok" data-click="marcarItemVistoria('${escArg(it.id)}','ok')">OK</button>
+        <button type="button" data-click="marcarItemVistoria('${escArg(it.id)}','problema')">Problema</button>
       </div>
     </div>
     <div class="detalhe-problema oculto">
@@ -96,12 +96,12 @@ function desenharGerenciarItensVistoria(){
   document.getElementById('tab-itens-vistoria').innerHTML = ordenados.length ? ordenados.map(it=>{
     const cat=CATEGORIAS_VISTORIA.find(c=>c.id===it.categoria);
     return `<tr>
-      <td>${cat?cat.nome:it.categoria}</td>
-      <td>${it.nome}</td>
+      <td>${esc(cat?cat.nome:it.categoria)}</td>
+      <td>${esc(it.nome)}</td>
       <td class="n">${AppEstado.dados.itensVistoriaRapida.includes(it.id)?'Sim':'—'}</td>
       <td class="n">
-        <button class="btn-mini" data-click="editarItemVistoria('${it.id}')">Editar</button>
-        <button class="btn-mini" data-click="excluirItemVistoria('${it.id}')">Excluir</button>
+        <button class="btn-mini" data-click="editarItemVistoria('${escArg(it.id)}')">Editar</button>
+        <button class="btn-mini" data-click="excluirItemVistoria('${escArg(it.id)}')">Excluir</button>
       </td>
     </tr>`;
   }).join('') : '<tr><td colspan="4" class="vazio">Nenhuma pergunta cadastrada.</td></tr>';
@@ -136,8 +136,8 @@ function montarChecklistVistoria(){
   cont.innerHTML = CATEGORIAS_VISTORIA.map((cat,i)=>{
     const itensCat = AppEstado.dados.itensVistoria.filter(it=>it.categoria===cat.id);
     return `<div class="grupo-checklist">
-      <button type="button" class="titulo-grupo-checklist" data-click="alternarGrupoChecklist('${cat.id}')">
-        <span>${cat.nome}</span><span class="contagem-grupo">${itensCat.length} itens</span>
+      <button type="button" class="titulo-grupo-checklist" data-click="alternarGrupoChecklist('${escArg(cat.id)}')">
+        <span>${esc(cat.nome)}</span><span class="contagem-grupo">${itensCat.length} itens</span>
       </button>
       <div class="corpo-grupo-checklist${i===0?'':' oculto'}" id="corpo-grupo-${cat.id}">
         ${itensCat.map(linhaChecklistHTML).join('')}
@@ -178,7 +178,7 @@ function removerFotoVistoria(idx){
 }
 function renderizarFotosPendentesVistoria(){
   document.getElementById('fotos-pendentes-vistoria').innerHTML = AppEstado.ui.fotosPendentesVistoria.map((f,i)=>
-    `<div class="foto-anexada"><img src="${f.dataUrl}" alt=""><button type="button" data-click="removerFotoVistoria(${i})">×</button></div>`
+    `<div class="foto-anexada"><img src="${esc(f.dataUrl)}" alt=""><button type="button" data-click="removerFotoVistoria(${i})">×</button></div>`
   ).join('');
   document.getElementById('vistoria-fotos-vazia').classList.toggle('oculto', AppEstado.ui.fotosPendentesVistoria.length>0);
 }
@@ -264,7 +264,7 @@ function desenharDashboardFuncionarioVistoria(){
   document.getElementById('tab-dashboard-funcionario-vistoria').innerHTML = linhas.length
     ? linhas.map(([nome,p])=>`
       <tr>
-        <td>${nome}</td>
+        <td>${esc(nome)}</td>
         <td class="n num">${p.total}</td>
         <td class="n verde num">${p.total-p.comProblema}</td>
         <td class="n vermelho num">${p.comProblema}</td>
@@ -346,9 +346,9 @@ function desenharDashboardVistoria(){
         const qtd=v.itens.filter(i=>i.status==='problema').length;
         return `<tr>
           <td>${dataBr(v.data)}</td>
-          <td>${v.suite}</td>
+          <td>${esc(v.suite)}</td>
           <td><span class="selo ${v.turno}">${v.turno==='dia'?'Dia':'Noite'}</span></td>
-          <td>${v.feitoPor}</td>
+          <td>${esc(v.feitoPor)}</td>
           <td>${v.tipoVistoria==='rapida'?'Rápida':'Completa'}</td>
           <td class="n vermelho num">${qtd}</td>
         </tr>`;
@@ -359,8 +359,8 @@ function desenharDashboardVistoria(){
   document.getElementById('alertas-prioridade-vistoria').innerHTML = alertasPrioridade.length
     ? alertasPrioridade.map(a=>`<div class="alerta-item cursor-padrao">
         <span class="selo-alerta atipico">Prioridade</span>
-        <div class="alerta-corpo"><div class="alerta-titulo">${a.item} — Suíte ${a.suite}</div>
-        <div class="alerta-motivo">${a.motivo}</div></div>
+        <div class="alerta-corpo"><div class="alerta-titulo">${esc(a.item)} — Suíte ${esc(a.suite)}</div>
+        <div class="alerta-motivo">${esc(a.motivo)}</div></div>
       </div>`).join('')
     : '<div class="vazio">Nenhum problema recorrente no momento.</div>';
 }
@@ -412,18 +412,18 @@ function desenharVistorias(){
   document.getElementById('lista-vistorias').innerHTML = lista.length ? lista.map(v=>{
     const problemas=v.itens.filter(i=>i.status==='problema');
     const selo = `<span class="selo-status atrasado">${problemas.length} problema(s)</span>`;
-    const listaProblemas = `<ul class="lista-problemas">${problemas.map(p=>`<li>${p.nome}${p.obs?': '+p.obs:''}</li>`).join('')}</ul>`;
+    const listaProblemas = `<ul class="lista-problemas">${problemas.map(p=>`<li>${esc(p.nome)}${esc(p.obs?': '+p.obs:'')}</li>`).join('')}</ul>`;
     const fotos = v.fotos && v.fotos.length
-      ? `<div class="grade-fotos-cartao">${v.fotos.map(f=>`<img src="${f}" alt="Foto da suíte" data-click="abrirLightbox('${f}','Suíte ${v.suite} · ${dataBr(v.data)}')">`).join('')}</div>`
+      ? `<div class="grade-fotos-cartao">${v.fotos.map(f=>`<img src="${esc(f)}" alt="Foto da suíte" data-click="abrirLightbox('${escArg(f)}','Suíte ${escArg(v.suite)} · ${dataBr(v.data)}')">`).join('')}</div>`
       : '';
     return `<div class="cartao-vistoria">
       <div class="topo-vistoria">
-        <div><div class="titulo-vistoria">Suíte ${v.suite}${v.tipoVistoria==='rapida'?' <span class="voce-selo">(vistoria rápida)</span>':''}</div>
-        <div class="sub-vistoria">${dataBr(v.data)} · ${v.turno==='dia'?'Dia':'Noite'} · vistoriado por ${v.feitoPor}</div></div>
+        <div><div class="titulo-vistoria">Suíte ${esc(v.suite)}${v.tipoVistoria==='rapida'?' <span class="voce-selo">(vistoria rápida)</span>':''}</div>
+        <div class="sub-vistoria">${dataBr(v.data)} · ${v.turno==='dia'?'Dia':'Noite'} · vistoriado por ${esc(v.feitoPor)}</div></div>
         ${selo}
       </div>
       ${listaProblemas}
-      ${v.observacaoGeral?`<div class="sub-boleto">${v.observacaoGeral}</div>`:''}
+      ${v.observacaoGeral?`<div class="sub-boleto">${esc(v.observacaoGeral)}</div>`:''}
       ${fotos}
     </div>`;
   }).join('') : '<div class="vazio">Nenhuma vistoria com problema registrada nesta unidade.</div>';
@@ -452,7 +452,7 @@ function abrirModalEditarLancamento(l){
   return new Promise(resolve=>{
     const categorias = l.tipo==='entrada' ? ENTRADAS : SAIDAS;
     document.getElementById('ml-categoria').innerHTML = categorias.map(c=>
-      `<option value="${c.id}" ${c.id===l.categoria?'selected':''}>${c.nome}</option>`).join('');
+      `<option value="${c.id}" ${c.id===l.categoria?'selected':''}>${esc(c.nome)}</option>`).join('');
     document.getElementById('ml-turno').value = l.turno;
     document.getElementById('ml-valor').value = l.valor.toFixed(2);
     document.getElementById('ml-obs').value = l.obs||'';
@@ -613,8 +613,8 @@ function desenharDashboardManutencao(){
   document.getElementById('alertas-manutencao').innerHTML = alertas.length
     ? alertas.map(a=>`<div class="alerta-item cursor-padrao">
         <span class="selo-alerta atipico">Prioridade</span>
-        <div class="alerta-corpo"><div class="alerta-titulo">${nomeServicoManutencao(a.servico)}${a.suite?' — Suíte '+a.suite:''}</div>
-        <div class="alerta-motivo">${a.motivo}</div></div>
+        <div class="alerta-corpo"><div class="alerta-titulo">${esc(nomeServicoManutencao(a.servico))}${esc(a.suite?' — Suíte '+a.suite:'')}</div>
+        <div class="alerta-motivo">${esc(a.motivo)}</div></div>
       </div>`).join('')
     : '<div class="vazio">Nenhum alerta de prioridade no momento.</div>';
 }
@@ -627,11 +627,11 @@ function desenharManutencao(){
   document.getElementById('tab-manutencao').innerHTML = lista.length ? lista.map(m=>`
     <tr>
       <td>${dataBr(m.registradoEm)}</td>
-      <td>${nomeServicoManutencao(m.servico)}</td>
-      <td>${m.especificacao}</td>
-      <td>${m.prestador}</td>
-      <td>${m.suite||'—'}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirManutencao('${m.id}')">Excluir</button></td>
+      <td>${esc(nomeServicoManutencao(m.servico))}</td>
+      <td>${esc(m.especificacao)}</td>
+      <td>${esc(m.prestador)}</td>
+      <td>${esc(m.suite||'—')}</td>
+      <td class="n"><button class="btn-mini" data-click="excluirManutencao('${escArg(m.id)}')">Excluir</button></td>
     </tr>`).join('') : '<tr><td colspan="6" class="vazio">Nenhum chamado registrado nesta unidade.</td></tr>';
 }
 
@@ -668,7 +668,7 @@ function removerItemConsumoPendente(idx){
 function renderizarItensConsumoPendente(){
   document.getElementById('lista-itens-consumo-pendente').innerHTML = AppEstado.ui.itensConsumoPendente.map((it,i)=>`
     <div class="item-pendente">
-      <span>${it.quantidade}x ${it.produto}</span>
+      <span>${it.quantidade}x ${esc(it.produto)}</span>
       <button type="button" data-click="removerItemConsumoPendente(${i})">remover</button>
     </div>`).join('');
 }
@@ -751,13 +751,13 @@ function desenharConsumoPlantao(){
   document.getElementById('titulo-consumo-plantao').textContent='Registros de '+nomeUnidade(un);
   const lista=AppEstado.dados.consumosPlantao.filter(c=>c.unidade===un).slice().sort((a,b)=> a.registradoEm<b.registradoEm?1:-1);
   document.getElementById('tab-consumo-plantao').innerHTML = lista.length ? lista.map(c=>{
-    const itensTxt=c.itens.map(it=>`${it.quantidade}x ${it.produto}`).join(', ');
+    const itensTxt=c.itens.map(it=>`${it.quantidade}x ${esc(it.produto)}`).join(', ');
     return `<tr>
       <td>${dataBr(c.data)}</td>
       <td><span class="selo ${c.turno}">${c.turno==='dia'?'Dia':'Noite'}</span></td>
       <td>${itensTxt}</td>
-      <td>${c.criadoPor}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirConsumoPlantao('${c.id}')">Excluir</button></td>
+      <td>${esc(c.criadoPor)}</td>
+      <td class="n"><button class="btn-mini" data-click="excluirConsumoPlantao('${escArg(c.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" class="vazio">Nenhum consumo registrado nesta unidade.</td></tr>';
 }

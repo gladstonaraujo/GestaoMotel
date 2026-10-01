@@ -1,4 +1,14 @@
 /* =========== HTML SEGURO =========== */
+// Escapa texto vindo de usuário/API antes de entrar em um template HTML (conteúdo ou atributo).
+const ESCAPES_HTML = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+function esc(valor){
+  return String(valor ?? '').replace(/[&<>"']/g, c=>ESCAPES_HTML[c]);
+}
+// Argumento textual de uma ação declarativa (data-click="acao('...')"): escapa \ e ' para o
+// interpretador de ações e depois o HTML do atributo.
+function escArg(valor){
+  return esc(String(valor ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"));
+}
 const DESCRITOR_INNER_HTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
 
 function urlPermitida(valor){

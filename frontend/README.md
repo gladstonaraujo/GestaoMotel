@@ -90,8 +90,12 @@ a pessoa logada (`restaurarSessao()`, chamada por `core/bootstrap.js`).
 
 ## Segurança e testes
 
-HTML produzido pelos módulos passa por sanitização central, que remove tags,
-URLs e atributos perigosos. Os antigos atributos `onclick`/`onchange` foram
+Todo texto vindo de usuário ou da API (observações, descrições, nomes, fotos etc.)
+é escapado com `esc()` antes de entrar em um template HTML, e `escArg()` nos
+argumentos de `data-click`. Em seguida o HTML passa por sanitização central, que
+remove tags, URLs e atributos perigosos. O sanitizador sozinho **não** basta:
+ele mantém `data-click`, então o escape na origem é obrigatório (o teste
+`seguranca-html.test.js` cobre isso). Os antigos atributos `onclick`/`onchange` foram
 substituídos por delegação `data-*`; o interpretador não usa `eval` e aceita
 somente ações de uma lista explícita. Rode `npm test` em `backend/` para validar
 essas regras e os invariantes da arquitetura antes do build.

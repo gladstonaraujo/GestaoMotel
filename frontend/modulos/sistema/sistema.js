@@ -6,25 +6,25 @@
 function montarCheckboxesUnidades(marcadas){
   const marcado = id => (marcadas==='todas' || (Array.isArray(marcadas)&&marcadas.includes(id))) ? 'checked' : '';
   document.getElementById('fu-unidades').innerHTML = UNIDADES.map(u=>
-    `<label><input type="checkbox" value="${u.id}" ${marcado(u.id)}> ${u.nome}</label>`
+    `<label><input type="checkbox" value="${u.id}" ${marcado(u.id)}> ${esc(u.nome)}</label>`
   ).join('');
 }
 
 function montarCheckboxesAbas(marcadas){
   document.getElementById('fu-abas').innerHTML = TABS_DISPONIVEIS.map(t=>
-    `<label><input type="checkbox" value="${t.id}" ${marcadas.includes(t.id)?'checked':''}> ${t.nome}</label>`
+    `<label><input type="checkbox" value="${t.id}" ${marcadas.includes(t.id)?'checked':''}> ${esc(t.nome)}</label>`
   ).join('');
 }
 
 function montarCheckboxesSetoresComprovantes(marcadas){
   document.getElementById('fu-setores-comprovantes').innerHTML = SETORES_COMPROVANTES.map(s=>
-    `<label><input type="checkbox" class="chk-setor-comp" value="${s.id}" ${marcadas.includes(s.id)?'checked':''}> ${s.nome}</label>`
+    `<label><input type="checkbox" class="chk-setor-comp" value="${s.id}" ${marcadas.includes(s.id)?'checked':''}> ${esc(s.nome)}</label>`
   ).join('');
 }
 
 function montarCheckboxesPermissoesFinanceiras(marcadas){
   document.getElementById('fu-permissoes-financeiras').innerHTML = PERMISSOES_FINANCEIRAS.map(p=>
-    `<label><input type="checkbox" class="chk-permissao-fin" value="${p.id}" ${marcadas.includes(p.id)?'checked':''}> ${p.nome}</label>`
+    `<label><input type="checkbox" class="chk-permissao-fin" value="${p.id}" ${marcadas.includes(p.id)?'checked':''}> ${esc(p.nome)}</label>`
   ).join('');
 }
 
@@ -117,16 +117,16 @@ function desenharHistoricoExclusoes(){
   document.getElementById('grade-stats-exclusoes').innerHTML = `
     <div class="stat-vistoria"><div class="num-stat">${lista.length}</div><div class="rotulo-stat">Exclusões registradas (total)</div></div>
     <div class="stat-vistoria"><div class="num-stat">${noPeriodo.length}</div><div class="rotulo-stat">Nos últimos 30 dias</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${pessoaMaisAtiva?pessoaMaisAtiva[0]:'—'}</div><div class="rotulo-stat">${pessoaMaisAtiva?'Quem mais excluiu ('+pessoaMaisAtiva[1]+')':'Ninguém excluiu ainda'}</div></div>
+    <div class="stat-vistoria"><div class="num-stat">${esc(pessoaMaisAtiva?pessoaMaisAtiva[0]:'—')}</div><div class="rotulo-stat">${pessoaMaisAtiva?'Quem mais excluiu ('+pessoaMaisAtiva[1]+')':'Ninguém excluiu ainda'}</div></div>
   `;
 
   cont.innerHTML = lista.length ? lista.map(h=>`
     <tr>
       <td>${dataBr(h.quando)}</td>
-      <td>${h.excluidoPor}</td>
-      <td>${h.tipo}</td>
-      <td>${h.descricao}</td>
-      <td>${h.unidade?nomeUnidade(h.unidade):'—'}</td>
+      <td>${esc(h.excluidoPor)}</td>
+      <td>${esc(h.tipo)}</td>
+      <td>${esc(h.descricao)}</td>
+      <td>${esc(h.unidade?nomeUnidade(h.unidade):'—')}</td>
     </tr>`).join('') : '<tr><td colspan="5" class="vazio">Nenhuma exclusão registrada ainda.</td></tr>';
 }
 
@@ -220,16 +220,16 @@ function desenharUsuarios(){
       ? `<span class="selo-status pago" title="${nomesPermissoesFin.join(', ')}">${minhasPermissoesFin.length} permissão(ões)</span>`
       : '<span class="selo-status atrasado">Nenhuma</span>';
     return `<tr>
-      <td>${u.nome}${voceTxt}</td>
-      <td>${u.login}</td>
+      <td>${esc(u.nome)}${voceTxt}</td>
+      <td>${esc(u.login)}</td>
       <td><span class="selo-papel ${u.papel}">${rotuloPapel(u.papel)}</span></td>
       <td>${unidadesTxt}</td>
       <td>${abasTxt}</td>
       <td class="n">${dashTxt}</td>
       <td class="n">${finTxt}</td>
       <td class="n">
-        <button class="btn-mini" data-click="editarUsuario('${u.login}')">Editar</button>
-        ${u.login!==usuario.login?` <button class="btn-mini" data-click="excluirUsuario('${u.login}')">Excluir</button>`:''}
+        <button class="btn-mini" data-click="editarUsuario('${escArg(u.login)}')">Editar</button>
+        ${u.login!==usuario.login?` <button class="btn-mini" data-click="excluirUsuario('${escArg(u.login)}')">Excluir</button>`:''}
       </td>
     </tr>`;
   }).join('');

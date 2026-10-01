@@ -66,7 +66,7 @@ function montarSelectFaltaFuncionario(){
   if(!sel) return;
   const daUnidade=AppEstado.dados.funcionarios.filter(f=>f.unidade===un);
   sel.innerHTML = daUnidade.length
-    ? daUnidade.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('')
+    ? daUnidade.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('')
     : '<option value="">Cadastre um funcionário primeiro</option>';
 }
 
@@ -89,7 +89,7 @@ function removerFotoAtestado(idx){
 }
 function renderizarFotosPendentesAtestado(){
   document.getElementById('fotos-pendentes-atestado').innerHTML = AppEstado.ui.fotosPendentesAtestado.map((f,i)=>
-    `<div class="foto-anexada"><img src="${f.dataUrl}" alt=""><button type="button" data-click="removerFotoAtestado(${i})">×</button></div>`
+    `<div class="foto-anexada"><img src="${esc(f.dataUrl)}" alt=""><button type="button" data-click="removerFotoAtestado(${i})">×</button></div>`
   ).join('');
   document.getElementById('previa-foto-atestado-vazia').classList.toggle('oculto', AppEstado.ui.fotosPendentesAtestado.length>0);
 }
@@ -220,12 +220,12 @@ function desenharFuncionarios(){
   document.getElementById('tab-funcionarios').innerHTML = equipe.length ? equipe.map(f=>{
     const qtdFaltas=AppEstado.dados.faltas.filter(fa=>fa.funcionarioId===f.id && fa.data>=desde).length;
     return `<tr>
-      <td>${f.nome}</td>
+      <td>${esc(f.nome)}</td>
       <td>${nomeCargo(f.cargo)}</td>
-      <td>${f.telefone||'—'}</td>
+      <td>${esc(f.telefone||'—')}</td>
       <td>${f.dataAdmissao?dataBr(f.dataAdmissao):'—'}</td>
       <td class="n ${qtdFaltas>0?'vermelho':''} num">${qtdFaltas}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirFuncionario('${f.id}')">Excluir</button></td>
+      <td class="n"><button class="btn-mini" data-click="excluirFuncionario('${escArg(f.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="6" class="vazio">Nenhum funcionário cadastrado para esta unidade.</td></tr>';
 
@@ -241,9 +241,9 @@ function desenharFuncionarios(){
     const legenda=`Atestado · ${f?f.nome:''} · ${dataBr(fa.data)}`;
     return `<tr>
       <td>${dataBr(fa.data)}</td>
-      <td>${f?f.nome:'(removido)'}</td>
-      <td>${fa.motivo}</td>
-      <td>${fa.fotos && fa.fotos.length ? fa.fotos.map(f=>`<img class="miniatura-tab espaco-miniatura" src="${f}" alt="Atestado" data-click="abrirLightbox('${f}','${legenda.replace(/'/g,"\\'")}')">`).join('') : '<span class="tracinho">—</span>'}</td>
+      <td>${esc(f?f.nome:'(removido)')}</td>
+      <td>${esc(fa.motivo)}</td>
+      <td>${fa.fotos && fa.fotos.length ? fa.fotos.map(f=>`<img class="miniatura-tab espaco-miniatura" src="${esc(f)}" alt="Atestado" data-click="abrirLightbox('${escArg(f)}','${escArg(legenda)}')">`).join('') : '<span class="tracinho">—</span>'}</td>
       <td class="n">${selo}</td>
       <td class="n"><button class="btn-mini" data-click="excluirFalta(${fa.indiceReal})">Excluir</button></td>
     </tr>`;
@@ -257,7 +257,7 @@ function montarSelectsFuncionariosTroca(){
   const un=unidadeAtual();
   const equipe=AppEstado.dados.funcionarios.filter(f=>f.unidade===un);
   const opcoes = equipe.length
-    ? equipe.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('')
+    ? equipe.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('')
     : '<option value="">Cadastre funcionários na aba Funcionários</option>';
   const s1=document.getElementById('ft-funcionario1');
   const s2=document.getElementById('ft-funcionario2');
@@ -379,14 +379,14 @@ function desenharTrocas(){
     const legenda=`Troca · ${nomeFunc(t.funcionario1Id)} x ${nomeFunc(t.funcionario2Id)}`;
     return `<tr>
       <td><span class="selo ${t.turno}">${t.turno==='dia'?'Dia':'Noite'}</span></td>
-      <td>${nomeFunc(t.funcionario1Id)}</td>
+      <td>${esc(nomeFunc(t.funcionario1Id))}</td>
       <td>${dataBr(t.data1)}</td>
-      <td>${nomeFunc(t.funcionario2Id)}</td>
+      <td>${esc(nomeFunc(t.funcionario2Id))}</td>
       <td>${dataBr(t.data2)}</td>
-      <td>${t.motivo}</td>
-      <td>${t.foto?`<img class="miniatura-tab" src="${t.foto}" alt="Documento" data-click="abrirLightbox('${t.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
-      <td>${t.criadoPor}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirTroca('${t.id}')">Excluir</button></td>
+      <td>${esc(t.motivo)}</td>
+      <td>${t.foto?`<img class="miniatura-tab" src="${esc(t.foto)}" alt="Documento" data-click="abrirLightbox('${escArg(t.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${esc(t.criadoPor)}</td>
+      <td class="n"><button class="btn-mini" data-click="excluirTroca('${escArg(t.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="9" class="vazio">Nenhuma troca registrada nesta unidade.</td></tr>';
 }
@@ -519,13 +519,13 @@ function desenharProdutosVencidos(){
     const legenda=`${p.produto} · ${nomeMotivoVencido(p.motivoTipo)} · qtd ${p.quantidade}`;
     return `<tr>
       <td>${dataBr(p.registradoEm)}</td>
-      <td>${p.produto}</td>
+      <td>${esc(p.produto)}</td>
       <td><span class="selo-status ${p.motivoTipo}">${nomeMotivoVencido(p.motivoTipo)}</span></td>
       <td class="n num">${p.quantidade}</td>
       <td>${p.validade?dataBr(p.validade):'—'}</td>
       <td class="n num">${p.prejuizo?fmt(p.prejuizo):'—'}</td>
-      <td>${p.foto?`<img class="miniatura-tab" src="${p.foto}" alt="Produto" data-click="abrirLightbox('${p.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirProdutoVencido('${p.id}')">Excluir</button></td>
+      <td>${p.foto?`<img class="miniatura-tab" src="${esc(p.foto)}" alt="Produto" data-click="abrirLightbox('${escArg(p.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
+      <td class="n"><button class="btn-mini" data-click="excluirProdutoVencido('${escArg(p.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="8" class="vazio">Nenhum produto vencido registrado nesta unidade.</td></tr>';
 }
@@ -596,7 +596,7 @@ function desenharConfigSuites(){
     <tr>
       <td>${s.categoria}</td>
       <td class="n num">${s.quantidade}</td>
-      <td class="n">${podeEditar?`<button class="btn-mini" data-click="excluirCategoriaSuite('${s.id}')">Excluir</button>`:'—'}</td>
+      <td class="n">${podeEditar?`<button class="btn-mini" data-click="excluirCategoriaSuite('${escArg(s.id)}')">Excluir</button>`:'—'}</td>
     </tr>`).join('') : '<tr><td colspan="3" class="vazio">Nenhuma categoria cadastrada ainda.</td></tr>';
 
   const total=totalSuitesUnidade(un);
@@ -813,6 +813,6 @@ function desenharRevpar(){
       <td class="n num">${fmt(r.faturadoTotal)}</td>
       <td class="n neutro-forte num">${fmt(r.revparGeral)}</td>
       <td class="n neutro-forte num">${fmt(r.trevpar)}</td>
-      <td class="n"><button class="btn-mini" data-click="excluirRevpar('${r.id}')">Excluir</button></td>
+      <td class="n"><button class="btn-mini" data-click="excluirRevpar('${escArg(r.id)}')">Excluir</button></td>
     </tr>`).join('') : '<tr><td colspan="6" class="vazio">Nenhum período registrado ainda.</td></tr>';
 }

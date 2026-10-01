@@ -73,7 +73,7 @@ function barras(itens,total,classe,mostrarValor=true){
   if(!itens.length || total<=0) return '<div class="vazio">Nada lançado neste período.</div>';
   return itens.map(i=>`
     <div class="linha-barra">
-      <div class="topo-linha"><span>${i.nome}</span>${mostrarValor?`<span class="num">${fmt(i.valor)}</span>`:''}</div>
+      <div class="topo-linha"><span>${esc(i.nome)}</span>${mostrarValor?`<span class="num">${fmt(i.valor)}</span>`:''}</div>
       <div class="trilho"><div class="preenche ${classe}" style="width:${Math.max(2,(i.valor/total)*100)}%"></div></div>
     </div>`).join('');
 }
@@ -205,11 +205,11 @@ function desenharAlertas(){
   document.getElementById('contagem-alertas').textContent=alertas.length;
   document.getElementById('lista-alertas').innerHTML = alertas.length ? alertas.map(a=>{
     const l=a.item;
-    return `<div class="alerta-item" data-click="irParaLancamento('${l.unidade}','${l.data}')">
+    return `<div class="alerta-item" data-click="irParaLancamento('${escArg(l.unidade)}','${escArg(l.data)}')">
       <span class="selo-alerta ${a.tipo}">${rotulosAlerta[a.tipo]}</span>
       <div class="alerta-corpo">
         <div class="alerta-titulo">${nomeUnidade(l.unidade)} · ${nomeCategoria(l.categoria)} · ${dataBr(l.data)}</div>
-        <div class="alerta-motivo">${a.motivo}</div>
+        <div class="alerta-motivo">${esc(a.motivo)}</div>
       </div>
       <div class="alerta-valor num vermelho">${fmt(l.valor)}</div>
     </div>`;
@@ -377,7 +377,7 @@ function desenharRelatorio(){
       <table class="dados">
         <thead><tr><th>Unidade</th><th class="n">Entradas</th><th class="n">Saídas</th><th class="n">Saldo</th></tr></thead>
         <tbody>${r.porUnidade.map(u=>`<tr>
-          <td>${u.nome}</td>
+          <td>${esc(u.nome)}</td>
           <td class="n verde num">${fmt(u.e)}</td>
           <td class="n vermelho num">${fmt(u.s)}</td>
           <td class="n neutro-forte num">${fmt(u.saldo)}</td>
@@ -438,7 +438,7 @@ function desenharRelatorio(){
     </div>` : '';
 
   const linhaRankingVistoria = p => `<tr>
-      <td>${p.nome}</td>
+      <td>${esc(p.nome)}</td>
       <td class="n num">${p.vistorias}</td>
       <td class="n verde num">${p.itensOk}</td>
       <td class="n vermelho num">${p.itensProblema}</td>
@@ -479,7 +479,7 @@ function desenharRelatorio(){
             <td>${nomeUnidade(l.unidade)}</td>
             <td><span class="selo ${l.turno}">${l.turno==='dia'?'Dia':'Noite'}</span></td>
             <td>${nomeCategoria(l.categoria)}</td>
-            <td>${l.obs||'—'}</td>
+            <td>${esc(l.obs||'—')}</td>
             <td class="n num ${l.tipo==='entrada'?'verde':'vermelho'}">${l.tipo==='saida'?'−':''}${fmt(l.valor)}</td>
           </tr>`).join('') : '<tr><td colspan="5" class="vazio">Nenhum lançamento hoje.</td></tr>'}</tbody>
       </table>
@@ -493,9 +493,9 @@ function desenharRelatorio(){
           <tbody>${r.vistoriasPeriodo.map(v=>{
             const problemas=v.itens.filter(i=>i.status==='problema').length;
             return `<tr>
-              <td>${nomeUnidade(v.unidade)}</td><td>${v.suite}</td>
+              <td>${nomeUnidade(v.unidade)}</td><td>${esc(v.suite)}</td>
               <td><span class="selo ${v.turno}">${v.turno==='dia'?'Dia':'Noite'}</span></td>
-              <td>${v.feitoPor}</td>
+              <td>${esc(v.feitoPor)}</td>
               <td class="n">${problemas?`<span class="selo-status atrasado">${problemas} problema(s)</span>`:'<span class="selo-status pago">OK</span>'}</td>
             </tr>`;
           }).join('')}</tbody>
@@ -505,11 +505,11 @@ function desenharRelatorio(){
         <h3>Faltas e trocas do dia</h3>
         ${tem('faltas') ? (r.faltasPeriodo.length ? r.faltasPeriodo.map(f=>{
           const func=AppEstado.dados.funcionarios.find(x=>x.id===f.funcionarioId);
-          return `<div class="sub-boleto u-mb-6">Falta: <strong>${func?func.nome:'(removido)'}</strong> — ${f.motivo} (${f.justificada?'justificada':'não justificada'})</div>`;
+          return `<div class="sub-boleto u-mb-6">Falta: <strong>${esc(func?func.nome:'(removido)')}</strong> — ${esc(f.motivo)} (${f.justificada?'justificada':'não justificada'})</div>`;
         }).join('') : '<div class="vazio">Nenhuma falta hoje.</div>') : ''}
         ${tem('trocas') ? (r.trocasPeriodo.length ? r.trocasPeriodo.map(t=>{
           const f1=AppEstado.dados.funcionarios.find(x=>x.id===t.funcionario1Id), f2=AppEstado.dados.funcionarios.find(x=>x.id===t.funcionario2Id);
-          return `<div class="sub-boleto u-mb-6">Troca (${t.turno==='dia'?'Dia':'Noite'}): <strong>${f1?f1.nome:'—'}</strong> x <strong>${f2?f2.nome:'—'}</strong> — ${t.motivo}</div>`;
+          return `<div class="sub-boleto u-mb-6">Troca (${t.turno==='dia'?'Dia':'Noite'}): <strong>${esc(f1?f1.nome:'—')}</strong> x <strong>${esc(f2?f2.nome:'—')}</strong> — ${esc(t.motivo)}</div>`;
         }).join('') : '<div class="vazio">Nenhuma troca hoje.</div>') : ''}
       </div>` : ''}
     </div>` : ''}
@@ -521,7 +521,7 @@ function desenharRelatorio(){
         <tbody>${r.produtosVencidosPeriodo.map(p=>`
           <tr>
             <td>${nomeUnidade(p.unidade)}</td>
-            <td>${p.produto}</td>
+            <td>${esc(p.produto)}</td>
             <td><span class="selo-status ${p.motivoTipo}">${nomeMotivoVencido(p.motivoTipo)}</span></td>
             <td class="n num">${p.quantidade}</td>
             <td class="n num">${p.prejuizo?fmt(p.prejuizo):'—'}</td>
@@ -534,8 +534,8 @@ function desenharRelatorio(){
       ${(r.boletosVencendo.length + r.contasVencendo.length) ? `<table class="dados">
         <thead><tr><th>Unidade</th><th>Descrição</th><th class="n">Valor</th></tr></thead>
         <tbody>
-          ${r.boletosVencendo.map(b=>`<tr><td>${nomeUnidade(b.unidade)}</td><td>${b.descricao}</td><td class="n num">${fmt(b.valor)}</td></tr>`).join('')}
-          ${r.contasVencendo.map(c=>`<tr><td>${nomeUnidade(c.unidade)}</td><td>${nomeTipoConta(c.tipo)} — ${c.descricao}</td><td class="n num">${fmt(c.valor)}</td></tr>`).join('')}
+          ${r.boletosVencendo.map(b=>`<tr><td>${nomeUnidade(b.unidade)}</td><td>${esc(b.descricao)}</td><td class="n num">${fmt(b.valor)}</td></tr>`).join('')}
+          ${r.contasVencendo.map(c=>`<tr><td>${nomeUnidade(c.unidade)}</td><td>${nomeTipoConta(c.tipo)} — ${esc(c.descricao)}</td><td class="n num">${fmt(c.valor)}</td></tr>`).join('')}
         </tbody>
       </table>` : '<div class="vazio">Nada vencendo hoje.</div>'}
     </div>` : ''}` : '';
@@ -568,14 +568,14 @@ function baixarRelatorioResumido(){
 
   const linhaMini = (rotulo,valor,cor='') => `<div class="mi"><span>${rotulo}</span><strong class="${cor}">${valor}</strong></div>`;
   const listaMini = (itens, formatarValor) => itens.length
-    ? '<ul class="lm">'+itens.map(i=>`<li><span>${i.nome}</span><b>${formatarValor(i.valor)}</b></li>`).join('')+'</ul>'
+    ? '<ul class="lm">'+itens.map(i=>`<li><span>${esc(i.nome)}</span><b>${formatarValor(i.valor)}</b></li>`).join('')+'</ul>'
     : '<p class="vz">Sem dados no período.</p>';
 
   const blocoFaturamento = tem('faturamento') ? `
     <section>
       <h2>Faturamento por unidade</h2>
       <table><thead><tr><th>Unidade</th><th>Entradas</th><th>Saídas</th><th>Saldo</th></tr></thead>
-      <tbody>${r.porUnidade.map(u=>`<tr><td>${u.nome}</td><td class="v">${fmt(u.e)}</td><td class="r">${fmt(u.s)}</td><td class="v b">${fmt(u.saldo)}</td></tr>`).join('')}</tbody></table>
+      <tbody>${r.porUnidade.map(u=>`<tr><td>${esc(u.nome)}</td><td class="v">${fmt(u.e)}</td><td class="r">${fmt(u.s)}</td><td class="v b">${fmt(u.saldo)}</td></tr>`).join('')}</tbody></table>
       ${r.porCategoria.length ? `<h3>Maiores despesas</h3>${listaMini(r.porCategoria, fmt)}` : ''}
     </section>` : '';
 
@@ -587,7 +587,7 @@ function baixarRelatorioResumido(){
       ${listaMini(r.rankingCategoriaFaturamentoMedio, fmt)}
     </section>` : '';
 
-  const linhaMiniRankingVistoria = p => `<li><span>${p.nome} (${p.vistorias} vistoria(s))</span><b>${p.aproveitamento}% · ${p.pontos} pts</b></li>`;
+  const linhaMiniRankingVistoria = p => `<li><span>${esc(p.nome)} (${p.vistorias} vistoria(s))</span><b>${p.aproveitamento}% · ${p.pontos} pts</b></li>`;
   const blocoRankingVistoria = tem('vistorias') ? `
     <section>
       <h2>Ranking de avaliação de vistoria</h2>
@@ -601,7 +601,7 @@ function baixarRelatorioResumido(){
     <section>
       <h2>Faltas</h2>
       <p class="mut">${r.faltasPeriodo.length} falta(s) — ${r.faltasJustificadas} justificada(s), ${r.faltasNaoJustificadas} não justificada(s)</p>
-      ${listaMini(r.rankingFaltas.map(([nome,valor])=>({nome,valor})), v=>v+'x')}
+      ${esc(listaMini(r.rankingFaltas.map(([nome,valor])=>({nome,valor})), v=>v+'x'))}
     </section>` : '';
 
   const blocoTrocas = tem('trocas') ? `
@@ -614,7 +614,7 @@ function baixarRelatorioResumido(){
     <section>
       <h2>Produtos vencidos</h2>
       <p class="mut">${r.produtosVencidosPeriodo.length} registro(s) — ${r.produtosVencidosItens} item(ns) — prejuízo de ${fmt(r.produtosVencidosPrejuizo)}</p>
-      ${listaMini(r.rankingProdutosVencidos.map(([nome,valor])=>({nome,valor})), v=>v+'x')}
+      ${esc(listaMini(r.rankingProdutosVencidos.map(([nome,valor])=>({nome,valor})), v=>v+'x'))}
     </section>` : '';
 
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
@@ -648,7 +648,7 @@ function baixarRelatorioResumido(){
 </style></head>
 <body>
   <h1>Relatório resumido — Rede A2</h1>
-  <p class="sub">${tituloPeriodo} · gerado em ${dataBr(hoje())} por ${usuario.nome}</p>
+  <p class="sub">${tituloPeriodo} · gerado em ${dataBr(hoje())} por ${esc(usuario.nome)}</p>
 
   <div class="destaque">
     <div class="rot">Saldo da rede</div>
@@ -848,7 +848,7 @@ function desenharRede(){
 
   document.getElementById('tab-rede').innerHTML =
     dados.map(d=>`<tr>
-      <td>${d.nome}</td>
+      <td>${esc(d.nome)}</td>
       <td class="n verde num">${fmt(d.e)}</td>
       <td class="n vermelho num">${fmt(d.s)}</td>
       <td class="n neutro-forte num">${fmt(d.saldo)}</td>

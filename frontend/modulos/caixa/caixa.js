@@ -53,7 +53,7 @@ function mudarTipo(t){
     t==='entrada' ? 'Forma de pagamento' : 'Categoria da despesa';
   const lista = t==='entrada' ? ENTRADAS : SAIDAS;
   document.getElementById('f-categoria').innerHTML =
-    lista.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+    lista.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
   removerFoto();
   atualizarDicaCategoria();
   atualizarVisibilidadeModoDespesa();
@@ -271,7 +271,7 @@ function desenharLancar(){
       <td>${dataBr(l.data)}</td>
       <td><span class="selo ${l.turno}">${l.turno==='dia'?'Dia':'Noite'}</span></td>
       <td>${nomeCategoria(l.categoria)}</td>
-      <td>${l.obs||'—'}</td>
+      <td>${esc(l.obs||'—')}</td>
       <td class="n num ${l.tipo==='entrada'?'verde':'vermelho'}">${l.tipo==='saida'?'−':''}${fmt(l.valor)}</td>
     </tr>`).join('')
     : '<tr><td colspan="5" class="vazio">Você ainda não lançou nada. Use o formulário acima.</td></tr>';
@@ -289,7 +289,7 @@ function desenharLancar(){
       <tr>
         <td>${dataBr(l.data)}</td>
         <td>${nomeCategoria(l.categoria)}</td>
-        <td>${l.obs||'—'}</td>
+        <td>${esc(l.obs||'—')}</td>
         <td class="n num">${fmt(l.rateio.valorTotal)}</td>
         <td class="n num vermelho">${fmt(l.valor)}</td>
       </tr>`).join('')
@@ -348,9 +348,9 @@ function desenharExtrato(){
     return `<tr>
       <td><span class="selo ${l.turno}">${l.turno==='dia'?'Dia':'Noite'}</span></td>
       <td>${nomeCategoria(l.categoria)}</td>
-      <td>${l.obs||'—'}${subRateio}</td>
-      <td>${l.por==='sistema'?'—':l.por}${avisoData}</td>
-      <td>${l.foto?`<img class="miniatura-tab" src="${l.foto}" alt="Comprovante" data-click="abrirLightbox('${l.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${esc(l.obs||'—')}${subRateio}</td>
+      <td>${esc(l.por==='sistema'?'—':l.por)}${avisoData}</td>
+      <td>${l.foto?`<img class="miniatura-tab" src="${esc(l.foto)}" alt="Comprovante" data-click="abrirLightbox('${escArg(l.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td class="n num ${l.tipo==='entrada'?'verde':'vermelho'}">${l.tipo==='saida'?'−':''}${fmt(l.valor)}</td>
       <td class="n">
         ${podeEditarValor?`<button class="btn-mini" data-click="editarValorLancamento(${i})">Editar</button>`:''}
@@ -366,10 +366,10 @@ function desenharExtrato(){
 function cartaoComprovanteHTML(foto, legenda, valorTxt, meta, classeValor, onApagar){
   const podeApagar = temPermissaoFinanceira(usuario,'apagar_comprovantes') && onApagar;
   return `<div class="cartao-comprovante">
-    <img src="${foto}" alt="Comprovante" data-click="abrirLightbox('${foto}','${legenda.replace(/'/g,"\\'")}')">
+    <img src="${esc(foto)}" alt="Comprovante" data-click="abrirLightbox('${escArg(foto)}','${escArg(legenda)}')">
     <div class="info">
-      <div class="val num ${classeValor}">${valorTxt}</div>
-      <div class="meta">${meta}</div>
+      <div class="val num ${classeValor}">${esc(valorTxt)}</div>
+      <div class="meta">${esc(meta)}</div>
       ${podeApagar?`<button class="btn-mini" data-click="event.stopPropagation(); ${onApagar}">Apagar foto</button>`:''}
     </div>
   </div>`;
@@ -586,7 +586,7 @@ function desenharFechamento(){
     const pct=Math.min(100, Math.round((r.parcelasRegistradas/r.totalParcelas)*100));
     return `<div class="cartao-parcela">
       <div class="topo-parcela">
-        <div><div class="titulo-compra">${r.descricao}</div>
+        <div><div class="titulo-compra">${esc(r.descricao)}</div>
         <div class="sub-compra">${r.parcelasRegistradas} de ${r.totalParcelas} parcela(s) lançada(s)</div></div>
         <div class="neutro-forte num">${fmt(r.valorTotalCompra)}</div>
       </div>
@@ -602,9 +602,9 @@ function desenharFechamento(){
     const legenda=`${l.compraParcelada.descricao} · parcela ${l.compraParcelada.parcelaAtual}/${l.compraParcelada.totalParcelas} · ${fmt(l.valor)}`;
     return `<tr>
       <td>${dataBr(l.data)}</td>
-      <td>${l.compraParcelada.descricao}</td>
+      <td>${esc(l.compraParcelada.descricao)}</td>
       <td>${l.compraParcelada.parcelaAtual} de ${l.compraParcelada.totalParcelas}</td>
-      <td>${l.foto?`<img class="miniatura-tab" src="${l.foto}" alt="Nota" data-click="abrirLightbox('${l.foto}','${legenda.replace(/'/g,"\\'")}')">`:'<span class="tracinho">—</span>'}</td>
+      <td>${l.foto?`<img class="miniatura-tab" src="${esc(l.foto)}" alt="Nota" data-click="abrirLightbox('${escArg(l.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td class="n num vermelho">${fmt(l.valor)}</td>
     </tr>`;
   }).join('');
