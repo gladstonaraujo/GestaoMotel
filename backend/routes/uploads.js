@@ -18,7 +18,7 @@ const EXTENSAO_POR_TIPO = {
   'image/webp': 'webp', 'image/gif': 'gif',
 };
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { dataUrl } = req.body;
   const casamento = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(dataUrl || '');
   if (!casamento) {
@@ -35,7 +35,7 @@ router.post('/', (req, res) => {
     return res.status(400).json({ erro: 'Foto muito grande (máximo 15MB).' });
   }
   const nomeArquivo = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${extensao}`;
-  fs.writeFileSync(path.join(PASTA_UPLOADS, nomeArquivo), buffer);
+  await fs.promises.writeFile(path.join(PASTA_UPLOADS, nomeArquivo), buffer);
   const base = process.env.URL_BASE_UPLOADS || `http://localhost:${process.env.PORT || 3001}`;
   res.status(201).json({ url: `${base}/uploads/${nomeArquivo}` });
 });

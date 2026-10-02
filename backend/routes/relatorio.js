@@ -7,55 +7,56 @@ router.use(autenticar, exigirPapel('admin')); // só o diretor vê o relatório 
 
 // GET /relatorio?dias=1|7|30  -> resumo consolidado das unidades do diretor
 router.get('/', async (req, res) => {
-  const dias = parseInt(req.query.dias || '30', 10);
+  let dias = parseInt(req.query.dias || '30', 10);
+  if (!Number.isFinite(dias) || dias < 1 || dias > 365) dias = 30;
   const unidades = req.usuario.todas_unidades
     ? (await db.query('SELECT id FROM unidades')).rows.map(r => r.id)
     : req.usuario.unidades;
 
-  const desde = `CURRENT_DATE - INTERVAL '${dias - 1} days'`;
+  const intervaloDias = `${Math.max(0, dias - 1)} days`;
 
   const [totais, porUnidade, porCategoria, faltas, trocas, vencidos, vistorias] = await Promise.all([
     db.query(
       `SELECT tipo, COALESCE(SUM(valor),0)::numeric(12,2) AS total
-       FROM lancamentos WHERE unidade_id = ANY($1) AND data >= ${desde} GROUP BY tipo`,
-      [unidades]
+       FROM lancamentos WHERE unidade_id = ANY($1) AND data >= CURRENT_DATE - ($2)::interval GROUP BY tipo`,
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT unidade_id,
               COALESCE(SUM(valor) FILTER (WHERE tipo='entrada'),0)::numeric(12,2) AS entradas,
               COALESCE(SUM(valor) FILTER (WHERE tipo='saida'),0)::numeric(12,2) AS saidas
-       FROM lancamentos WHERE unidade_id = ANY($1) AND data >= ${desde}
+       FROM lancamentos WHERE unidade_id = ANY($1) AND data >= CURRENT_DATE - ($2)::interval
        GROUP BY unidade_id`,
-      [unidades]
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT categoria_id, SUM(valor)::numeric(12,2) AS total FROM lancamentos
-       WHERE unidade_id = ANY($1) AND data >= ${desde} AND tipo='saida'
+       WHERE unidade_id = ANY($1) AND data >= CURRENT_DATE - ($2)::interval AND tipo='saida'
        GROUP BY categoria_id ORDER BY total DESC LIMIT 5`,
-      [unidades]
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE justificada)::int AS justificadas
-       FROM faltas WHERE unidade_id = ANY($1) AND data >= ${desde}`,
-      [unidades]
+       FROM faltas WHERE unidade_id = ANY($1) AND data >= CURRENT_DATE - ($2)::interval`,
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT turno, COUNT(*)::int AS qtd FROM trocas_plantao
-       WHERE unidade_id = ANY($1) AND registrado_em >= ${desde} GROUP BY turno`,
-      [unidades]
+       WHERE unidade_id = ANY($1) AND registrado_em >= CURRENT_DATE - ($2)::interval GROUP BY turno`,
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT COUNT(*)::int AS registros, COALESCE(SUM(quantidade),0)::int AS itens, COALESCE(SUM(prejuizo),0)::numeric(12,2) AS prejuizo
-       FROM produtos_vencidos WHERE unidade_id = ANY($1) AND registrado_em >= ${desde}`,
-      [unidades]
+       FROM produtos_vencidos WHERE unidade_id = ANY($1) AND registrado_em >= CURRENT_DATE - ($2)::interval`,
+      [unidades, intervaloDias]
     ),
     db.query(
       `SELECT COUNT(*)::int AS total,
               COUNT(*) FILTER (WHERE EXISTS (
                 SELECT 1 FROM vistoria_itens vi WHERE vi.vistoria_id = v.id AND vi.status='problema'
               ))::int AS com_problema
-       FROM vistorias v WHERE unidade_id = ANY($1) AND data >= ${desde}`,
-      [unidades]
+       FROM vistorias v WHERE unidade_id = ANY($1) AND data >= CURRENT_DATE - ($2)::interval`,
+      [unidades, intervaloDias]
     ),
   ]);
 
@@ -69,9 +70,9 @@ router.get('/', async (req, res) => {
      FROM vistorias v
      JOIN vistoria_itens vi ON vi.vistoria_id = v.id
      JOIN usuarios u ON u.id = v.feito_por
-     WHERE v.unidade_id = ANY($1) AND v.data >= ${desde}
+     WHERE v.unidade_id = ANY($1) AND v.data >= CURRENT_DATE - ($2)::interval
      GROUP BY u.id, u.nome, u.papel`,
-    [unidades]
+    [unidades, intervaloDias]
   );
   const comAvaliacao = rankingVistoria.map(p => {
     const total = p.itens_ok + p.itens_problema;

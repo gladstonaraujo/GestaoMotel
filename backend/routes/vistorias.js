@@ -40,21 +40,32 @@ router.post('/', exigirUnidade, async (req, res) => {
     return res.status(400).json({ erro: 'Anexe ao menos uma foto — obrigatório quando há item marcado como problema.' });
   }
 
-  const { rows } = await db.query(
-    `INSERT INTO vistorias (unidade_id, suite, data, turno, tipo_vistoria, observacao_geral, feito_por)
-     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [unidade_id, suite, data || hojeBelem(), turno, tipo_vistoria || 'completa', observacao_geral || null, req.usuario.id]
-  );
-  for (const item of itens) {
-    await db.query(
-      'INSERT INTO vistoria_itens (vistoria_id, item_id, status, observacao) VALUES ($1,$2,$3,$4)',
-      [rows[0].id, item.id, item.status, item.observacao || null]
+  const client = await db.pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `INSERT INTO vistorias (unidade_id, suite, data, turno, tipo_vistoria, observacao_geral, feito_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [unidade_id, suite, data || hojeBelem(), turno, tipo_vistoria || 'completa', observacao_geral || null, req.usuario.id]
     );
+    const vistoriaId = rows[0].id;
+    for (const item of itens) {
+      await client.query(
+        'INSERT INTO vistoria_itens (vistoria_id, item_id, status, observacao) VALUES ($1,$2,$3,$4)',
+        [vistoriaId, item.id, item.status, item.observacao || null]
+      );
+    }
+    for (const url of fotos_url || []) {
+      await client.query('INSERT INTO vistoria_fotos (vistoria_id, foto_url) VALUES ($1,$2)', [vistoriaId, url]);
+    }
+    await client.query('COMMIT');
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
   }
-  for (const url of fotos_url || []) {
-    await db.query('INSERT INTO vistoria_fotos (vistoria_id, foto_url) VALUES ($1,$2)', [rows[0].id, url]);
-  }
-  res.status(201).json(rows[0]);
 });
 
 module.exports = router;

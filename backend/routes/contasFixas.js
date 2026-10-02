@@ -37,16 +37,26 @@ router.post('/:id/marcar-pago', exigirAcessoAoRegistro('contas_fixas'), exigirPa
   const hoje = hojeBelem();
   const categoria = conta.tipo === 'imposto' ? 'impostos' : 'fixas';
 
-  const { rows: lanc } = await db.query(
-    `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
-     VALUES ($1,$2,'dia','saida',$3,$4,$5,$6,$7,$2) RETURNING id`,
-    [conta.unidade_id, hoje, categoria, conta.valor, `${conta.tipo} — ${conta.descricao}`, req.usuario.id, conta.foto_url]
-  );
-  await db.query(
-    'UPDATE contas_fixas SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',
-    [hoje, lanc[0].id, req.params.id]
-  );
-  res.json({ ok: true });
+  const client = await db.pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: lanc } = await client.query(
+      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
+       VALUES ($1,$2,'dia','saida',$3,$4,$5,$6,$7,$2) RETURNING id`,
+      [conta.unidade_id, hoje, categoria, conta.valor, `${conta.tipo} — ${conta.descricao}`, req.usuario.id, conta.foto_url]
+    );
+    await client.query(
+      'UPDATE contas_fixas SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',
+      [hoje, lanc[0].id, req.params.id]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
 });
 
 // Apagar só a foto do comprovante — exige a permissão 'apagar_comprovantes'

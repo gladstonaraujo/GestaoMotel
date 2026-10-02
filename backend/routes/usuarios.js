@@ -38,29 +38,35 @@ router.post('/', async (req, res) => {
   if (!PAPEIS.includes(papel)) return res.status(400).json({ erro: 'Papel inválido.' });
   if (typeof senha !== 'string' || senha.length < 6) return res.status(400).json({ erro: 'A senha precisa ter pelo menos 6 caracteres.' });
   const senha_hash = await bcrypt.hash(senha, 10);
+  const client = await db.pool.connect();
   try {
-    const { rows } = await db.query(
+    await client.query('BEGIN');
+    const { rows } = await client.query(
       `INSERT INTO usuarios (login, senha_hash, nome, papel, todas_unidades, pode_ver_dashboards, escopo_comprovantes)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
       [login.toLowerCase(), senha_hash, nome, papel, todas_unidades, pode_ver_dashboards, escopo_comprovantes]
     );
     const usuarioId = rows[0].id;
     for (const u of unidades) {
-      await db.query('INSERT INTO usuario_unidades (usuario_id, unidade_id) VALUES ($1,$2)', [usuarioId, u]);
+      await client.query('INSERT INTO usuario_unidades (usuario_id, unidade_id) VALUES ($1,$2)', [usuarioId, u]);
     }
     for (const a of abas) {
-      await db.query('INSERT INTO usuario_abas (usuario_id, aba) VALUES ($1,$2)', [usuarioId, a]);
+      await client.query('INSERT INTO usuario_abas (usuario_id, aba) VALUES ($1,$2)', [usuarioId, a]);
     }
     for (const s of secoes_comprovantes) {
-      await db.query('INSERT INTO usuario_setores_comprovantes (usuario_id, setor) VALUES ($1,$2)', [usuarioId, s]);
+      await client.query('INSERT INTO usuario_setores_comprovantes (usuario_id, setor) VALUES ($1,$2)', [usuarioId, s]);
     }
     for (const p of permissoes_financeiras) {
-      await db.query('INSERT INTO usuario_permissoes_financeiras (usuario_id, permissao) VALUES ($1,$2)', [usuarioId, p]);
+      await client.query('INSERT INTO usuario_permissoes_financeiras (usuario_id, permissao) VALUES ($1,$2)', [usuarioId, p]);
     }
+    await client.query('COMMIT');
     res.status(201).json({ id: usuarioId });
   } catch (e) {
+    await client.query('ROLLBACK');
     if (e.code === '23505') return res.status(409).json({ erro: 'Já existe um usuário com esse login.' });
     throw e;
+  } finally {
+    client.release();
   }
 });
 
@@ -93,32 +99,38 @@ router.put('/:id', async (req, res) => {
     campos.push(`escopo_comprovantes=$${i++}`); valores.push(escopo_comprovantes);
   }
   if (senha) { campos.push(`senha_hash=$${i++}`); valores.push(await bcrypt.hash(senha, 10)); }
-  if (campos.length) {
-    valores.push(req.params.id);
-    try {
-      await db.query(`UPDATE usuarios SET ${campos.join(', ')} WHERE id=$${i}`, valores);
-    } catch (e) {
-      if (e.code === '23505') return res.status(409).json({ erro: 'Já existe um usuário com esse login.' });
-      throw e;
+  const client = await db.pool.connect();
+  try {
+    await client.query('BEGIN');
+    if (campos.length) {
+      valores.push(req.params.id);
+      await client.query(`UPDATE usuarios SET ${campos.join(', ')} WHERE id=$${i}`, valores);
     }
+    if (Array.isArray(unidades)) {
+      await client.query('DELETE FROM usuario_unidades WHERE usuario_id=$1', [req.params.id]);
+      for (const u of unidades) await client.query('INSERT INTO usuario_unidades (usuario_id, unidade_id) VALUES ($1,$2)', [req.params.id, u]);
+    }
+    if (Array.isArray(abas)) {
+      await client.query('DELETE FROM usuario_abas WHERE usuario_id=$1', [req.params.id]);
+      for (const a of abas) await client.query('INSERT INTO usuario_abas (usuario_id, aba) VALUES ($1,$2)', [req.params.id, a]);
+    }
+    if (Array.isArray(secoes_comprovantes)) {
+      await client.query('DELETE FROM usuario_setores_comprovantes WHERE usuario_id=$1', [req.params.id]);
+      for (const s of secoes_comprovantes) await client.query('INSERT INTO usuario_setores_comprovantes (usuario_id, setor) VALUES ($1,$2)', [req.params.id, s]);
+    }
+    if (Array.isArray(permissoes_financeiras)) {
+      await client.query('DELETE FROM usuario_permissoes_financeiras WHERE usuario_id=$1', [req.params.id]);
+      for (const p of permissoes_financeiras) await client.query('INSERT INTO usuario_permissoes_financeiras (usuario_id, permissao) VALUES ($1,$2)', [req.params.id, p]);
+    }
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    if (e.code === '23505') return res.status(409).json({ erro: 'Já existe um usuário com esse login.' });
+    throw e;
+  } finally {
+    client.release();
   }
-  if (Array.isArray(unidades)) {
-    await db.query('DELETE FROM usuario_unidades WHERE usuario_id=$1', [req.params.id]);
-    for (const u of unidades) await db.query('INSERT INTO usuario_unidades (usuario_id, unidade_id) VALUES ($1,$2)', [req.params.id, u]);
-  }
-  if (Array.isArray(abas)) {
-    await db.query('DELETE FROM usuario_abas WHERE usuario_id=$1', [req.params.id]);
-    for (const a of abas) await db.query('INSERT INTO usuario_abas (usuario_id, aba) VALUES ($1,$2)', [req.params.id, a]);
-  }
-  if (Array.isArray(secoes_comprovantes)) {
-    await db.query('DELETE FROM usuario_setores_comprovantes WHERE usuario_id=$1', [req.params.id]);
-    for (const s of secoes_comprovantes) await db.query('INSERT INTO usuario_setores_comprovantes (usuario_id, setor) VALUES ($1,$2)', [req.params.id, s]);
-  }
-  if (Array.isArray(permissoes_financeiras)) {
-    await db.query('DELETE FROM usuario_permissoes_financeiras WHERE usuario_id=$1', [req.params.id]);
-    for (const p of permissoes_financeiras) await db.query('INSERT INTO usuario_permissoes_financeiras (usuario_id, permissao) VALUES ($1,$2)', [req.params.id, p]);
-  }
-  res.json({ ok: true });
 });
 
 router.delete('/:id', async (req, res) => {

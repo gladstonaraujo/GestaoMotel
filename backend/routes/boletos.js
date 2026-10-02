@@ -48,22 +48,32 @@ router.post('/conjunta', exigirPapel('gerente', 'admin'), async (req, res) => {
   }
   const valorTotal = unidades.reduce((s, u) => s + Number(u.valor), 0);
 
-  const { rows: conjuntaRows } = await db.query(
-    `INSERT INTO compras_conjuntas (descricao, valor_total_conjunto) VALUES ($1,$2) RETURNING id`,
-    [descricao, valorTotal]
-  );
-  const compraConjuntaId = conjuntaRows[0].id;
-
-  const criados = [];
-  for (const u of unidades) {
-    const { rows } = await db.query(
-      `INSERT INTO boletos (unidade_id, descricao, valor, vencimento, foto_url, codigo_barras, pix_copia_cola, compra_conjunta_id, criado_por)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [u.unidade_id, descricao, u.valor, vencimento, foto_url || null, codigo_barras || null, pix_copia_cola || null, compraConjuntaId, req.usuario.id]
+  const client = await db.pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: conjuntaRows } = await client.query(
+      `INSERT INTO compras_conjuntas (descricao, valor_total_conjunto) VALUES ($1,$2) RETURNING id`,
+      [descricao, valorTotal]
     );
-    criados.push(rows[0]);
+    const compraConjuntaId = conjuntaRows[0].id;
+
+    const criados = [];
+    for (const u of unidades) {
+      const { rows } = await client.query(
+        `INSERT INTO boletos (unidade_id, descricao, valor, vencimento, foto_url, codigo_barras, pix_copia_cola, compra_conjunta_id, criado_por)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [u.unidade_id, descricao, u.valor, vencimento, foto_url || null, codigo_barras || null, pix_copia_cola || null, compraConjuntaId, req.usuario.id]
+      );
+      criados.push(rows[0]);
+    }
+    await client.query('COMMIT');
+    res.status(201).json(criados);
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
   }
-  res.status(201).json(criados);
 });
 
 // Marca como pago e já gera a saída correspondente no caixa
@@ -73,16 +83,26 @@ router.post('/:id/marcar-pago', exigirAcessoAoRegistro('boletos'), exigirPapel('
   if (!boleto) return res.status(404).json({ erro: 'Boleto não encontrado.' });
   const hoje = hojeBelem();
 
-  const { rows: lanc } = await db.query(
-    `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
-     VALUES ($1,$2,'dia','saida','boletos',$3,$4,$5,$6,$2) RETURNING id`,
-    [boleto.unidade_id, hoje, boleto.valor, `Pix — ${boleto.descricao} (venc. ${boleto.vencimento})`, req.usuario.id, boleto.foto_url]
-  );
-  await db.query(
-    'UPDATE boletos SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',
-    [hoje, lanc[0].id, req.params.id]
-  );
-  res.json({ ok: true });
+  const client = await db.pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rows: lanc } = await client.query(
+      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
+       VALUES ($1,$2,'dia','saida','boletos',$3,$4,$5,$6,$2) RETURNING id`,
+      [boleto.unidade_id, hoje, boleto.valor, `Pix — ${boleto.descricao} (venc. ${boleto.vencimento})`, req.usuario.id, boleto.foto_url]
+    );
+    await client.query(
+      'UPDATE boletos SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',
+      [hoje, lanc[0].id, req.params.id]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
 });
 
 // Apagar só a foto do comprovante — exige a permissão 'apagar_comprovantes'

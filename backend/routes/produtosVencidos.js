@@ -40,13 +40,14 @@ router.delete('/:id', exigirAcessoAoRegistro('produtos_vencidos'), async (req, r
 
 // ranking dos produtos que mais vencem, últimos N dias (padrão 30)
 router.get('/ranking', exigirUnidade, async (req, res) => {
-  const dias = parseInt(req.query.dias || '30', 10);
+  let dias = parseInt(req.query.dias || '30', 10);
+  if (!Number.isFinite(dias) || dias < 1 || dias > 365) dias = 30;
   const { rows } = await db.query(
     `SELECT produto, SUM(quantidade)::int AS total_quantidade, COALESCE(SUM(prejuizo),0)::numeric(12,2) AS total_prejuizo
      FROM produtos_vencidos
-     WHERE unidade_id=$1 AND registrado_em >= CURRENT_DATE - ($2 || ' days')::interval
+     WHERE unidade_id=$1 AND registrado_em >= CURRENT_DATE - ($2)::interval
      GROUP BY produto ORDER BY total_quantidade DESC LIMIT 6`,
-    [req.query.unidade_id, dias]
+    [req.query.unidade_id, `${dias} days`]
   );
   res.json(rows);
 });
