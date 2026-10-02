@@ -36,6 +36,10 @@ function minificarCss(entrada, saida) {
 // Raiz: index.html e estilos compartilhados
 minificarCss(path.join(src, 'styles.css'), path.join(dist, 'styles.css'));
 fs.copyFileSync(path.join(src, 'index.html'), path.join(dist, 'index.html'));
+fs.copyFileSync(path.join(src, 'logo-a2.png'), path.join(dist, 'logo-a2.png'));
+if (fs.existsSync(path.join(src, 'logo-a2-dark.png'))) {
+  fs.copyFileSync(path.join(src, 'logo-a2-dark.png'), path.join(dist, 'logo-a2-dark.png'));
+}
 
 // Núcleo: todos os .js de core/
 for (const arquivo of listarArquivos(coreSrc, '.js')) {
