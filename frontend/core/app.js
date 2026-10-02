@@ -27,13 +27,25 @@ async function entrar(){
 }
 document.getElementById('in-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
 
-function sair(){
+function sair(motivo){
+  alternarMenuUsuario(false);
   usuario=null;
   localStorage.removeItem('token');
   localStorage.removeItem('usuario');
   document.getElementById('app').style.display='none';
   document.getElementById('tela-login').style.display='grid';
   document.getElementById('in-senha').value='';
+  document.getElementById('caixa-erro-visivel')?.remove();
+  const erroLogin=document.getElementById('erro-login');
+  if(erroLogin){
+    if(motivo){
+      erroLogin.textContent=motivo;
+      erroLogin.classList.remove('oculto');
+    }else{
+      erroLogin.classList.add('oculto');
+      erroLogin.textContent='';
+    }
+  }
 }
 
 // se já tinha uma sessão salva (login anterior), pula a tela de login direto
@@ -54,6 +66,7 @@ function iniciarApp(){
   document.getElementById('tela-login').style.display='none';
   document.getElementById('app').style.display='block';
   atualizarCabecalho();
+  aplicarMenuRecolhido(lerPreferenciaDoMenu());
   document.getElementById('sel-data').value=hoje();
   const ordemPreferida = ['painel','lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','revpar','manutencao','boletos-admin','notas-fiscais','relatorio','rede'];
   const primeiraAba = ordemPreferida.find(t=>abasDoUsuario(usuario).includes(t)) || 'vistoria';
@@ -68,6 +81,15 @@ function atualizarCabecalho(){
   const escopo = usuario.unidades==='todas' ? 'todas as unidades'
     : ids.length>1 ? ids.map(nomeUnidade).join(', ') : nomeUnidade(ids[0]);
   document.getElementById('papel-usuario').textContent=rotuloPapel(usuario.papel)+' · '+escopo;
+
+  // Menu do usuário: avatar com iniciais e dados do acesso
+  const iniciais=usuario.nome.split(/\s+/).filter(Boolean).map(p=>p[0]).filter((_,i,v)=>i===0||i===v.length-1).join('').toUpperCase();
+  document.getElementById('avatar-usuario').textContent=iniciais;
+  document.getElementById('avatar-usuario-grande').textContent=iniciais;
+  document.getElementById('dd-nome').textContent=usuario.nome;
+  document.getElementById('dd-login').textContent=usuario.login ? '@'+usuario.login : '';
+  document.getElementById('dd-papel').textContent=rotuloPapel(usuario.papel);
+  document.getElementById('dd-unidades').textContent=escopo;
 
   const sel=document.getElementById('sel-unidade');
   const selecaoAnterior=sel.value;
@@ -114,6 +136,67 @@ function atualizarCabecalho(){
 
 /* =========== NAVEGAÇÃO =========== */
 let telaAtual='';
+
+// Menu lateral. No computador ele recolhe (só ícones) e expande; no celular/tablet é uma gaveta.
+// Sem argumento, alterna; com true/false, força a gaveta (o recolhimento do computador não é afetado).
+const MENU_DESKTOP=window.matchMedia('(min-width:1025px)');
+
+function lerPreferenciaDoMenu(){
+  try{ return localStorage.getItem('menuRecolhido')==='1'; }catch(e){ return false; }
+}
+
+function aplicarMenuRecolhido(recolhido){
+  document.body.classList.toggle('menu-recolhido', recolhido);
+  // Com o menu só em ícones, o nome da tela vira dica ao passar o mouse.
+  document.querySelectorAll('nav.abas .lista-menu button').forEach(botao=>{
+    const nome=botao.querySelector('span')?.textContent.trim()||'';
+    if(recolhido) botao.title=nome; else botao.removeAttribute('title');
+  });
+  const botao=document.querySelector('.btn-recolher');
+  if(botao){
+    botao.setAttribute('aria-expanded', String(!recolhido));
+    botao.setAttribute('aria-label', recolhido ? 'Expandir menu' : 'Recolher menu');
+  }
+}
+
+function alternarMenu(forcar){
+  if(typeof forcar==='boolean'){
+    if(!MENU_DESKTOP.matches){
+      document.body.classList.toggle('menu-aberto', forcar);
+      document.querySelector('.btn-menu')?.setAttribute('aria-expanded', String(forcar));
+    }
+    return;
+  }
+  if(MENU_DESKTOP.matches){
+    const recolher=!document.body.classList.contains('menu-recolhido');
+    aplicarMenuRecolhido(recolher);
+    try{ localStorage.setItem('menuRecolhido', recolher?'1':'0'); }catch(e){}
+    return;
+  }
+  const aberto=!document.body.classList.contains('menu-aberto');
+  document.body.classList.toggle('menu-aberto', aberto);
+  document.querySelector('.btn-menu')?.setAttribute('aria-expanded', String(aberto));
+}
+
+// Menu do usuário (avatar no cabeçalho). Fecha ao clicar fora, ao apertar Esc e ao sair.
+function alternarMenuUsuario(abrirMenu){
+  const caixa=document.getElementById('dropdown-usuario');
+  const botao=document.getElementById('btn-usuario');
+  if(!caixa||!botao) return;
+  const abrir=typeof abrirMenu==='boolean' ? abrirMenu : caixa.classList.contains('oculto');
+  caixa.classList.toggle('oculto', !abrir);
+  botao.setAttribute('aria-expanded', String(abrir));
+}
+document.addEventListener('click',ev=>{
+  if(!ev.target.closest?.('#menu-usuario')) alternarMenuUsuario(false);
+});
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'){
+    const aberto=!document.getElementById('dropdown-usuario')?.classList.contains('oculto');
+    alternarMenuUsuario(false);
+    if(aberto) document.getElementById('btn-usuario')?.focus();
+  }
+});
 
 function atualizarGruposDoMenu(){
   document.querySelectorAll('nav.abas .grupo-menu').forEach(rotulo=>{
@@ -206,12 +289,20 @@ async function abrir(tela){
   });
   const grupo=AppModulos.grupoDaTela(tela);
   document.body.dataset.modulo=grupo ? grupo.id : '';
+  document.getElementById('titulo-tela').textContent=AppModulos.telas[tela].nome;
+  document.getElementById('trilha-tela').textContent=grupo ? grupo.nome : '';
+  alternarMenu(false);
+  window.scrollTo({top:0});
   const novaRota='#/'+tela;
   if(location.hash!==novaRota) history.pushState(null, '', novaRota);
   const secao=document.getElementById('tela-'+tela);
   secao?.setAttribute('aria-busy','true');
-  await carregarDadosDaTela(tela);
-  secao?.removeAttribute('aria-busy');
+  try{
+    await carregarDadosDaTela(tela);
+  }finally{
+    secao?.removeAttribute('aria-busy');
+  }
+  if(!usuario) return;
   desenhar();
 }
 

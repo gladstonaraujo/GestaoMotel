@@ -16,7 +16,11 @@ function mostrarErroVisivel(msg){
 
 // pega o erro "de fora" (rede, recursos) — costuma vir sem detalhe em pré-visualizações isoladas
 window.addEventListener('error', function(ev){
+  if(ev?.message?.includes('Sessão expirada')) return;
   mostrarErroVisivel('Erro (global): ' + (ev.message||'desconhecido') + ' — ' + (ev.filename?ev.filename.split('/').pop():'?') + ':' + (ev.lineno||'?') + ':' + (ev.colno||'?'));
+});
+window.addEventListener('unhandledrejection', function(ev){
+  if(ev?.reason?.message?.includes('Sessão expirada')) return;
 });
 
 // envolve toda função clicável num try/catch que PEGA o erro de verdade, por dentro,
@@ -27,11 +31,13 @@ function protegido(fn, nome){
       const resultado = fn.apply(this, args);
       if(resultado && typeof resultado.catch==='function'){
         resultado.catch(e=>{
+          if(e?.message?.includes('Sessão expirada')) return;
           mostrarErroVisivel('Erro em ' + nome + '(): ' + e.message + '\n' + (e.stack||'').split('\n').slice(0,3).join('\n'));
         });
       }
       return resultado;
     }catch(e){
+      if(e?.message?.includes('Sessão expirada')) return;
       mostrarErroVisivel('Erro em ' + nome + '(): ' + e.message + '\n' + (e.stack||'').split('\n').slice(0,3).join('\n'));
     }
   };
@@ -41,6 +47,7 @@ function protegido(fn, nome){
    dado de exemplo ser gerado — pra funcionar mesmo se algo mais abaixo no carregamento falhar. */
 ['prevejaFoto','removerFoto','prevejaFotoBoleto','removerFotoBoleto','prevejaFotoParcela','removerFotoParcela',
  'abrirLightbox','fecharLightbox','diaMenos','dataBr','nomeUnidade','nomeCategoria','unidadesDoUsuario','rotuloPapel',
+ 'temaAtual','aplicarTema','alternarTema',
  'entrar','sair','iniciarApp','atualizarCabecalho','abrir','unidadeAtual','dataAtual',
  'diasPeriodo','listaDatas','filtrar','desenhar','diasDoMes','graficoTendenciaSvg','desenharTendenciaProjecao','barras','desenharPainel','atualizarDicaCategoria','mudarTipo',
  'atualizarVisibilidadeModoDespesa','mudarModoDespesa','ajustarParcelaAtualLancar','recalcularValorParcelaLancar',

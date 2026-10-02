@@ -18,10 +18,12 @@ async function api(caminho, opcoes = {}) {
   }
 
   if (resp.status === 401) {
-    // sessão expirou ou token inválido — derruba pra tela de login
+    // sessão expirou ou token inválido — derruba pra tela de login com aviso elegante
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-    if (usuario) { usuario = null; sair(); }
+    if (typeof sair === 'function') {
+      sair('Sua sessão expirou por inatividade. Faça login novamente para continuar.');
+    }
     throw new Error('Sessão expirada, faça login de novo.');
   }
 
@@ -100,6 +102,7 @@ function lancamentoApiParaLocal(row){
     foto: row.foto_url,
     dataAlterada: row.data_alterada,
     registradoEm: row.registrado_em,
+    criadoEm: row.criado_em,
     formaPagamentoSaida: row.forma_pagamento_saida,
     rateio: row.rateio_valor_total!=null ? {valorTotal: parseFloat(row.rateio_valor_total)} : undefined,
     editadoPor: row.editado_por_nome || row.editado_por || undefined,

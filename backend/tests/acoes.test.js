@@ -23,6 +23,13 @@ test('executa uma ação permitida com argumentos', () => {
   assert.equal(recebido,'painel');
 });
 
+test('permite executar alternarTema declarativamente', () => {
+  let executou = false;
+  window.alternarTema = () => { executou = true; };
+  executarAcaoDeclarativa("alternarTema()", {}, {});
+  assert.equal(executou, true);
+});
+
 test('bloqueia código arbitrário e funções fora da lista', () => {
   assert.throws(()=>executarAcaoDeclarativa('eval(\'1\')',{},{}),/não permitida/);
   assert.throws(()=>executarAcaoDeclarativa('alert(\'x\')',{},{}),/não permitida/);

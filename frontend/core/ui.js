@@ -157,6 +157,52 @@ function rotuloPapel(p){
   return {admin:'Administrador geral',gerente:'Gerente de unidade',funcionario:'Funcionário',inspetor:'Vistoria de suítes'}[p];
 }
 
+/* =========== TEMA CLARO / ESCURO =========== */
+function temaAtual(){
+  return document.documentElement.getAttribute('data-tema') === 'escuro' ? 'escuro' : 'claro';
+}
+
+function aplicarTema(tema, salvar=true){
+  const modo = (tema === 'escuro' || tema === 'dark') ? 'escuro' : 'claro';
+  document.documentElement.setAttribute('data-tema', modo);
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if(metaTheme) metaTheme.setAttribute('content', modo === 'escuro' ? '#111827' : '#ffffff');
+  const btnTema = document.getElementById('btn-tema');
+  if(btnTema){
+    const label = modo === 'escuro' ? 'Ativar tema claro' : 'Ativar tema escuro';
+    btnTema.setAttribute('aria-label', label);
+    btnTema.setAttribute('title', label);
+    const spanLabel = document.getElementById('label-btn-tema');
+    if(spanLabel){
+      spanLabel.textContent = modo === 'escuro' ? 'Tema claro' : 'Tema escuro';
+    }
+  }
+  if(salvar){
+    try{ localStorage.setItem('temaPreferido', modo); }catch(e){}
+  }
+}
+
+function alternarTema(){
+  const proximo = temaAtual() === 'escuro' ? 'claro' : 'escuro';
+  aplicarTema(proximo, true);
+}
+
+function inicializarTema(){
+  let salvo = null;
+  try{ salvo = localStorage.getItem('temaPreferido'); }catch(e){}
+  if(salvo === 'escuro' || salvo === 'claro'){
+    aplicarTema(salvo, false);
+    return;
+  }
+  const prefereEscuro = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  aplicarTema(prefereEscuro ? 'escuro' : 'claro', false);
+}
+
+// Inicializa o tema imediatamente para evitar flash de tela clara
+if(typeof document !== 'undefined'){
+  inicializarTema();
+}
+
 /* =========== MODAIS PRÓPRIOS (confirm/alert/prompt nativos não funcionam neste sandbox) =========== */
 function confirmarAcao(mensagem){
   return new Promise(resolve=>{
@@ -185,4 +231,83 @@ function pedirValor(mensagem, valorPadrao){
     document.getElementById('modal-prompt-ok').onclick=()=>{ limpar(); resolve(input.value); };
     document.getElementById('modal-prompt-cancelar').onclick=()=>{ limpar(); resolve(null); };
   });
+}
+
+/* =========== AUXILIARES COMPARTILHADOS ENTRE MÓDULOS ===========
+ * Usados por mais de um domínio; ficam no núcleo para não dependerem da ordem de carregamento. */
+function barras(itens,total,classe,mostrarValor=true){
+  if(!itens.length || total<=0) return '<div class="vazio">Nada lançado neste período.</div>';
+  return itens.map(i=>`
+    <div class="linha-barra">
+      <div class="topo-linha"><span>${esc(i.nome)}</span>${mostrarValor?`<span class="num">${fmt(i.valor)}</span>`:''}</div>
+      <div class="trilho"><div class="preenche ${classe}" style="width:${Math.max(2,(i.valor/total)*100)}%"></div></div>
+    </div>`).join('');
+}
+
+function nomeTipoConta(t){
+  return {imposto:'Imposto', energia:'Energia elétrica', agua:'Água', internet:'Internet/sistema', outra:'Outra conta fixa'}[t] || t;
+}
+
+function nomeMotivoVencido(m){
+  return {vencido:'Vencido', avariado:'Avariado', perdido:'Perdido'}[m] || m;
+}
+
+/* =========== CARTÕES DE KPI (usados em vários módulos) =========== */
+function deslocarData(dataStr,dias){
+  const d=new Date(dataStr+'T12:00:00');
+  d.setDate(d.getDate()+dias);
+  return d.toISOString().slice(0,10);
+}
+
+// Indicadores de um conjunto de dias: totais, caixa em dinheiro, cartões e a série diária.
+function indicadoresDoPeriodo(un,datas){
+  const movs=filtrar({unidade:un,datas});
+  const ent=movs.filter(l=>l.tipo==='entrada'), sai=movs.filter(l=>l.tipo==='saida');
+  const totE=somar(ent), totS=somar(sai);
+  const serie=datas.map(d=>{
+    const doDia=movs.filter(l=>l.data===d);
+    const e=somar(doDia.filter(l=>l.tipo==='entrada')), s=somar(doDia.filter(l=>l.tipo==='saida'));
+    return {dia:d,e,s,saldo:e-s};
+  });
+  return {
+    entradas:totE, saidas:totS, saldo:totE-totS,
+    margem: totE>0 ? (totE-totS)/totE*100 : null,
+    dinheiro: somar(ent.filter(l=>l.categoria==='dinheiro')) - somarSaidasEmDinheiro(sai),
+    cartoes: somar(ent.filter(l=>l.categoria==='debito'||l.categoria==='credito')),
+    serie
+  };
+}
+
+function miniGrafico(valores,rotulos=[]){
+  if(valores.length<2 || valores.every(v=>v===0)) return '';
+  const w=120, h=32, min=Math.min(...valores), max=Math.max(...valores);
+  const y=v=>h-2-((v-min)/((max-min)||1))*(h-4);
+  const x=i=>(i/(valores.length-1))*w;
+  const linha=valores.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  const dica=rotulos.length ? rotulos.map((r,i)=>r+': '+fmt(valores[i])).join('\n') : 'Evolução dia a dia no período';
+  // O texto do popover vem de data-dica e é exibido por CSS (.kpi-spark-wrap:hover::after).
+  return `<span class="kpi-spark-wrap" tabindex="0" data-dica="${dica}">
+    <svg class="kpi-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${dica}">
+      <polyline points="${linha}" class="kpi-spark-linha"/>
+    </svg>
+  </span>`;
+}
+
+// Variação contra o período anterior. subirEhBom=false inverte a cor (ex.: saídas).
+function variacaoKpi(atual,anterior,subirEhBom){
+  if(anterior===0 && atual===0) return '<span class="kpi-delta neutro">sem variação</span>';
+  if(anterior===0) return '<span class="kpi-delta neutro">sem base anterior</span>';
+  const pct=(atual-anterior)/Math.abs(anterior)*100;
+  if(Math.abs(pct)<0.05) return '<span class="kpi-delta neutro">= estável</span>';
+  const sobe=pct>0, bom=sobe===subirEhBom;
+  const txt=Math.abs(pct).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+  return `<span class="kpi-delta ${bom?'bom':'ruim'}">${sobe?'▲':'▼'} ${txt}</span>`;
+}
+
+function cartaoKpi({rotulo,valor,classeValor='',delta='',apoio='',grafico='',destaque=false}){
+  return `<div class="kpi${destaque?' kpi-destaque':''}">
+    <div class="kpi-rotulo">${rotulo}</div>
+    <div class="kpi-linha-valor"><div class="kpi-valor num ${classeValor}">${valor}</div>${grafico}</div>
+    ${(delta||apoio) ? `<div class="kpi-rodape">${delta}<span class="kpi-apoio">${apoio}</span></div>` : ''}
+  </div>`;
 }

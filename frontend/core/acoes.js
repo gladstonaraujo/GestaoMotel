@@ -1,6 +1,6 @@
 /* Delegação declarativa de eventos, sem eval/new Function. */
 const ACOES_PERMITIDAS = new Set([
-  'abrir','abrirLightbox','adicionarItemConsumoPlantao','ajustarParcelaAtual',
+  'abrir','abrirLightbox','alternarMenu','alternarMenuUsuario','alternarTema','aplicarTema','adicionarItemConsumoPlantao','ajustarParcelaAtual',
   'ajustarParcelaAtualLancar','ajustarQtdConsumo','alternarCompraConjunta',
   'alternarGrupoChecklist','apagar','atualizarDicaCategoria','atualizarRotuloAtestado',
   'baixarPdfConsumoPlantao','baixarRelatorioResumido','cancelarLancamentoBoletoAdmin',
