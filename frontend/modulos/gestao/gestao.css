@@ -1,4 +1,4 @@
 /* Estados específicos de perdas de estoque */
 .selo-status.vencido{background:var(--saida);color:#fff}
-.selo-status.avariado{background:#FDF3DF;color:var(--dia)}
-.selo-status.perdido{background:#EDE9F7;color:var(--noite)}
+.selo-status.avariado{background:var(--dia-fraca);color:var(--dia)}
+.selo-status.perdido{background:var(--noite-fraca);color:var(--noite)}

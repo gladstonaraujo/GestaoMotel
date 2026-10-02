@@ -221,9 +221,6 @@ function removerFotoImposto(){
   document.getElementById('previa-foto-imposto-vazia').classList.remove('oculto');
 }
 
-function nomeTipoConta(t){
-  return {imposto:'Imposto', energia:'Energia elétrica', agua:'Água', internet:'Internet/sistema', outra:'Outra conta fixa'}[t] || t;
-}
 function competenciaBr(c){
   if(!c) return '—';
   const [a,m]=c.split('-');

@@ -1,15 +1,15 @@
 /* ---------- USUÁRIOS E ACESSOS ---------- */
 .aviso-restrito{
-  background:#EDE9F7;color:var(--noite);border-left:3px solid var(--noite);
-  padding:9px 12px;border-radius:3px;font-size:13.5px;margin-bottom:16px;
+  background:var(--noite-fraca);color:var(--noite);border:1px solid #D9CEF6;border-left:3px solid var(--noite);
+  padding:10px 14px;border-radius:var(--raio-sm);font-size:13.5px;margin-bottom:18px;
 }
-.grupo-unidades{display:flex;flex-wrap:wrap;gap:8px 16px;padding:9px 0 2px}
-.grupo-unidades label{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink);cursor:pointer}
-.selo-papel{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
-.selo-papel.admin{background:#EDE9F7;color:var(--noite)}
-.selo-papel.gerente{background:#FDF3DF;color:var(--dia)}
-.selo-papel.funcionario{background:#E4F3EC;color:var(--entrada)}
-.selo-papel.inspetor{background:#DCEEFB;color:var(--acento)}
-.btn-add-usuario{background:var(--acento);color:#fff;border:0;border-radius:4px;padding:9px 16px;font-weight:600;font-size:13.5px}
-.btn-add-usuario:hover{background:#2342BC}
-.voce-selo{font-size:11.5px;color:var(--slate);margin-left:6px}
+.selo-papel.admin{background:var(--noite-fraca);color:var(--noite)}
+.selo-papel.gerente{background:var(--dia-fraca);color:var(--dia)}
+.selo-papel.funcionario{background:var(--entrada-fraca);color:var(--entrada)}
+.selo-papel.inspetor{background:var(--acento-fraca);color:var(--acento)}
+.btn-add-usuario{
+  background:var(--ink);color:#fff;border:0;border-radius:var(--raio-sm);min-height:40px;padding:9px 18px;
+  font-weight:600;font-size:13.5px;box-shadow:0 1px 2px rgba(16,24,40,.2);
+}
+.btn-add-usuario:hover{background:var(--ink-2)}
+.voce-selo{font-size:12px;color:var(--slate);margin-left:6px}

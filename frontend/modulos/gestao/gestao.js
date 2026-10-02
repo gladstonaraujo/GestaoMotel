@@ -181,11 +181,11 @@ function desenharDashboardFuncionarios(){
   document.getElementById('sub-dashboard-funcionarios').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
 
   painel.innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${equipe.length}</div><div class="rotulo-stat">Funcionários cadastrados</div></div>
-    <div class="stat-vistoria"><div class="num-stat vermelho">${faltasPeriodo.length}</div><div class="rotulo-stat">Faltas no período</div></div>
-    <div class="stat-vistoria"><div class="num-stat verde">${justificadas}</div><div class="rotulo-stat">Faltas justificadas</div></div>
-    <div class="stat-vistoria"><div class="num-stat vermelho">${naoJustificadas}</div><div class="rotulo-stat">Não justificadas</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${trocasPeriodo.length}</div><div class="rotulo-stat">Trocas de plantão registradas</div></div>
+    ${cartaoKpi({rotulo:`Funcionários cadastrados`,valor:`${equipe.length}`})}
+    ${cartaoKpi({rotulo:`Faltas no período`,valor:`${faltasPeriodo.length}`,classeValor:`vermelho`})}
+    ${cartaoKpi({rotulo:`Faltas justificadas`,valor:`${justificadas}`,classeValor:`verde`})}
+    ${cartaoKpi({rotulo:`Não justificadas`,valor:`${naoJustificadas}`,classeValor:`vermelho`})}
+    ${cartaoKpi({rotulo:`Trocas de plantão registradas`,valor:`${trocasPeriodo.length}`})}
   `;
 
   const contagemPorPessoa={};
@@ -392,10 +392,6 @@ function desenharTrocas(){
 }
 
 /* =========== PRODUTOS VENCIDOS =========== */
-function nomeMotivoVencido(m){
-  return {vencido:'Vencido', avariado:'Avariado', perdido:'Perdido'}[m] || m;
-}
-
 function prevejaFotoVencido(input){
   const arq = input.files && input.files[0];
   if(!arq) return;
@@ -492,10 +488,10 @@ function desenharDashboardVencidos(){
 
   document.getElementById('sub-dashboard-vencidos').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
   painel.innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${lista.length}</div><div class="rotulo-stat">Registros no período</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${totalItens}</div><div class="rotulo-stat">Itens perdidos (quantidade)</div></div>
-    <div class="stat-vistoria"><div class="num-stat vermelho">${fmt(totalPrejuizo)}</div><div class="rotulo-stat">Prejuízo estimado</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${porVencido}</div><div class="rotulo-stat">Por vencimento</div></div>
+    ${cartaoKpi({rotulo:`Registros no período`,valor:`${lista.length}`})}
+    ${cartaoKpi({rotulo:`Itens perdidos (quantidade)`,valor:`${totalItens}`})}
+    ${cartaoKpi({rotulo:`Prejuízo estimado`,valor:`${fmt(totalPrejuizo)}`,classeValor:`vermelho`})}
+    ${cartaoKpi({rotulo:`Por vencimento`,valor:`${porVencido}`})}
   `;
 
   const contagemProduto={};

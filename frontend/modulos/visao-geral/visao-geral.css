@@ -1,16 +1,1 @@
-/* Saldo e totais do painel */
-.destaque{
-  background:var(--card);border:1px solid var(--line);border-radius:6px;
-  padding:22px 24px;margin-bottom:16px;
-}
-.destaque .rotulo{color:var(--slate);font-size:13px;margin-bottom:2px}
-.destaque .valorao{font-size:44px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
-.destaque .valorao.positivo{color:var(--entrada)}
-.destaque .valorao.negativo{color:var(--saida)}
-.destaque .apoio{margin-top:14px;display:flex;gap:28px;flex-wrap:wrap;font-size:14px}
-.destaque .apoio div span{display:block;color:var(--slate);font-size:12.5px}
-.destaque .apoio div strong{font-size:19px;font-weight:600}
-
-@media (max-width:640px){
-  .destaque .valorao{font-size:34px}
-}
+/* O destaque de saldo é compartilhado com o Caixa e vive em styles.css. */

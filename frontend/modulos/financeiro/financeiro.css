@@ -1,9 +1,12 @@
 /* Ações financeiras */
-.btn-marcar-pago{background:var(--entrada);color:#fff;border:0;border-radius:4px;padding:5px 11px;font-size:12.5px;font-weight:600}
-.btn-marcar-pago:hover{background:#0B6849}
+.btn-marcar-pago{
+  background:var(--entrada);color:#fff;border:0;border-radius:var(--raio-sm);padding:6px 13px;
+  font-size:12.5px;font-weight:600;box-shadow:var(--sombra-1);transition:background-color .15s ease;
+}
+.btn-marcar-pago:hover{background:#05603B}
 
 /* Rateios e valores por unidade */
-.grupo-unidades-valor{display:flex;flex-direction:column;gap:8px;padding:9px 0 4px}
+.grupo-unidades-valor{display:flex;flex-direction:column;gap:10px;padding:10px 0 4px}
 .linha-unidade-valor{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.linha-unidade-valor label{display:flex;align-items:center;gap:6px;font-size:13.5px;min-width:150px;cursor:pointer}
-.linha-unidade-valor input[type=number]{width:130px;padding:7px 9px;border:1px solid var(--line);border-radius:4px}
+.linha-unidade-valor label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:400;min-width:160px;cursor:pointer}
+.linha-unidade-valor input[type=number]{width:140px}

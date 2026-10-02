@@ -56,26 +56,59 @@ function desenharTendenciaProjecao(){
   const mediaDiaria = diaHoje>0 ? acumulado/diaHoje : 0;
   const projecaoFimMes = mediaDiaria*diasNoMes;
 
-  if(pontosReais.length<2){
-    cont.innerHTML='<div class="vazio">Ainda não há lançamentos suficientes este mês pra desenhar a tendência.</div>';
+  if(pontosReais.length<1){
+    cont.innerHTML='<div class="vazio">Ainda não há dias suficientes neste mês pra desenhar a tendência.</div>';
   }else{
     cont.innerHTML=graficoTendenciaSvg(pontosReais, projecaoFimMes, diasNoMes);
   }
 
-  document.getElementById('grade-projecao').innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${fmt(acumulado)}</div><div class="rotulo-stat">Saldo acumulado até hoje (dia ${diaHoje})</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${fmt(mediaDiaria)}</div><div class="rotulo-stat">Média diária no mês</div></div>
-    <div class="stat-vistoria"><div class="num-stat ${projecaoFimMes>=0?'verde':'vermelho'}">${fmt(projecaoFimMes)}</div><div class="rotulo-stat">Projeção pro fim do mês (dia ${diasNoMes})</div></div>
-  `;
+  // Mês anterior, como referência de comparação para a média e a projeção
+  const mesAnterior=deslocarData(mesAtual+'-01',-1).slice(0,7);
+  const diasMesAnterior=diasDoMes(mesAnterior);
+  const saldoMesAnterior=AppEstado.dados.lancamentos
+    .filter(l=>l.unidade===un && l.data.startsWith(mesAnterior))
+    .reduce((t,l)=>t+(l.tipo==='entrada'?l.valor:-l.valor),0);
+  const mediaMesAnterior=saldoMesAnterior/diasMesAnterior;
+  const percorrido=Math.round(diaHoje/diasNoMes*100);
+
+  document.getElementById('kpis-mes').innerHTML=[
+    cartaoKpi({rotulo:'Saldo acumulado no mês',valor:fmt(acumulado),classeValor:acumulado>=0?'positivo':'negativo',
+      apoio:`dia ${diaHoje} de ${diasNoMes} · ${percorrido}% do mês`,
+      grafico:miniGrafico(pontosReais.map(p=>p.valor),pontosReais.map(p=>`dia ${p.dia}`))}),
+    cartaoKpi({rotulo:'Média diária no mês',valor:fmt(mediaDiaria),classeValor:mediaDiaria>=0?'':'vermelho',
+      delta:variacaoKpi(mediaDiaria,mediaMesAnterior,true),apoio:'vs média do mês anterior'}),
+    cartaoKpi({rotulo:`Projeção para o dia ${diasNoMes}`,valor:fmt(projecaoFimMes),classeValor:projecaoFimMes>=0?'positivo':'negativo',
+      delta:variacaoKpi(projecaoFimMes,saldoMesAnterior,true),apoio:'vs saldo do mês anterior'})
+  ].join('');
 }
 
-function barras(itens,total,classe,mostrarValor=true){
-  if(!itens.length || total<=0) return '<div class="vazio">Nada lançado neste período.</div>';
-  return itens.map(i=>`
-    <div class="linha-barra">
-      <div class="topo-linha"><span>${esc(i.nome)}</span>${mostrarValor?`<span class="num">${fmt(i.valor)}</span>`:''}</div>
-      <div class="trilho"><div class="preenche ${classe}" style="width:${Math.max(2,(i.valor/total)*100)}%"></div></div>
-    </div>`).join('');
+/* =========== KPIs DO PAINEL =========== */
+function desenharKpisPainel(un,datas,per){
+  const atual=indicadoresDoPeriodo(un,datas);
+  const anterior=indicadoresDoPeriodo(un,datas.map(d=>deslocarData(d,-per)));
+  const rotuloAnterior=per===1?'vs dia anterior':'vs período anterior';
+
+  const cartoes=[
+    cartaoKpi({rotulo:'Saldo do período',valor:fmt(atual.saldo),classeValor:atual.saldo>=0?'positivo':'negativo',destaque:true,
+      delta:variacaoKpi(atual.saldo,anterior.saldo,true),apoio:rotuloAnterior,
+      grafico:miniGrafico(atual.serie.reduce((acc,s)=>{ acc.push((acc.length?acc[acc.length-1]:0)+s.saldo); return acc; },[]),atual.serie.map(s=>dataBr(s.dia)))}),
+    cartaoKpi({rotulo:'Entradas',valor:fmt(atual.entradas),classeValor:'verde',
+      delta:variacaoKpi(atual.entradas,anterior.entradas,true),apoio:rotuloAnterior,
+      grafico:miniGrafico(atual.serie.map(s=>s.e),atual.serie.map(s=>dataBr(s.dia)))}),
+    cartaoKpi({rotulo:'Saídas',valor:fmt(atual.saidas),classeValor:'vermelho',
+      delta:variacaoKpi(atual.saidas,anterior.saidas,false),apoio:rotuloAnterior,
+      grafico:miniGrafico(atual.serie.map(s=>s.s),atual.serie.map(s=>dataBr(s.dia)))}),
+    cartaoKpi({rotulo:'Margem do período',
+      valor:atual.margem===null?'—':atual.margem.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%',
+      classeValor:atual.margem===null?'':(atual.margem>=0?'positivo':'negativo'),
+      delta:atual.margem!==null&&anterior.margem!==null ? variacaoKpi(atual.margem,anterior.margem,true) : '',
+      apoio:'saldo sobre entradas'}),
+    cartaoKpi({rotulo:'Dinheiro em caixa',valor:fmt(atual.dinheiro),classeValor:atual.dinheiro<0?'vermelho':'',
+      delta:variacaoKpi(atual.dinheiro,anterior.dinheiro,true),apoio:rotuloAnterior}),
+    cartaoKpi({rotulo:'A receber de cartões',valor:fmt(atual.cartoes),
+      delta:variacaoKpi(atual.cartoes,anterior.cartoes,true),apoio:rotuloAnterior})
+  ];
+  document.getElementById('kpis-painel').innerHTML=cartoes.join('');
 }
 
 function desenharPainel(){
@@ -91,16 +124,7 @@ function desenharPainel(){
     per===1 ? 'Movimento de '+dataBr(dataAtual())
             : `De ${dataBr(datas[0])} a ${dataBr(datas[datas.length-1])} · ${per} dias`;
 
-  const g=document.getElementById('saldo-grande');
-  g.textContent=fmt(saldo);
-  g.className='valorao num '+(saldo>=0?'positivo':'negativo');
-
-  document.getElementById('tot-entradas').textContent=fmt(totE);
-  document.getElementById('tot-saidas').textContent=fmt(totS);
-  document.getElementById('tot-dinheiro').textContent=
-    fmt(somar(ent.filter(l=>l.categoria==='dinheiro')) - somarSaidasEmDinheiro(sai));
-  document.getElementById('tot-cartoes').textContent=
-    fmt(somar(ent.filter(l=>l.categoria==='debito'||l.categoria==='credito')));
+  desenharKpisPainel(un,datas,per);
 
   const porEnt=ENTRADAS.map(c=>({nome:c.nome,valor:somar(ent.filter(l=>l.categoria===c.id))}))
     .filter(i=>i.valor>0).sort((a,b)=>b.valor-a.valor);
@@ -363,6 +387,48 @@ function calcularDadosRelatorio(){
     rankingVistoriaGerentes, rankingVistoriaFuncionarios};
 }
 
+// KPIs do topo do relatório: financeiro e alertas sempre; faltas, trocas e vencidos conforme as seções marcadas.
+function kpisRelatorio(r,tem){
+  const datas=[];
+  for(let d=r.inicio; d<=r.fim; d=deslocarData(d,1)) datas.push(d);
+  const atual=indicadoresDoPeriodo(null,datas);
+  const anterior=indicadoresDoPeriodo(null,datas.map(d=>deslocarData(d,-datas.length)));
+  const rotulosDias=atual.serie.map(s=>dataBr(s.dia));
+  const apoioAnterior=datas.length===1?'vs dia anterior':'vs período anterior';
+  const periodo=r.dias===1 ? 'hoje, '+dataBr(r.fim) : dataBr(r.inicio)+' a '+dataBr(r.fim);
+  const pctVistoria=r.vistoriasPeriodo.length ? Math.round(r.vistoriasComProblema.length/r.vistoriasPeriodo.length*100) : 0;
+
+  const cartoes=[
+    cartaoKpi({rotulo:'Saldo da rede',valor:fmt(atual.saldo),classeValor:atual.saldo>=0?'positivo':'negativo',destaque:true,
+      delta:variacaoKpi(atual.saldo,anterior.saldo,true),apoio:apoioAnterior,
+      grafico:miniGrafico(atual.serie.reduce((acc,s)=>{ acc.push((acc.length?acc[acc.length-1]:0)+s.saldo); return acc; },[]),rotulosDias)}),
+    cartaoKpi({rotulo:'Entradas',valor:fmt(atual.entradas),classeValor:'verde',
+      delta:variacaoKpi(atual.entradas,anterior.entradas,true),apoio:apoioAnterior,
+      grafico:miniGrafico(atual.serie.map(s=>s.e),rotulosDias)}),
+    cartaoKpi({rotulo:'Saídas',valor:fmt(atual.saidas),classeValor:'vermelho',
+      delta:variacaoKpi(atual.saidas,anterior.saidas,false),apoio:apoioAnterior,
+      grafico:miniGrafico(atual.serie.map(s=>s.s),rotulosDias)}),
+    cartaoKpi({rotulo:'Margem do período',
+      valor:atual.margem===null?'—':atual.margem.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%',
+      classeValor:atual.margem===null?'':(atual.margem>=0?'positivo':'negativo'),
+      delta:atual.margem!==null&&anterior.margem!==null ? variacaoKpi(atual.margem,anterior.margem,true) : '',
+      apoio:'saldo sobre entradas'}),
+    cartaoKpi({rotulo:'Alertas ativos',valor:String(r.alertas.length),classeValor:r.alertas.length?'vermelho':'',
+      apoio:'despesas repetidas ou fora do padrão (30 dias)'}),
+    cartaoKpi({rotulo:'Vistorias com problema',valor:`${r.vistoriasComProblema.length} de ${r.vistoriasPeriodo.length}`,
+      classeValor:r.vistoriasComProblema.length?'vermelho':'',apoio:r.vistoriasPeriodo.length?`${pctVistoria}% das vistorias`:'nenhuma vistoria no período'})
+  ];
+  if(tem('faltas')) cartoes.push(cartaoKpi({rotulo:'Faltas da equipe',valor:String(r.faltasPeriodo.length),
+    classeValor:r.faltasNaoJustificadas?'vermelho':'',apoio:`${r.faltasJustificadas} justificada(s) · ${r.faltasNaoJustificadas} não justificada(s)`}));
+  if(tem('trocas')) cartoes.push(cartaoKpi({rotulo:'Trocas de plantão',valor:String(r.trocasPeriodo.length),
+    apoio:`Dia ${r.trocasDia} · Noite ${r.trocasNoite}`}));
+  if(tem('vencidos')) cartoes.push(cartaoKpi({rotulo:'Prejuízo com vencidos',valor:fmt(r.produtosVencidosPrejuizo),
+    classeValor:r.produtosVencidosPrejuizo?'vermelho':'',apoio:`${r.produtosVencidosPeriodo.length} registro(s) · ${r.produtosVencidosItens} item(ns)`}));
+
+  return `<p class="secao-sub u-mb-10">Indicadores da rede · ${periodo}</p>
+    <div class="kpis" aria-live="polite">${cartoes.join('')}</div>`;
+}
+
 function desenharRelatorio(){
   const cont=document.getElementById('corpo-relatorio');
   if(!cont) return;
@@ -452,7 +518,7 @@ function desenharRelatorio(){
   const blocoRankingVistoria = tem('vistorias') ? `
     <h3 class="espaco-bloco">Ranking de avaliação de vistoria</h3>
     <p class="secao-sub u-mb-10">Fórmula: cada item "OK" soma 1 ponto, cada item "problema" tira 1 ponto. Aproveitamento = itens OK ÷ total de itens avaliados.</p>
-    <div class="grade u-mb-16">
+    <div class="grade grade-larga u-mb-16">
       <div class="painel">
         <h3>Gerentes</h3>
         <table class="dados">${cabecalhoRankingVistoria}
@@ -541,16 +607,7 @@ function desenharRelatorio(){
     </div>` : ''}` : '';
 
   cont.innerHTML = `
-    <div class="destaque">
-      <div class="rotulo">Saldo da rede · ${r.dias===1 ? 'hoje, '+dataBr(r.fim) : dataBr(r.inicio)+' a '+dataBr(r.fim)}</div>
-      <div class="valorao num ${saldo>=0?'positivo':'negativo'}">${fmt(saldo)}</div>
-      <div class="apoio">
-        <div><span>Entradas</span><strong class="num verde">${fmt(r.totE)}</strong></div>
-        <div><span>Saídas</span><strong class="num vermelho">${fmt(r.totS)}</strong></div>
-        <div><span>Alertas ativos</span><strong class="num">${r.alertas.length}</strong></div>
-        <div><span>Vistorias c/ problema</span><strong class="num">${r.vistoriasComProblema.length} de ${r.vistoriasPeriodo.length}</strong></div>
-      </div>
-    </div>
+    ${kpisRelatorio(r,tem)}
     ${blocoFaturamento}
     ${blocoFaltasTrocasVencidos}
     ${blocoRevpar}

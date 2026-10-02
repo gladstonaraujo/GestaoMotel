@@ -293,12 +293,12 @@ function desenharDashboardVistoria(){
   document.getElementById('sub-dashboard-vistoria').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
 
   document.getElementById('grade-stats-vistoria').innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${total}</div><div class="rotulo-stat">Vistorias registradas</div></div>
-    <div class="stat-vistoria"><div class="num-stat verde">${pctOk}%</div><div class="rotulo-stat">Sem nenhum problema</div></div>
-    <div class="stat-vistoria"><div class="num-stat vermelho">${comProblema}</div><div class="rotulo-stat">Vistorias com problema</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${suitesDistintas}</div><div class="rotulo-stat">Suítes distintas vistoriadas</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${rapidas}/${total}</div><div class="rotulo-stat">Vistorias rápidas (plantão)</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${totalFotos}</div><div class="rotulo-stat">Fotos anexadas no período</div></div>
+    ${cartaoKpi({rotulo:`Vistorias registradas`,valor:`${total}`})}
+    ${cartaoKpi({rotulo:`Sem nenhum problema`,valor:`${pctOk}%`,classeValor:`verde`})}
+    ${cartaoKpi({rotulo:`Vistorias com problema`,valor:`${comProblema}`,classeValor:`vermelho`})}
+    ${cartaoKpi({rotulo:`Suítes distintas vistoriadas`,valor:`${suitesDistintas}`})}
+    ${cartaoKpi({rotulo:`Vistorias rápidas (plantão)`,valor:`${rapidas}/${total}`})}
+    ${cartaoKpi({rotulo:`Fotos anexadas no período`,valor:`${totalFotos}`})}
   `;
 
   // ranking de itens mais reportados
@@ -429,78 +429,6 @@ function desenharVistorias(){
   }).join('') : '<div class="vazio">Nenhuma vistoria com problema registrada nesta unidade.</div>';
 }
 
-async function apagar(i){
-  if(!temPermissaoFinanceira(usuario,'excluir_lancamentos')){
-    avisar('Você não tem permissão pra excluir lançamentos. Fale com o diretor.');
-    return;
-  }
-  if(!await confirmarAcao('Excluir esse lançamento? Essa ação não pode ser desfeita.')) return;
-  const l=AppEstado.dados.lancamentos[i];
-  if(!l) return;
-  try{
-    await api('/lancamentos/'+l.id, { method:'DELETE' });
-  }catch(e){
-    avisar(e.message);
-    return;
-  }
-  registrarExclusao('Lançamento', `${l.tipo==='entrada'?'Entrada':'Saída'} — ${nomeCategoria(l.categoria)} — ${fmt(l.valor)} (${dataBr(l.data)})`, l.unidade);
-  await recarregarLancamentos();
-  desenhar();
-}
-
-function abrirModalEditarLancamento(l){
-  return new Promise(resolve=>{
-    const categorias = l.tipo==='entrada' ? ENTRADAS : SAIDAS;
-    document.getElementById('ml-categoria').innerHTML = categorias.map(c=>
-      `<option value="${c.id}" ${c.id===l.categoria?'selected':''}>${esc(c.nome)}</option>`).join('');
-    document.getElementById('ml-turno').value = l.turno;
-    document.getElementById('ml-valor').value = l.valor.toFixed(2);
-    document.getElementById('ml-obs').value = l.obs||'';
-    document.getElementById('modal-editar-lancamento-erro').classList.add('oculto');
-    document.getElementById('modal-editar-lancamento').classList.remove('oculto');
-    const limpar=()=>document.getElementById('modal-editar-lancamento').classList.add('oculto');
-    document.getElementById('modal-editar-lancamento-ok').onclick=()=>{
-      const valor=parseFloat(document.getElementById('ml-valor').value);
-      if(!valor || valor<=0){
-        const erro=document.getElementById('modal-editar-lancamento-erro');
-        erro.textContent='Informe um valor válido.';
-        erro.classList.remove('oculto');
-        return;
-      }
-      const resultado={
-        categoria: document.getElementById('ml-categoria').value,
-        turno: document.getElementById('ml-turno').value,
-        valor, obs: document.getElementById('ml-obs').value.trim()
-      };
-      limpar();
-      resolve(resultado);
-    };
-    document.getElementById('modal-editar-lancamento-cancelar').onclick=()=>{ limpar(); resolve(null); };
-  });
-}
-
-async function editarValorLancamento(i){
-  if(!temPermissaoFinanceira(usuario,'editar_valores')){
-    avisar('Você não tem permissão pra editar valores. Fale com o diretor.');
-    return;
-  }
-  const l=AppEstado.dados.lancamentos[i];
-  if(!l) return;
-  const resultado=await abrirModalEditarLancamento(l);
-  if(!resultado) return;
-  try{
-    await api('/lancamentos/'+l.id, { method:'PUT', body: JSON.stringify({
-      categoria_id: resultado.categoria, turno: resultado.turno,
-      valor: resultado.valor, observacao: resultado.obs
-    }) });
-  }catch(e){
-    avisar(e.message);
-    return;
-  }
-  await recarregarLancamentos();
-  desenhar();
-}
-
 /* =========== MANUTENÇÃO DE TERCEIROS =========== */
 function nomeServicoManutencao(s){
   return {maquina_lavar:'Máquina de lavar', maquina_secar:'Máquina de secar', maquina_passar:'Máquina de passar',
@@ -591,9 +519,9 @@ function desenharDashboardManutencao(){
 
   document.getElementById('sub-dashboard-manutencao').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
   document.getElementById('grade-stats-manutencao').innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${lista.length}</div><div class="rotulo-stat">Chamados no período</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${suitesDistintas}</div><div class="rotulo-stat">Suítes distintas atendidas</div></div>
-    <div class="stat-vistoria"><div class="num-stat ${alertas.length?'vermelho':''}">${alertas.length}</div><div class="rotulo-stat">Alertas de prioridade</div></div>
+    ${cartaoKpi({rotulo:`Chamados no período`,valor:`${lista.length}`})}
+    ${cartaoKpi({rotulo:`Suítes distintas atendidas`,valor:`${suitesDistintas}`})}
+    ${cartaoKpi({rotulo:`Alertas de prioridade`,valor:`${alertas.length}`,classeValor:`${alertas.length?'vermelho':''}`})}
   `;
 
   const contagemServico={};
@@ -731,8 +659,8 @@ function desenharDashboardConsumoPlantao(){
 
   document.getElementById('sub-dashboard-consumo-plantao').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
   document.getElementById('grade-stats-consumo-plantao').innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${lista.length}</div><div class="rotulo-stat">Registros no período</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${totalItens}</div><div class="rotulo-stat">Itens consumidos (total)</div></div>
+    ${cartaoKpi({rotulo:`Registros no período`,valor:`${lista.length}`})}
+    ${cartaoKpi({rotulo:`Itens consumidos (total)`,valor:`${totalItens}`})}
   `;
 
   const contagemProduto={};

@@ -115,9 +115,9 @@ function desenharHistoricoExclusoes(){
   const pessoaMaisAtiva=Object.entries(porPessoa).sort((a,b)=>b[1]-a[1])[0];
 
   document.getElementById('grade-stats-exclusoes').innerHTML = `
-    <div class="stat-vistoria"><div class="num-stat">${lista.length}</div><div class="rotulo-stat">Exclusões registradas (total)</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${noPeriodo.length}</div><div class="rotulo-stat">Nos últimos 30 dias</div></div>
-    <div class="stat-vistoria"><div class="num-stat">${esc(pessoaMaisAtiva?pessoaMaisAtiva[0]:'—')}</div><div class="rotulo-stat">${pessoaMaisAtiva?'Quem mais excluiu ('+pessoaMaisAtiva[1]+')':'Ninguém excluiu ainda'}</div></div>
+    ${cartaoKpi({rotulo:`Exclusões registradas (total)`,valor:`${lista.length}`})}
+    ${cartaoKpi({rotulo:`Nos últimos 30 dias`,valor:`${noPeriodo.length}`})}
+    ${cartaoKpi({rotulo:`${pessoaMaisAtiva?'Quem mais excluiu ('+pessoaMaisAtiva[1]+')':'Ninguém excluiu ainda'}`,valor:`${esc(pessoaMaisAtiva?pessoaMaisAtiva[0]:'—')}`})}
   `;
 
   cont.innerHTML = lista.length ? lista.map(h=>`

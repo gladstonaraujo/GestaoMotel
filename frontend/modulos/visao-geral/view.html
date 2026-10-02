@@ -2,28 +2,19 @@
   <h2 class="secao" id="titulo-painel"></h2>
   <p class="secao-sub" id="sub-painel"></p>
 
-  <div class="destaque">
-    <div class="rotulo">Saldo do período</div>
-    <div class="valorao num" id="saldo-grande">R$ 0,00</div>
-    <div class="apoio">
-      <div><span>Entradas</span><strong class="num verde" id="tot-entradas">R$ 0,00</strong></div>
-      <div><span>Saídas</span><strong class="num vermelho" id="tot-saidas">R$ 0,00</strong></div>
-      <div><span>Dinheiro em caixa</span><strong class="num" id="tot-dinheiro">R$ 0,00</strong></div>
-      <div><span>A receber de cartões</span><strong class="num" id="tot-cartoes">R$ 0,00</strong></div>
-    </div>
+  <div class="kpis" id="kpis-painel" aria-live="polite"></div>
+
+  <div class="painel u-mb-16">
+    <h3>Tendência do mês e projeção</h3>
+    <p class="subtitulo-painel">Saldo diário acumulado, e uma projeção de fim de mês com base na média diária até hoje.</p>
+    <div class="kpis kpis-mes" id="kpis-mes" aria-live="polite"></div>
+    <div id="grafico-tendencia"></div>
   </div>
 
   <div class="painel u-mb-16">
     <h3>Alertas de despesas<span class="contagem-badge" id="contagem-alertas">0</span></h3>
     <p class="subtitulo-painel">Despesas repetidas ou com valor fora do padrão, olhando as 6 unidades nos últimos 30 dias. Clique num item pra abrir o extrato do dia.</p>
     <div id="lista-alertas"></div>
-  </div>
-
-  <div class="painel u-mb-16">
-    <h3>Tendência do mês e projeção</h3>
-    <p class="subtitulo-painel">Saldo diário acumulado, e uma projeção de fim de mês com base na média diária até hoje.</p>
-    <div id="grafico-tendencia"></div>
-    <div class="grade-stats-vistoria u-mt-14" id="grade-projecao"></div>
   </div>
 
   <div class="grade">
@@ -73,8 +64,9 @@
   </div>
 
   <div class="painel u-mb-16">
-    <label class="rotulo-relatorio">O que incluir no relatório</label>
-    <div class="grupo-unidades">
+    <h3>O que incluir no relatório</h3>
+    <p class="subtitulo-painel">Marque as seções que devem aparecer no relatório e no resumo copiado.</p>
+    <div class="grupo-unidades grupo-opcoes">
       <label><input type="checkbox" class="chk-secao-relatorio" value="faturamento" checked data-change="desenharRelatorio()"> Faturamento</label>
       <label><input type="checkbox" class="chk-secao-relatorio" value="revpar" checked data-change="desenharRelatorio()"> RevPAR</label>
       <label><input type="checkbox" class="chk-secao-relatorio" value="faltas" checked data-change="desenharRelatorio()"> Faltas</label>

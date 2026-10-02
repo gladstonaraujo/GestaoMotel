@@ -265,7 +265,10 @@ function desenharLancar(){
   document.getElementById('sub-lancar').textContent =
     `${nomeUnidade(unidadeAtual())} · ${dataBr(dataAtual())} — troque a unidade ou a data na barra acima.`;
 
-  const meus=AppEstado.dados.lancamentos.filter(l=>l.por===usuario.nome).slice(-10).reverse();
+  // A API devolve do mais novo para o mais antigo (por unidade); ordena de novo porque a lista junta várias unidades.
+  const meus=AppEstado.dados.lancamentos.filter(l=>l.por===usuario.nome)
+    .sort((x,y)=>String(y.criadoEm||y.data).localeCompare(String(x.criadoEm||x.data)))
+    .slice(0,10);
   document.getElementById('tab-meus').innerHTML = meus.length ? meus.map(l=>`
     <tr>
       <td>${dataBr(l.data)}</td>
@@ -307,14 +310,22 @@ function desenharExtrato(){
 
   const entradasDia=movs.filter(l=>l.tipo==='entrada'), saidasDia=movs.filter(l=>l.tipo==='saida');
   const totE=somar(entradasDia), totS=somar(saidasDia);
-  const gEl=document.getElementById('ex-saldo-dia');
-  gEl.textContent=fmt(totE-totS);
-  gEl.className='valorao num '+(totE-totS>=0?'positivo':'negativo');
-  document.getElementById('ex-total-entradas').textContent=fmt(totE);
-  document.getElementById('ex-total-saidas').textContent=fmt(totS);
-  document.getElementById('ex-qtd-lancamentos').textContent=movs.length;
-  document.getElementById('ex-dinheiro-caixa').textContent=
-    fmt(somar(entradasDia.filter(l=>l.categoria==='dinheiro')) - somarSaidasEmDinheiro(saidasDia));
+  const anterior=indicadoresDoPeriodo(un,[deslocarData(d,-1)]);
+  const atual=indicadoresDoPeriodo(un,[d]);
+  document.getElementById('kpis-extrato').innerHTML=[
+    cartaoKpi({rotulo:'Saldo do dia',valor:fmt(totE-totS),classeValor:totE-totS>=0?'positivo':'negativo',destaque:true,
+      delta:variacaoKpi(atual.saldo,anterior.saldo,true),apoio:'vs dia anterior'}),
+    cartaoKpi({rotulo:'Entradas',valor:fmt(totE),classeValor:'verde',
+      delta:variacaoKpi(atual.entradas,anterior.entradas,true),apoio:'vs dia anterior'}),
+    cartaoKpi({rotulo:'Saídas',valor:fmt(totS),classeValor:'vermelho',
+      delta:variacaoKpi(atual.saidas,anterior.saidas,false),apoio:'vs dia anterior'}),
+    cartaoKpi({rotulo:'Lançamentos',valor:String(movs.length),
+      apoio:qtdAlteradas?`${qtdAlteradas} com data alterada`:'nos dois turnos'}),
+    cartaoKpi({rotulo:'Dinheiro em caixa',valor:fmt(atual.dinheiro),classeValor:atual.dinheiro<0?'vermelho':'',
+      delta:variacaoKpi(atual.dinheiro,anterior.dinheiro,true),apoio:'vs dia anterior'}),
+    cartaoKpi({rotulo:'A receber de cartões',valor:fmt(atual.cartoes),
+      delta:variacaoKpi(atual.cartoes,anterior.cartoes,true),apoio:'vs dia anterior'})
+  ].join('');
 
   document.getElementById('tab-ex-turno').innerHTML = ['dia','noite'].map(t=>{
     const doTurno=movs.filter(l=>l.turno===t);
@@ -610,4 +621,77 @@ function desenharFechamento(){
   }).join('');
   document.getElementById('tab-parcelas').innerHTML =
     linhas || '<tr><td colspan="5" class="vazio">Nenhuma parcela lançada ainda.</td></tr>';
+}
+
+/* =========== EDIÇÃO E EXCLUSÃO DE LANÇAMENTOS (extrato) =========== */
+async function apagar(i){
+  if(!temPermissaoFinanceira(usuario,'excluir_lancamentos')){
+    avisar('Você não tem permissão pra excluir lançamentos. Fale com o diretor.');
+    return;
+  }
+  if(!await confirmarAcao('Excluir esse lançamento? Essa ação não pode ser desfeita.')) return;
+  const l=AppEstado.dados.lancamentos[i];
+  if(!l) return;
+  try{
+    await api('/lancamentos/'+l.id, { method:'DELETE' });
+  }catch(e){
+    avisar(e.message);
+    return;
+  }
+  registrarExclusao('Lançamento', `${l.tipo==='entrada'?'Entrada':'Saída'} — ${nomeCategoria(l.categoria)} — ${fmt(l.valor)} (${dataBr(l.data)})`, l.unidade);
+  await recarregarLancamentos();
+  desenhar();
+}
+
+function abrirModalEditarLancamento(l){
+  return new Promise(resolve=>{
+    const categorias = l.tipo==='entrada' ? ENTRADAS : SAIDAS;
+    document.getElementById('ml-categoria').innerHTML = categorias.map(c=>
+      `<option value="${c.id}" ${c.id===l.categoria?'selected':''}>${esc(c.nome)}</option>`).join('');
+    document.getElementById('ml-turno').value = l.turno;
+    document.getElementById('ml-valor').value = l.valor.toFixed(2);
+    document.getElementById('ml-obs').value = l.obs||'';
+    document.getElementById('modal-editar-lancamento-erro').classList.add('oculto');
+    document.getElementById('modal-editar-lancamento').classList.remove('oculto');
+    const limpar=()=>document.getElementById('modal-editar-lancamento').classList.add('oculto');
+    document.getElementById('modal-editar-lancamento-ok').onclick=()=>{
+      const valor=parseFloat(document.getElementById('ml-valor').value);
+      if(!valor || valor<=0){
+        const erro=document.getElementById('modal-editar-lancamento-erro');
+        erro.textContent='Informe um valor válido.';
+        erro.classList.remove('oculto');
+        return;
+      }
+      const resultado={
+        categoria: document.getElementById('ml-categoria').value,
+        turno: document.getElementById('ml-turno').value,
+        valor, obs: document.getElementById('ml-obs').value.trim()
+      };
+      limpar();
+      resolve(resultado);
+    };
+    document.getElementById('modal-editar-lancamento-cancelar').onclick=()=>{ limpar(); resolve(null); };
+  });
+}
+
+async function editarValorLancamento(i){
+  if(!temPermissaoFinanceira(usuario,'editar_valores')){
+    avisar('Você não tem permissão pra editar valores. Fale com o diretor.');
+    return;
+  }
+  const l=AppEstado.dados.lancamentos[i];
+  if(!l) return;
+  const resultado=await abrirModalEditarLancamento(l);
+  if(!resultado) return;
+  try{
+    await api('/lancamentos/'+l.id, { method:'PUT', body: JSON.stringify({
+      categoria_id: resultado.categoria, turno: resultado.turno,
+      valor: resultado.valor, observacao: resultado.obs
+    }) });
+  }catch(e){
+    avisar(e.message);
+    return;
+  }
+  await recarregarLancamentos();
+  desenhar();
 }
