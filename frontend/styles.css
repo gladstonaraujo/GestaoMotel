@@ -189,6 +189,9 @@ label{font-weight:500}
   border-radius:20px;padding:40px 36px 36px;box-shadow:var(--sombra-3);
 }
 .login-caixa .logo-login{display:block;width:150px;max-width:60%;height:auto;margin:0 auto 26px}
+.login-caixa .logo-login.logo-tema-escuro{display:none}
+[data-tema="escuro"] .login-caixa .logo-login.logo-tema-claro{display:none}
+[data-tema="escuro"] .login-caixa .logo-login.logo-tema-escuro{display:block}
 .login-caixa h1{margin:0 0 6px;font-size:22px;font-weight:650;letter-spacing:-.02em;text-align:center}
 .login-caixa p.sub{margin:0 0 26px;color:var(--slate);font-size:14px;text-align:center}
 .campo{margin-bottom:16px}
