@@ -127,17 +127,29 @@ CORS_ORIGIN=*
 }
 
 # ---- 5. Dependências e usuário inicial ----
-Titulo "Instalando dependências (npm install)"
+# Dois modos: projeto completo (tem build.js: instala tudo e gera o dist) ou
+# pacote só com o dist (já compilado na máquina de desenvolvimento).
 Push-Location $backend
-npm install --no-fund --no-audit
-npm run build
+if (Test-Path (Join-Path $backend 'build.js')) {
+    Titulo "Instalando dependências e gerando o dist (npm install + build)"
+    npm install --no-fund --no-audit
+    npm run build
+} else {
+    Titulo "Instalando dependências de produção (pacote só com dist)"
+    if (-not (Test-Path (Join-Path $backend 'dist\server.js')) -or -not (Test-Path (Join-Path $raiz 'frontend\dist'))) {
+        Write-Host "Faltam backend\dist\server.js ou frontend\dist — copie as duas pastas dist." -ForegroundColor Red
+        Pop-Location
+        exit 1
+    }
+    npm install --omit=dev --no-fund --no-audit
+}
 
 $temUsuario = & "$pgBin\psql.exe" -U postgres -h 127.0.0.1 -d gestao_motel -tAc "SELECT 1 FROM usuarios WHERE login='diretor'"
 if ($temUsuario -match '1') {
     Write-Host "Usuário 'diretor' já existe, pulando seed.js."
 } else {
     Write-Host "Criando o usuário 'diretor' (senha inicial: 123 — troque assim que entrar!)..."
-    node seed.js
+    node dist\seed.js
 }
 Pop-Location
 

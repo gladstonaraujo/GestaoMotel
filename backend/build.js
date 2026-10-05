@@ -71,5 +71,17 @@ esbuild.buildSync({
   external: ['bcrypt', 'pg-native'],
 });
 
+// Seed (cria o usuário inicial): também empacotado, para o servidor que só recebe o dist
+esbuild.buildSync({
+  entryPoints: [path.join(__dirname, 'seed.js')],
+  outfile: path.join(__dirname, 'dist', 'seed.js'),
+  bundle: true,
+  platform: 'node',
+  target: 'node18',
+  minify: true,
+  legalComments: 'none',
+  external: ['bcrypt', 'pg-native'],
+});
+
 console.log('Front-end gerado em', dist, `(${modulos.length} módulos)`);
 console.log('Back-end gerado em', path.join(__dirname, 'dist', 'server.js'));

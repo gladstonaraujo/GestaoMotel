@@ -111,15 +111,26 @@ EOF
 fi
 
 # ---- 5. Dependências e usuário inicial ----
-titulo "Instalando dependências (npm install)"
-(cd "$BACKEND" && npm install --no-fund --no-audit && npm run build)
+# Dois modos: projeto completo (tem build.js: instala tudo e gera o dist) ou
+# pacote só com o dist (já compilado na máquina de desenvolvimento).
+if [ -f "$BACKEND/build.js" ]; then
+  titulo "Instalando dependências e gerando o dist (npm install + build)"
+  (cd "$BACKEND" && npm install --no-fund --no-audit && npm run build)
+else
+  titulo "Instalando dependências de produção (pacote só com dist)"
+  if [ ! -f "$BACKEND/dist/server.js" ] || [ ! -d "$RAIZ/frontend/dist" ]; then
+    echo "Faltam backend/dist/server.js ou frontend/dist — copie as duas pastas dist." >&2
+    exit 1
+  fi
+  (cd "$BACKEND" && npm install --omit=dev --no-fund --no-audit)
+fi
 
 TEM_USUARIO=$(sudo -u postgres psql -d gestao_motel -tAc "SELECT 1 FROM usuarios WHERE login='diretor'")
 if [ "$TEM_USUARIO" = "1" ]; then
   echo "Usuário 'diretor' já existe, pulando seed.js."
 else
   echo "Criando o usuário 'diretor' (senha inicial: 123 — troque assim que entrar!)..."
-  (cd "$BACKEND" && node seed.js)
+  (cd "$BACKEND" && node dist/seed.js)
 fi
 
 # dono dos arquivos volta a ser o usuário normal, não root (importante pro
