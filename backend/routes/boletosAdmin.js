@@ -1,10 +1,19 @@
 const express = require('express');
 const db = require('../db');
-const { autenticar, exigirPapel } = require('../middleware/auth');
+const { autenticar, temAcessoAUnidade } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
 
 const router = express.Router();
-router.use(autenticar, exigirPapel('admin')); // só o diretor mexe aqui
+
+// O diretor sempre acessa; os demais só se o diretor liberou a aba "Boletos Administrativo" pra eles
+function exigirAbaBoletosAdmin(req, res, next) {
+  const u = req.usuario;
+  if (u.papel === 'admin' || (Array.isArray(u.abas) && u.abas.includes('boletos-admin'))) return next();
+  return res.status(403).json({ erro: 'Você não tem acesso aos boletos administrativos. Fale com o diretor.' });
+}
+const temPermissao = (req, permissao) => req.usuario.permissoes_financeiras?.includes(permissao);
+
+router.use(autenticar, exigirAbaBoletosAdmin);
 
 router.get('/', async (req, res) => {
   const { rows: boletos } = await db.query('SELECT * FROM boletos_admin ORDER BY registrado_em DESC');
@@ -39,6 +48,9 @@ router.post('/:id/lancar', async (req, res) => {
   if (!Array.isArray(unidades) || !unidades.length) {
     return res.status(400).json({ erro: 'Marque pelo menos uma unidade.' });
   }
+  if (unidades.some(u => !temAcessoAUnidade(req.usuario, u.unidade_id))) {
+    return res.status(403).json({ erro: 'Você não tem acesso a uma das unidades marcadas.' });
+  }
 
   for (const u of unidades) {
     const { rows: novoBoleto } = await db.query(
@@ -64,11 +76,17 @@ router.post('/:id/lancar', async (req, res) => {
 });
 
 router.delete('/:id/foto', async (req, res) => {
+  if (!temPermissao(req, 'apagar_comprovantes')) {
+    return res.status(403).json({ erro: 'Você não tem permissão pra apagar comprovantes. Fale com o diretor.' });
+  }
   const { rows } = await db.query('UPDATE boletos_admin SET foto_url=NULL WHERE id=$1 RETURNING *', [req.params.id]);
   res.json(rows[0]);
 });
 
 router.delete('/:id', async (req, res) => {
+  if (!temPermissao(req, 'excluir_boletos')) {
+    return res.status(403).json({ erro: 'Você não tem permissão pra excluir boletos. Fale com o diretor.' });
+  }
   const { rows } = await db.query('SELECT * FROM boletos_admin WHERE id=$1', [req.params.id]);
   const b = rows[0];
   await db.query('DELETE FROM boletos_admin WHERE id=$1', [req.params.id]);

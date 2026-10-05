@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade, exigirPapel, exigirAcessoAoRegistro } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
-const { hoje: hojeBelem } = require('../utils/data');
+const { hoje: hojeBelem, dataDoPlantao, turnoAtual } = require('../utils/data');
 
 const router = express.Router();
 router.use(autenticar);
@@ -76,20 +76,29 @@ router.post('/conjunta', exigirPapel('gerente', 'admin'), async (req, res) => {
   }
 });
 
-// Marca como pago e já gera a saída correspondente no caixa
+// Marca como pago e já gera a saída correspondente no caixa, no plantão em andamento.
+// A forma de pagamento decide se a saída mexe no dinheiro físico do caixa (dinheiro) ou não (pix).
 router.post('/:id/marcar-pago', exigirAcessoAoRegistro('boletos'), exigirPapel('gerente', 'admin'), async (req, res) => {
+  const formaPagamento = req.body?.forma_pagamento || 'pix';
+  if (!['dinheiro', 'pix'].includes(formaPagamento)) {
+    return res.status(400).json({ erro: 'Forma de pagamento inválida.' });
+  }
   const { rows } = await db.query('SELECT * FROM boletos WHERE id=$1', [req.params.id]);
   const boleto = rows[0];
   if (!boleto) return res.status(404).json({ erro: 'Boleto não encontrado.' });
+  if (boleto.status === 'pago') return res.status(409).json({ erro: 'Esse boleto já está pago.' });
   const hoje = hojeBelem();
 
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
     const { rows: lanc } = await client.query(
-      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
-       VALUES ($1,$2,'dia','saida','boletos',$3,$4,$5,$6,$2) RETURNING id`,
-      [boleto.unidade_id, hoje, boleto.valor, `Pix — ${boleto.descricao} (venc. ${boleto.vencimento})`, req.usuario.id, boleto.foto_url]
+      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url,
+                                forma_pagamento_saida, registrado_em)
+       VALUES ($1,$2,$3,'saida','boletos',$4,$5,$6,$7,$8,$9) RETURNING id`,
+      [boleto.unidade_id, dataDoPlantao(), turnoAtual(), boleto.valor,
+       `${formaPagamento === 'pix' ? 'Pix' : 'Dinheiro'} — ${boleto.descricao} (venc. ${boleto.vencimento})`,
+       req.usuario.id, boleto.foto_url, formaPagamento, hoje]
     );
     await client.query(
       'UPDATE boletos SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',

@@ -6,11 +6,11 @@ const path = require('node:path');
 const frontend=path.resolve(__dirname,'../../frontend');
 const ler=arquivo=>fs.readFileSync(path.join(frontend,arquivo),'utf8');
 
-test('as 19 telas vivem nas views dos módulos sem duplicidade', () => {
+test('as 20 telas vivem nas views dos módulos sem duplicidade', () => {
   const modulos=['visao-geral','caixa','operacao','financeiro','gestao','sistema'];
   const ids=modulos.flatMap(modulo=>[...ler(`modulos/${modulo}/view.html`).matchAll(/<section\s+id="(tela-[^"]+)"/g)].map(m=>m[1]));
-  assert.equal(ids.length,19);
-  assert.equal(new Set(ids).size,19);
+  assert.equal(ids.length,20);
+  assert.equal(new Set(ids).size,20);
   assert.doesNotMatch(ler('index.html'),/<section\s+id="tela-/);
 });
 

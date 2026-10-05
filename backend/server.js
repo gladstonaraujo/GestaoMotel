@@ -52,6 +52,7 @@ app.use('/api/boletos-admin', require('./routes/boletosAdmin'));
 app.use('/api/consumo-plantao', require('./routes/consumoPlantao'));
 app.use('/api/notas-fiscais', require('./routes/notasFiscais'));
 app.use('/api/historico-exclusoes', require('./routes/historicoExclusoes'));
+app.use('/api/produtos', require('./routes/produtos'));
 app.use('/api/relatorio', require('./routes/relatorio'));
 
 app.get('/api/saude', (req, res) => res.json({ ok: true }));

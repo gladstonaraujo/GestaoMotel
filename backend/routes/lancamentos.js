@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade, exigirAcessoAoRegistro } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
-const { hoje: hojeBelem } = require('../utils/data');
+const { hoje: hojeBelem, dataDoPlantao } = require('../utils/data');
 const { dataValida, valorPositivo, texto, primeiroErro } = require('../utils/validar');
 
 const router = express.Router();
@@ -42,9 +42,10 @@ router.post('/', exigirUnidade, async (req, res) => {
     [forma_pagamento_saida == null || ['dinheiro', 'pix'].includes(forma_pagamento_saida), 'Forma de pagamento inválida.'],
   ]);
   if (erroEntrada) return res.status(400).json({ erro: erroEntrada });
-  // regra: só gerente/admin escolhem data diferente de hoje
+  // regra: só gerente/admin escolhem outra data. A data do plantão em andamento também conta
+  // como "hoje" — de madrugada o plantão da noite ainda é o do dia anterior.
   const hoje = hojeBelem();
-  const dataAlterada = data !== hoje;
+  const dataAlterada = data !== hoje && data !== dataDoPlantao();
   if (dataAlterada && !['gerente', 'admin'].includes(req.usuario.papel)) {
     return res.status(403).json({ erro: 'Só gerente e diretor podem lançar em outra data.' });
   }

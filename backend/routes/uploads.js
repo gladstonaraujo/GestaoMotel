@@ -36,7 +36,10 @@ router.post('/', async (req, res) => {
   }
   const nomeArquivo = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${extensao}`;
   await fs.promises.writeFile(path.join(PASTA_UPLOADS, nomeArquivo), buffer);
-  const base = process.env.URL_BASE_UPLOADS || `http://localhost:${process.env.PORT || 3001}`;
+  // Link relativo: o navegador busca a foto no mesmo endereço por onde abriu o sistema (IP da rede,
+  // nome da máquina...). Um "http://localhost:3001" absoluto só funcionava no próprio servidor —
+  // no celular ou tablet "localhost" é o próprio aparelho, e a foto não abria.
+  const base = process.env.URL_BASE_UPLOADS || '';
   res.status(201).json({ url: `${base}/uploads/${nomeArquivo}` });
 });
 

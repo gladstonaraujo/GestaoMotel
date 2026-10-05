@@ -12,6 +12,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE unidades (
   id            TEXT PRIMARY KEY,          -- ex.: 'beirol1', 'jardim'
   nome          TEXT NOT NULL,             -- ex.: 'Beirol 1'
+  ativa         BOOLEAN NOT NULL DEFAULT true,   -- false = desativada: some dos seletores, o histórico fica
   criado_em     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -327,6 +328,20 @@ INSERT INTO itens_vistoria_catalogo (id, categoria, nome, na_rapida) VALUES
   ('higiene','consumo','Sabonete e produtos de higiene repostos', false),
   ('conveniencia','consumo','Preservativos e itens de conveniência repostos', false),
   ('consumo_conferido','consumo','Consumo do frigobar conferido', true);
+
+-- ============================================================
+-- CATÁLOGO DE PRODUTOS (FRIGOBAR / REVENDA / CONSUMO)
+-- ============================================================
+CREATE TABLE produtos (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome            TEXT NOT NULL,
+  categoria       TEXT DEFAULT 'Geral',
+  preco_custo     NUMERIC(12,2) DEFAULT 0,
+  preco_venda     NUMERIC(12,2) DEFAULT 0,
+  ativo           BOOLEAN NOT NULL DEFAULT true,
+  criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_produtos_nome_lower ON produtos (lower(trim(nome)));
 
 -- ============================================================
 -- PRODUTOS VENCIDOS, AVARIADOS OU PERDIDOS

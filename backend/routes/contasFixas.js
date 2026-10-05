@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade, exigirPapel, exigirAcessoAoRegistro } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
-const { hoje: hojeBelem } = require('../utils/data');
+const { hoje: hojeBelem, dataDoPlantao, turnoAtual } = require('../utils/data');
 
 const router = express.Router();
 router.use(autenticar);
@@ -30,10 +30,16 @@ router.post('/', exigirUnidade, exigirPapel('gerente', 'admin'), async (req, res
   res.status(201).json(rows[0]);
 });
 
+// Marca como paga e gera a saída no caixa, no plantão em andamento, com a forma de pagamento escolhida
 router.post('/:id/marcar-pago', exigirAcessoAoRegistro('contas_fixas'), exigirPapel('gerente', 'admin'), async (req, res) => {
+  const formaPagamento = req.body?.forma_pagamento || 'pix';
+  if (!['dinheiro', 'pix'].includes(formaPagamento)) {
+    return res.status(400).json({ erro: 'Forma de pagamento inválida.' });
+  }
   const { rows } = await db.query('SELECT * FROM contas_fixas WHERE id=$1', [req.params.id]);
   const conta = rows[0];
   if (!conta) return res.status(404).json({ erro: 'Conta não encontrada.' });
+  if (conta.status === 'pago') return res.status(409).json({ erro: 'Essa conta já está paga.' });
   const hoje = hojeBelem();
   const categoria = conta.tipo === 'imposto' ? 'impostos' : 'fixas';
 
@@ -41,9 +47,11 @@ router.post('/:id/marcar-pago', exigirAcessoAoRegistro('contas_fixas'), exigirPa
   try {
     await client.query('BEGIN');
     const { rows: lanc } = await client.query(
-      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url, registrado_em)
-       VALUES ($1,$2,'dia','saida',$3,$4,$5,$6,$7,$2) RETURNING id`,
-      [conta.unidade_id, hoje, categoria, conta.valor, `${conta.tipo} — ${conta.descricao}`, req.usuario.id, conta.foto_url]
+      `INSERT INTO lancamentos (unidade_id, data, turno, tipo, categoria_id, valor, observacao, lancado_por, foto_url,
+                                forma_pagamento_saida, registrado_em)
+       VALUES ($1,$2,$3,'saida',$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+      [conta.unidade_id, dataDoPlantao(), turnoAtual(), categoria, conta.valor, `${conta.tipo} — ${conta.descricao}`,
+       req.usuario.id, conta.foto_url, formaPagamento, hoje]
     );
     await client.query(
       'UPDATE contas_fixas SET status=\'pago\', data_pagamento=$1, lancamento_id=$2 WHERE id=$3',

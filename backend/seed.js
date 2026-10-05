@@ -9,7 +9,7 @@ const db = require('./db');
 
 const ABAS_ADMIN = [
   'painel', 'lancar', 'consumo-plantao', 'vistoria', 'extrato', 'comprovantes', 'boletos',
-  'fechamento', 'impostos', 'funcionarios', 'vencidos', 'revpar', 'manutencao',
+  'fechamento', 'impostos', 'funcionarios', 'vencidos', 'produtos', 'revpar', 'manutencao',
   'boletos-admin', 'notas-fiscais', 'relatorio', 'rede',
 ];
 const SETORES_COMPROVANTES_ADMIN = ['lancamentos', 'boletos', 'boletos-admin', 'impostos'];
