@@ -4,9 +4,9 @@
 
   <div class="painel oculto u-mb-16" id="painel-dashboard-consumo-plantao">
     <h3>Dashboard de consumo</h3>
-    <p class="secao-sub" id="sub-dashboard-consumo-plantao"></p>
-    <div class="kpis kpis-mes" id="grade-stats-consumo-plantao"></div>
-    <div class="u-mt-16">
+    <p class="secao-sub u-mb-16" id="sub-dashboard-consumo-plantao"></p>
+    <div class="kpis" id="grade-stats-consumo-plantao" aria-live="polite"></div>
+    <div class="u-mt-18">
       <h4 class="titulo-dashboard">Produtos mais consumidos</h4>
       <div id="ranking-consumo-plantao"></div>
     </div>
@@ -14,29 +14,54 @@
 
   <div class="form-lanc">
     <h3 class="titulo-form">Registrar consumo do plantão</h3>
-    <div class="form-linha">
-      <div>
-        <label for="fcp-turno">Turno</label>
+    <div class="linha-contexto-consumo">
+      <div class="campo-turno-consumo">
+        <label for="fcp-turno">Turno do plantão</label>
         <select id="fcp-turno">
           <option value="dia">Dia — 08:00 às 20:00</option>
           <option value="noite">Noite — 20:00 às 08:00</option>
         </select>
       </div>
     </div>
-    <div class="form-linha">
-      <div class="u-coluna-inteira">
-        <label for="fcp-produto">Produto</label>
-        <input id="fcp-produto" placeholder="ex.: água, coca cola, chocolate">
+
+    <div class="card-adicionar-item-consumo">
+      <div class="grade-adicionar-produto">
+        <div class="coluna-produto-consumo">
+          <label for="fcp-produto">Produto</label>
+          <div class="campo-combo-busca">
+            <input id="fcp-produto" list="lista-produtos-consumo" placeholder="Buscar ou escolher produto..." autocomplete="off">
+            <span class="icone-busca-combo">
+              <svg class="icone" viewBox="0 0 24 24" width="15" height="15"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+          </div>
+          <datalist id="lista-produtos-consumo"></datalist>
+        </div>
+
+        <div class="coluna-qtd-consumo">
+          <label for="fcp-quantidade">Quantidade</label>
+          <div class="seletor-qtd-consumo">
+            <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(-1)" title="Diminuir" aria-label="Diminuir">−</button>
+            <input type="number" id="fcp-quantidade" min="1" step="1" value="1">
+            <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(1)" title="Aumentar" aria-label="Aumentar">+</button>
+          </div>
+        </div>
+
+        <div class="coluna-acao-item">
+          <label class="rotulo-invisivel">&nbsp;</label>
+          <button type="button" class="btn-adicionar-item-consumo" data-click="adicionarItemConsumoPlantao()">
+            <svg class="icone" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Adicionar item
+          </button>
+        </div>
       </div>
     </div>
-    <div class="linha-quantidade-consumo">
-      <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(-1)">−</button>
-      <input type="number" id="fcp-quantidade" min="1" step="1" value="1">
-      <button type="button" class="btn-qtd-consumo" data-click="ajustarQtdConsumo(1)">+</button>
-      <button type="button" class="btn-salvar u-flex-1" data-click="adicionarItemConsumoPlantao()">Adicionar item</button>
+
+    <div id="bloco-itens-consumo" class="u-mt-14">
+      <label class="rotulo-bloco" id="lbl-itens-pendentes">Itens a registrar no plantão</label>
+      <div id="lista-itens-consumo-pendente"></div>
     </div>
-    <div id="lista-itens-consumo-pendente"></div>
-    <div class="acoes-form">
+
+    <div class="acoes-form u-mt-18">
       <button class="btn-salvar" data-click="salvarConsumoPlantao()">Salvar registro do plantão</button>
       <span id="msg-consumo-plantao" class="aviso-ok"></span>
     </div>
@@ -62,8 +87,8 @@
 
   <div class="painel oculto u-mb-16" id="painel-dashboard-vistoria">
     <h3>Dashboard geral de vistorias</h3>
-    <p class="secao-sub" id="sub-dashboard-vistoria"></p>
-    <div class="kpis kpis-mes" id="grade-stats-vistoria"></div>
+    <p class="secao-sub u-mb-16" id="sub-dashboard-vistoria"></p>
+    <div class="kpis" id="grade-stats-vistoria" aria-live="polite"></div>
 
     <div class="grade u-mt-16">
       <div class="painel painel-sem-borda">
@@ -208,8 +233,8 @@
 
   <div class="painel oculto u-mb-16" id="painel-dashboard-manutencao">
     <h3>Dashboard de manutenção</h3>
-    <p class="secao-sub" id="sub-dashboard-manutencao"></p>
-    <div class="kpis kpis-mes" id="grade-stats-manutencao"></div>
+    <p class="secao-sub u-mb-16" id="sub-dashboard-manutencao"></p>
+    <div class="kpis" id="grade-stats-manutencao" aria-live="polite"></div>
     <div class="grade u-mt-16">
       <div class="painel painel-sem-borda">
         <h4 class="titulo-dashboard">Serviço mais chamado</h4>

@@ -2,9 +2,10 @@
   <h2 class="secao">Lançar movimento</h2>
   <p class="secao-sub" id="sub-lancar"></p>
 
-  <div class="form-lanc">
-    <div class="form-linha">
-      <div>
+  <div class="form-lanc form-lanc-caixa">
+    <!-- Linha 1: Tipo de movimento, Turno e Forma/Categoria -->
+    <div class="form-linha form-linha-topo-lancar">
+      <div class="col-tipo-lanc">
         <label>Tipo</label>
         <div class="escolha-tipo">
           <button id="bt-entrada" class="on-e" data-click="mudarTipo('entrada')">Entrada</button>
@@ -18,19 +19,30 @@
           <option value="noite">Noite — 20:00 às 08:00</option>
         </select>
       </div>
-      <div>
+      <div id="col-categoria-lanc">
         <label for="f-categoria" id="lbl-categoria">Forma de pagamento</label>
         <select id="f-categoria" data-change="atualizarDicaCategoria()"></select>
       </div>
-      <div>
+    </div>
+
+    <!-- Linha 2: Valor do lançamento e Forma de pagamento da saída (quando aplicável) -->
+    <div class="form-linha form-linha-valores-lancar">
+      <div class="col-valor-principal">
         <label for="f-valor" id="lbl-valor">Valor (R$)</label>
         <input type="number" id="f-valor" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div class="oculto col-forma-saida" id="bloco-forma-pagamento-saida">
+        <label for="f-forma-pagamento-saida">Como essa saída foi paga</label>
+        <select id="f-forma-pagamento-saida">
+          <option value="dinheiro">Dinheiro (saiu do caixa físico)</option>
+          <option value="pix">Pix / transferência (não mexe no caixa físico)</option>
+        </select>
       </div>
     </div>
 
     <div id="bloco-modo-despesa" class="oculto">
       <div class="form-linha">
-        <div>
+        <div class="u-coluna-inteira">
           <label for="f-modo-despesa">Este lançamento é</label>
           <select id="f-modo-despesa" data-change="mudarModoDespesa()">
             <option value="normal">Normal (padrão)</option>
@@ -60,7 +72,7 @@
 
       <div id="bloco-rateio-lancar" class="oculto">
         <div class="form-linha">
-          <div>
+          <div class="u-coluna-inteira">
             <label for="f-rateio-valor-total">Valor total da nota (R$)</label>
             <input type="number" id="f-rateio-valor-total" min="0" step="0.01" placeholder="0,00">
           </div>
@@ -68,6 +80,7 @@
         <p class="aviso-data-campo">Só o valor de <strong id="txt-unidade-rateio">—</strong> (campo Valor acima) entra no caixa e no fechamento desta unidade. As outras unidades não recebem nada automaticamente — o valor total acima é só pra referência.</p>
       </div>
     </div>
+
     <div class="form-linha">
       <div class="u-coluna-inteira">
         <label for="f-obs" id="lbl-obs">Descrição (opcional)</label>
@@ -75,15 +88,7 @@
         <div id="dica-obs" class="aviso-data-campo oculto"></div>
       </div>
     </div>
-    <div class="form-linha oculto" id="bloco-forma-pagamento-saida">
-      <div>
-        <label for="f-forma-pagamento-saida">Como essa saída foi paga</label>
-        <select id="f-forma-pagamento-saida">
-          <option value="dinheiro">Dinheiro (saiu do caixa físico)</option>
-          <option value="pix">Pix / transferência (não mexe no caixa físico)</option>
-        </select>
-      </div>
-    </div>
+
     <div class="form-linha" id="bloco-foto-lancar">
       <div class="u-coluna-inteira">
         <label id="lbl-foto">Foto da nota fiscal ou comprovante (só gerente e diretor)</label>
@@ -99,13 +104,14 @@
         </div>
       </div>
     </div>
+
     <div class="acoes-form">
       <button class="btn-salvar" data-click="salvarLancamento()">Salvar lançamento</button>
       <span id="msg-lanc" class="aviso-ok"></span>
     </div>
   </div>
 
-  <div class="painel">
+  <div class="painel u-mb-16">
     <h3>Últimos lançamentos que você registrou</h3>
     <table class="dados">
       <thead><tr>
@@ -162,24 +168,9 @@
   <h2 class="secao">Comprovantes</h2>
   <p class="secao-sub" id="sub-comprovantes"></p>
 
-  <div class="painel oculto u-mb-16" id="setor-comp-lancamentos">
-    <h3>Lançamentos do dia a dia</h3>
+  <div class="filtros-comprovantes u-mb-16" id="filtros-comprovantes"></div>
+  <div class="painel" id="painel-comprovantes-unico">
     <div id="grade-comprovantes" class="grade-comprovantes"></div>
-  </div>
-
-  <div class="painel oculto u-mb-16" id="setor-comp-boletos">
-    <h3>Boletos e Pix</h3>
-    <div id="grade-comprovantes-boletos" class="grade-comprovantes"></div>
-  </div>
-
-  <div class="painel oculto u-mb-16" id="setor-comp-boletos-admin">
-    <h3>Boletos Administrativo</h3>
-    <div id="grade-comprovantes-boletos-admin" class="grade-comprovantes"></div>
-  </div>
-
-  <div class="painel oculto" id="setor-comp-impostos">
-    <h3>Impostos e Energia</h3>
-    <div id="grade-comprovantes-impostos" class="grade-comprovantes"></div>
   </div>
 </section>
 

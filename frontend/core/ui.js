@@ -143,15 +143,25 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') fecharLightbox();
 
 /* =========== UTILIDADES =========== */
 const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const hoje = () => new Date().toISOString().slice(0,10);
-function diaMenos(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+// Datas sempre no fuso de Belém, igual ao servidor. toISOString() dá a data em UTC, que a partir
+// das 21h já é o dia seguinte — o funcionário ficava preso numa data que o servidor recusava.
+const FUSO_HORARIO = 'America/Belem';
+const formatadorDataLocal = new Intl.DateTimeFormat('sv-SE', {timeZone:FUSO_HORARIO}); // YYYY-MM-DD
+const formatadorHoraLocal = new Intl.DateTimeFormat('en-GB', {timeZone:FUSO_HORARIO, hour:'2-digit', hourCycle:'h23'});
+const hoje = () => formatadorDataLocal.format(new Date());
+const horaAtual = () => parseInt(formatadorHoraLocal.format(new Date()),10);
+// turno do dia 08:00–20:00; de madrugada ainda é o plantão da noite que começou ontem
+const turnoAtual = () => { const h=horaAtual(); return h>=8 && h<20 ? 'dia' : 'noite'; };
+const dataDoPlantao = () => horaAtual()>=8 ? hoje() : deslocarData(hoje(),-1);
+function diaMenos(n){ return deslocarData(hoje(),-n); }
 function dataBr(iso){ const [a,m,d]=iso.split('-'); return `${d}/${m}/${a}`; }
-function nomeUnidade(id){ return (UNIDADES.find(u=>u.id===id)||{}).nome || id; }
+function nomeUnidade(id){ return (UNIDADES_TODAS.find(u=>u.id===id)||{}).nome || id; }
 function nomeCategoria(id){
   const t=[...ENTRADAS,...SAIDAS].find(c=>c.id===id); return t?t.nome:id;
 }
 function unidadesDoUsuario(){
-  return usuario.unidades==='todas' ? UNIDADES.map(u=>u.id) : usuario.unidades;
+  // só unidades ativas: uma unidade desativada some dos seletores mesmo pra quem ainda tem acesso a ela
+  return usuario.unidades==='todas' ? UNIDADES.map(u=>u.id) : usuario.unidades.filter(id=>UNIDADES.some(u=>u.id===id));
 }
 function rotuloPapel(p){
   return {admin:'Administrador geral',gerente:'Gerente de unidade',funcionario:'Funcionário',inspetor:'Vistoria de suítes'}[p];
@@ -211,6 +221,21 @@ function confirmarAcao(mensagem){
     const limpar=()=>document.getElementById('modal-confirmacao').classList.add('oculto');
     document.getElementById('modal-confirmacao-ok').onclick=()=>{ limpar(); resolve(true); };
     document.getElementById('modal-confirmacao-cancelar').onclick=()=>{ limpar(); resolve(false); };
+  });
+}
+
+// Pergunta se um pagamento saiu em dinheiro ou Pix; devolve 'dinheiro', 'pix' ou null (cancelou)
+function escolherFormaPagamento(mensagem){
+  return new Promise(resolve=>{
+    document.getElementById('modal-forma-pagamento-texto').textContent=mensagem;
+    document.getElementById('modal-forma-pagamento-select').value='pix';
+    document.getElementById('modal-forma-pagamento').classList.remove('oculto');
+    const limpar=()=>document.getElementById('modal-forma-pagamento').classList.add('oculto');
+    document.getElementById('modal-forma-pagamento-ok').onclick=()=>{
+      const forma=document.getElementById('modal-forma-pagamento-select').value;
+      limpar(); resolve(forma);
+    };
+    document.getElementById('modal-forma-pagamento-cancelar').onclick=()=>{ limpar(); resolve(null); };
   });
 }
 

@@ -5,9 +5,9 @@
     { id: 'operacao', nome: 'Operação', telas: ['consumo-plantao', 'vistoria', 'manutencao'] },
     { id: 'financeiro', nome: 'Financeiro', telas: ['boletos', 'impostos', 'boletos-admin', 'notas-fiscais'] },
     { id: 'pessoas', nome: 'Pessoas', telas: ['funcionarios'] },
-    { id: 'estoque', nome: 'Estoque', telas: ['vencidos'] },
+    { id: 'estoque', nome: 'Estoque', telas: ['vencidos', 'produtos'] },
     { id: 'desempenho', nome: 'Desempenho', telas: ['revpar'] },
-    { id: 'sistema', nome: 'Sistema', telas: ['usuarios', 'historico-exclusoes'] }
+    { id: 'sistema', nome: 'Sistema', telas: ['usuarios', 'unidades', 'historico-exclusoes'] }
   ];
 
   const telas = {
@@ -25,10 +25,12 @@
     impostos: { nome: 'Impostos e energia', desenhar: ['desenharImpostos'] },
     funcionarios: { nome: 'Funcionários', desenhar: ['desenharFuncionarios', 'desenharTrocas'] },
     vencidos: { nome: 'Produtos vencidos', desenhar: ['desenharProdutosVencidos'] },
+    produtos: { nome: 'Cadastro de produtos', desenhar: ['desenharProdutosCatalogo'] },
     revpar: { nome: 'RevPAR', desenhar: ['desenharRevpar'] },
     relatorio: { nome: 'Relatório', desenhar: ['desenharRelatorio'], somenteAdmin: true },
     rede: { nome: 'Comparativo da rede', desenhar: ['desenharRede'] },
     usuarios: { nome: 'Usuários e acessos', desenhar: ['desenharUsuarios'], somenteAdmin: true },
+    unidades: { nome: 'Unidades', desenhar: ['desenharUnidades'], somenteAdmin: true },
     'historico-exclusoes': { nome: 'Histórico de exclusões', desenhar: ['desenharHistoricoExclusoes'], somenteAdmin: true }
   };
 
@@ -38,8 +40,8 @@
     lancar:'caixa', extrato:'caixa', comprovantes:'caixa', fechamento:'caixa',
     'consumo-plantao':'operacao', vistoria:'operacao', manutencao:'operacao',
     boletos:'financeiro', impostos:'financeiro', 'boletos-admin':'financeiro', 'notas-fiscais':'financeiro',
-    funcionarios:'gestao', vencidos:'gestao', revpar:'gestao',
-    usuarios:'sistema', 'historico-exclusoes':'sistema'
+    funcionarios:'gestao', vencidos:'gestao', produtos:'gestao', revpar:'gestao',
+    usuarios:'sistema', unidades:'sistema', 'historico-exclusoes':'sistema'
   });
   const rotaAtual = () => decodeURIComponent(location.hash.replace(/^#\/?/, '').split('?')[0]);
 

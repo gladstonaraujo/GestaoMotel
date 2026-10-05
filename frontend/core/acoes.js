@@ -10,7 +10,7 @@ const ACOES_PERMITIDAS = new Set([
   'entrar','excluirBoleto','excluirBoletoAdmin','excluirCategoriaSuite',
   'excluirConsumoPlantao','excluirContaFixa','excluirFalta','excluirFuncionario',
   'excluirItemVistoria','excluirManutencao','excluirNotaFiscal','excluirProdutoVencido',
-  'excluirRevpar','excluirTroca','excluirUsuario','fecharLightbox',
+  'excluirRevpar','alternarUnidadeAtiva','renomearUnidade','salvarUnidade','excluirTroca','excluirUsuario','fecharLightbox',
   'iniciarLancamentoBoletoAdmin','irParaLancamento','limparFormItemVistoria',
   'limparFormUsuario','marcarBoletoPago','marcarImpostoPago','marcarItemVistoria',
   'mudarModoDespesa','mudarPapelForm','mudarPeriodoRelatorio','mudarTipo',
@@ -24,7 +24,13 @@ const ACOES_PERMITIDAS = new Set([
   'salvarBoletoAdmin','salvarCategoriaSuite','salvarConsumoPlantao','salvarFalta',
   'salvarFuncionario','salvarImposto','salvarItemVistoria','salvarLancamento',
   'salvarManutencao','salvarNotaFiscal','salvarParcela','salvarProdutoVencido',
-  'salvarRevpar','salvarUsuario','salvarVistoria','usarAbasPadrao'
+  'salvarRevpar','salvarUsuario','salvarVistoria','usarAbasPadrao',
+  'filtrarImpostos','limparFiltrosImpostos',
+  'editarProdutoCatalogo','alternarStatusProduto','salvarProdutoCatalogo','limparFormProduto',
+  'abrirDialogNovoProduto','fecharDialogProduto',
+  'abrirDialogCategoriasProdutos','fecharDialogCategoriasProdutos','salvarCategoriaProduto',
+  'editarCategoriaProdutoCatalogo','cancelarEdicaoCategoriaProduto','excluirCategoriaProdutoCatalogo',
+  'limparFiltrosProdutosCatalogo','mudarPaginaProdutos','mudarItensPorPaginaProdutos','filtrarProdutosCatalogo'
 ]);
 
 function separarArgumentos(texto){

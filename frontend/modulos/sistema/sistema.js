@@ -103,6 +103,67 @@ async function excluirUsuario(login){
   desenharUsuarios();
 }
 
+/* =========== UNIDADES (só admin) =========== */
+function desenharUnidades(){
+  if(usuario.papel!=='admin') return;
+  document.getElementById('tab-unidades').innerHTML = UNIDADES_TODAS.map(u=>`
+    <tr>
+      <td>${esc(u.nome)}</td>
+      <td>${u.ativa?'<span class="selo dia">Ativa</span>':'<span class="selo noite">Desativada</span>'}</td>
+      <td class="n">
+        <button class="btn-mini" data-click="renomearUnidade('${escArg(u.id)}')">Renomear</button>
+        <button class="btn-mini" data-click="alternarUnidadeAtiva('${escArg(u.id)}')">${u.ativa?'Desativar':'Reativar'}</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="3" class="vazio">Nenhuma unidade cadastrada.</td></tr>';
+}
+
+// recarrega a lista e redesenha tudo que depende dela (seletor do topo, menu, checkboxes de usuários)
+async function atualizarAposMudarUnidades(){
+  await carregarUnidades();
+  atualizarCabecalho();
+  montarCheckboxesUnidades([]);
+  window.montarUnidadesNotaFiscal?.(); // lista de rateio das notas fiscais (módulo Financeiro)
+  desenhar();
+}
+
+async function salvarUnidade(){
+  const campo=document.getElementById('fun-nome');
+  const msg=document.getElementById('msg-unidade');
+  const nome=campo.value.trim();
+  if(!nome){ msg.style.color='var(--saida)'; msg.textContent='Informe o nome da unidade.'; return; }
+  try{
+    await api('/unidades', { method:'POST', body: JSON.stringify({ nome }) });
+  }catch(e){
+    msg.style.color='var(--saida)'; msg.textContent=e.message; return;
+  }
+  campo.value='';
+  msg.style.color='var(--entrada)'; msg.textContent=`Unidade "${nome}" adicionada.`;
+  setTimeout(()=>{ msg.textContent=''; },5000);
+  await atualizarAposMudarUnidades();
+}
+
+async function renomearUnidade(id){
+  const u=UNIDADES_TODAS.find(x=>x.id===id);
+  if(!u) return;
+  const nome=await pedirValor('Novo nome da unidade:', u.nome);
+  if(nome===null || !nome.trim() || nome.trim()===u.nome) return;
+  try{
+    await api('/unidades/'+encodeURIComponent(id), { method:'PUT', body: JSON.stringify({ nome: nome.trim() }) });
+  }catch(e){ avisar(e.message); return; }
+  await atualizarAposMudarUnidades();
+}
+
+async function alternarUnidadeAtiva(id){
+  const u=UNIDADES_TODAS.find(x=>x.id===id);
+  if(!u) return;
+  const desativar=u.ativa;
+  if(desativar && !await confirmarAcao(`Desativar "${u.nome}"? Ela some dos seletores e ninguém consegue lançar nela, mas o histórico fica guardado e dá pra reativar depois.`)) return;
+  try{
+    await api('/unidades/'+encodeURIComponent(id), { method:'PUT', body: JSON.stringify({ ativa: !desativar }) });
+  }catch(e){ avisar(e.message); return; }
+  await atualizarAposMudarUnidades();
+}
+
 function desenharHistoricoExclusoes(){
   const cont=document.getElementById('tab-historico-exclusoes');
   if(!cont || usuario.papel!=='admin') return;
@@ -114,11 +175,25 @@ function desenharHistoricoExclusoes(){
   noPeriodo.forEach(h=> porPessoa[h.excluidoPor]=(porPessoa[h.excluidoPor]||0)+1);
   const pessoaMaisAtiva=Object.entries(porPessoa).sort((a,b)=>b[1]-a[1])[0];
 
-  document.getElementById('grade-stats-exclusoes').innerHTML = `
-    ${cartaoKpi({rotulo:`Exclusões registradas (total)`,valor:`${lista.length}`})}
-    ${cartaoKpi({rotulo:`Nos últimos 30 dias`,valor:`${noPeriodo.length}`})}
-    ${cartaoKpi({rotulo:`${pessoaMaisAtiva?'Quem mais excluiu ('+pessoaMaisAtiva[1]+')':'Ninguém excluiu ainda'}`,valor:`${esc(pessoaMaisAtiva?pessoaMaisAtiva[0]:'—')}`})}
-  `;
+  document.getElementById('grade-stats-exclusoes').innerHTML = [
+    cartaoKpi({
+      rotulo:'Exclusões registradas (total)',
+      valor:String(lista.length),
+      destaque:true,
+      apoio:`${noPeriodo.length} ocorrência(s) nos últimos 30 dias`
+    }),
+    cartaoKpi({
+      rotulo:'Últimos 30 dias',
+      valor:String(noPeriodo.length),
+      classeValor:noPeriodo.length > 0 ? 'negativo' : 'positivo',
+      apoio:noPeriodo.length > 0 ? 'ações de exclusão recentes' : 'nenhuma exclusão recente'
+    }),
+    cartaoKpi({
+      rotulo:'Usuário com mais registros',
+      valor:pessoaMaisAtiva ? pessoaMaisAtiva[0] : '—',
+      apoio:pessoaMaisAtiva ? `${pessoaMaisAtiva[1]} exclusão(ões) no período recente` : 'sem registros recentes'
+    })
+  ].join('');
 
   cont.innerHTML = lista.length ? lista.map(h=>`
     <tr>

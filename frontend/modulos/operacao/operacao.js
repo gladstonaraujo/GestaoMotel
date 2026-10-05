@@ -292,14 +292,41 @@ function desenharDashboardVistoria(){
 
   document.getElementById('sub-dashboard-vistoria').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
 
-  document.getElementById('grade-stats-vistoria').innerHTML = `
-    ${cartaoKpi({rotulo:`Vistorias registradas`,valor:`${total}`})}
-    ${cartaoKpi({rotulo:`Sem nenhum problema`,valor:`${pctOk}%`,classeValor:`verde`})}
-    ${cartaoKpi({rotulo:`Vistorias com problema`,valor:`${comProblema}`,classeValor:`vermelho`})}
-    ${cartaoKpi({rotulo:`Suítes distintas vistoriadas`,valor:`${suitesDistintas}`})}
-    ${cartaoKpi({rotulo:`Vistorias rápidas (plantão)`,valor:`${rapidas}/${total}`})}
-    ${cartaoKpi({rotulo:`Fotos anexadas no período`,valor:`${totalFotos}`})}
-  `;
+  document.getElementById('grade-stats-vistoria').innerHTML = [
+    cartaoKpi({
+      rotulo:'Vistorias registradas',
+      valor:String(total),
+      destaque:true,
+      apoio:`${suitesDistintas} suíte(s) diferente(s) vistoriada(s)`
+    }),
+    cartaoKpi({
+      rotulo:'Sem nenhum problema',
+      valor:`${pctOk}%`,
+      classeValor:'positivo',
+      apoio:`${total - comProblema} de ${total} vistorias 100% aprovadas`
+    }),
+    cartaoKpi({
+      rotulo:'Vistorias com problema',
+      valor:String(comProblema),
+      classeValor:comProblema > 0 ? 'negativo' : 'positivo',
+      apoio:comProblema > 0 ? `${Math.round((comProblema/total)*100)}% das vistorias do período` : 'nenhuma pendência encontrada'
+    }),
+    cartaoKpi({
+      rotulo:'Suítes vistoriadas',
+      valor:String(suitesDistintas),
+      apoio:'cobertura de suítes da unidade'
+    }),
+    cartaoKpi({
+      rotulo:'Vistorias rápidas',
+      valor:`${rapidas}`,
+      apoio:`${total ? Math.round((rapidas/total)*100) : 0}% do total de vistorias`
+    }),
+    cartaoKpi({
+      rotulo:'Fotos anexadas',
+      valor:String(totalFotos),
+      apoio:'evidências fotográficas registradas'
+    })
+  ].join('');
 
   // ranking de itens mais reportados
   const contagemItens={};
@@ -518,11 +545,25 @@ function desenharDashboardManutencao(){
   const alertas=calcularAlertasManutencao(un);
 
   document.getElementById('sub-dashboard-manutencao').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
-  document.getElementById('grade-stats-manutencao').innerHTML = `
-    ${cartaoKpi({rotulo:`Chamados no período`,valor:`${lista.length}`})}
-    ${cartaoKpi({rotulo:`Suítes distintas atendidas`,valor:`${suitesDistintas}`})}
-    ${cartaoKpi({rotulo:`Alertas de prioridade`,valor:`${alertas.length}`,classeValor:`${alertas.length?'vermelho':''}`})}
-  `;
+  document.getElementById('grade-stats-manutencao').innerHTML = [
+    cartaoKpi({
+      rotulo:'Chamados no período',
+      valor:String(lista.length),
+      destaque:true,
+      apoio:`${suitesDistintas} suíte(s) diferente(s) atendida(s)`
+    }),
+    cartaoKpi({
+      rotulo:'Suítes atendidas',
+      valor:String(suitesDistintas),
+      apoio:'cobertura de suítes com chamado'
+    }),
+    cartaoKpi({
+      rotulo:'Alertas de prioridade',
+      valor:String(alertas.length),
+      classeValor:alertas.length ? 'negativo' : 'positivo',
+      apoio:alertas.length ? 'recorrência de 2+ vezes em 30 dias' : 'nenhuma reincidência crítica'
+    })
+  ].join('');
 
   const contagemServico={};
   lista.forEach(m=> contagemServico[nomeServicoManutencao(m.servico)]=(contagemServico[nomeServicoManutencao(m.servico)]||0)+1);
@@ -594,10 +635,16 @@ function removerItemConsumoPendente(idx){
 }
 
 function renderizarItensConsumoPendente(){
-  document.getElementById('lista-itens-consumo-pendente').innerHTML = AppEstado.ui.itensConsumoPendente.map((it,i)=>`
+  const container = document.getElementById('lista-itens-consumo-pendente');
+  if(!container) return;
+  const lista = AppEstado.ui.itensConsumoPendente || [];
+  container.innerHTML = lista.map((it,i)=>`
     <div class="item-pendente">
-      <span>${it.quantidade}x ${esc(it.produto)}</span>
-      <button type="button" data-click="removerItemConsumoPendente(${i})">remover</button>
+      <div class="item-info">
+        <span class="item-tag-qtd">${it.quantidade}x</span>
+        <strong>${esc(it.produto)}</strong>
+      </div>
+      <button type="button" data-click="removerItemConsumoPendente(${i})" title="Remover item">Remover</button>
     </div>`).join('');
 }
 
@@ -656,12 +703,30 @@ function desenharDashboardConsumoPlantao(){
   const desde=diaMenos(29);
   const lista=AppEstado.dados.consumosPlantao.filter(c=>c.unidade===un && c.registradoEm>=desde);
   const totalItens=lista.reduce((s,c)=>s+c.itens.reduce((s2,it)=>s2+it.quantidade,0),0);
+  const plantoesDia=lista.filter(c=>c.turno==='dia').length;
+  const plantoesNoite=lista.filter(c=>c.turno==='noite').length;
+  const mediaPorPlantao=lista.length ? (totalItens/lista.length).toFixed(1) : '0';
 
   document.getElementById('sub-dashboard-consumo-plantao').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
-  document.getElementById('grade-stats-consumo-plantao').innerHTML = `
-    ${cartaoKpi({rotulo:`Registros no período`,valor:`${lista.length}`})}
-    ${cartaoKpi({rotulo:`Itens consumidos (total)`,valor:`${totalItens}`})}
-  `;
+  document.getElementById('grade-stats-consumo-plantao').innerHTML = [
+    cartaoKpi({
+      rotulo:'Itens consumidos (total)',
+      valor:String(totalItens),
+      classeValor:'positivo',
+      destaque:true,
+      apoio:`média de ${mediaPorPlantao} item(ns) por plantão`
+    }),
+    cartaoKpi({
+      rotulo:'Plantões registrados',
+      valor:String(lista.length),
+      apoio:`Dia ${plantoesDia} · Noite ${plantoesNoite}`
+    }),
+    cartaoKpi({
+      rotulo:'Média por plantão',
+      valor:mediaPorPlantao,
+      apoio:'itens consumidos / plantão'
+    })
+  ].join('');
 
   const contagemProduto={};
   lista.forEach(c=> c.itens.forEach(it=>{
@@ -675,6 +740,14 @@ function desenharDashboardConsumoPlantao(){
 
 function desenharConsumoPlantao(){
   desenharDashboardConsumoPlantao();
+  const datalist = document.getElementById('lista-produtos-consumo');
+  if(datalist){
+    const prods = (AppEstado.dados.produtos||[]).filter(p=>p.ativo);
+    datalist.innerHTML = prods.map(p => {
+      const precoTxt = p.precoVenda > 0 ? ` (R$ ${p.precoVenda.toFixed(2)})` : '';
+      return `<option value="${esc(p.nome)}">${esc(p.categoria || 'Geral')}${precoTxt}</option>`;
+    }).join('');
+  }
   const un=unidadeAtual();
   document.getElementById('titulo-consumo-plantao').textContent='Registros de '+nomeUnidade(un);
   const lista=AppEstado.dados.consumosPlantao.filter(c=>c.unidade===un).slice().sort((a,b)=> a.registradoEm<b.registradoEm?1:-1);

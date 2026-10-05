@@ -1,7 +1,7 @@
 /* Views, estilos e scripts são carregados somente ao entrar no domínio. */
 const modulosCarregados=new Set();
 const carregamentoDeModulos=new Map();
-const VERSAO_RECURSOS='20261001-23';
+const VERSAO_RECURSOS='20261004-2';
 
 function carregarRecursoScript(src){
   return new Promise((resolve,reject)=>{

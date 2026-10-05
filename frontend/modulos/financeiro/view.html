@@ -150,7 +150,43 @@
   </div>
 
   <div class="painel">
-    <h3 id="titulo-impostos">Contas de impostos e energia</h3>
+    <div class="topo-painel-filtros">
+      <h3 id="titulo-impostos">Contas de impostos e energia</h3>
+    </div>
+    <div class="barra-unidade barra-filtro-modulo barra-filtros-impostos">
+      <div class="filtro">
+        <label for="filtro-imp-busca">Buscar</label>
+        <input type="text" id="filtro-imp-busca" placeholder="Buscar por descrição..." data-input="filtrarImpostos()">
+      </div>
+      <div class="filtro">
+        <label for="filtro-imp-status">Status</label>
+        <select id="filtro-imp-status" data-change="filtrarImpostos()">
+          <option value="todos">Todos</option>
+          <option value="pendente">Pendente</option>
+          <option value="atrasado">Atrasada</option>
+          <option value="pago">Paga</option>
+        </select>
+      </div>
+      <div class="filtro">
+        <label for="filtro-imp-tipo">Tipo</label>
+        <select id="filtro-imp-tipo" data-change="filtrarImpostos()">
+          <option value="todos">Todos os tipos</option>
+          <option value="imposto">Imposto</option>
+          <option value="energia">Energia elétrica</option>
+          <option value="agua">Água</option>
+          <option value="internet">Internet / sistema</option>
+          <option value="outra">Outra conta fixa</option>
+        </select>
+      </div>
+      <div class="filtro">
+        <label for="filtro-imp-competencia">Competência</label>
+        <input type="month" id="filtro-imp-competencia" data-change="filtrarImpostos()">
+      </div>
+      <div class="filtro filtro-acoes-alinhadas">
+        <button type="button" class="btn-mini btn-limpar-filtros" id="btn-limpar-filtros-imp" data-click="limparFiltrosImpostos()">Limpar filtros</button>
+      </div>
+    </div>
+    <div id="resumo-filtros-impostos" class="resumo-filtros-tabela oculto"></div>
     <table class="dados">
       <thead><tr>
         <th>Competência</th><th>Vencimento</th><th>Tipo</th><th>Descrição</th><th>Foto</th>

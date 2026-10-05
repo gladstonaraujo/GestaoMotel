@@ -192,8 +192,16 @@ function boletoAdminApiParaLocal(row){
   };
 }
 
+// busca as unidades na API e preenche UNIDADES / UNIDADES_TODAS (arrays que o resto do código já usa)
+async function carregarUnidades(){
+  const lista = await api('/unidades');
+  UNIDADES_TODAS.splice(0, UNIDADES_TODAS.length, ...lista);
+  UNIDADES.splice(0, UNIDADES.length, ...lista.filter(u=>u.ativa));
+}
+
 async function recarregarBoletosAdmin(){
-  if(!usuario || usuario.papel!=='admin') return;
+  // o diretor sempre vê; os demais só se o diretor liberou a aba (o servidor confere a mesma regra)
+  if(!usuario || (usuario.papel!=='admin' && !abasDoUsuario(usuario).includes('boletos-admin'))) return;
   const lista = await api('/boletos-admin');
   AppEstado.dados.boletosAdmin = lista.map(boletoAdminApiParaLocal);
 }
@@ -397,6 +405,38 @@ async function recarregarProdutosVencidos(){
   const ids = unidadesDoUsuario();
   const listas = await Promise.all(ids.map(id => api('/produtos-vencidos?unidade_id='+encodeURIComponent(id))));
   AppEstado.dados.produtosVencidos = listas.flat().map(produtoVencidoApiParaLocal);
+}
+
+function produtoApiParaLocal(row){
+  return {
+    id: row.id,
+    nome: row.nome,
+    categoria: row.categoria || 'Geral',
+    precoCusto: parseFloat(row.preco_custo)||0,
+    precoVenda: parseFloat(row.preco_venda)||0,
+    ativo: !!row.ativo,
+    criadoEm: row.criado_em
+  };
+}
+
+async function recarregarProdutos(){
+  if(!usuario) return;
+  const [lista, categorias] = await Promise.all([
+    api('/produtos?todos=true'),
+    api('/produtos/categorias/todas').catch(() => [])
+  ]);
+  AppEstado.dados.produtos = lista.map(produtoApiParaLocal);
+  AppEstado.dados.categoriasProdutos = Array.isArray(categorias) ? categorias : [];
+}
+
+async function recarregarCategoriasProdutos(){
+  if(!usuario) return;
+  try{
+    const categorias = await api('/produtos/categorias/todas');
+    AppEstado.dados.categoriasProdutos = Array.isArray(categorias) ? categorias : [];
+  }catch(e){
+    AppEstado.dados.categoriasProdutos = [];
+  }
 }
 
 function suiteConfigApiParaLocal(row){

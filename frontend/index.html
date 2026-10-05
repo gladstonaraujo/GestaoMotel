@@ -6,7 +6,7 @@
 <title>Sistema A2 Pousada</title>
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/png" href="logo-a2.png">
-<link rel="stylesheet" href="styles.css?v=20261001-23">
+<link rel="stylesheet" href="styles.css?v=20261003-5">
 <script>
 (function(){
   try{
@@ -70,6 +70,25 @@
   </div>
 </div>
 
+<div id="modal-forma-pagamento" class="modal-overlay oculto">
+  <div class="modal-caixa">
+    <p id="modal-forma-pagamento-texto"></p>
+    <div class="form-linha">
+      <div class="u-coluna-inteira">
+        <label for="modal-forma-pagamento-select">Como foi pago</label>
+        <select id="modal-forma-pagamento-select">
+          <option value="pix">Pix / transferência (não mexe no caixa físico)</option>
+          <option value="dinheiro">Dinheiro (sai do caixa físico deste plantão)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn-cancelar" id="modal-forma-pagamento-cancelar">Cancelar</button>
+      <button class="btn-salvar" id="modal-forma-pagamento-ok">Confirmar pagamento</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-editar-lancamento" class="modal-overlay oculto">
   <div class="modal-caixa modal-edicao">
     <h3 class="titulo-form-destaque">Editar lançamento</h3>
@@ -106,6 +125,105 @@
   </div>
 </div>
 
+<div id="modal-produto" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="titulo-form-produto">
+  <div class="modal-caixa modal-edicao modal-produto-dialog">
+    <div class="topo-modal-dialog">
+      <h3 id="titulo-form-produto" class="u-m-0">Adicionar novo produto</h3>
+      <button type="button" class="btn-fechar-modal" data-click="fecharDialogProduto()" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="corpo-modal-dialog">
+      <input type="hidden" id="fp-id">
+      <div class="form-linha">
+        <div class="u-flex-1">
+          <label for="fp-nome">Nome do produto</label>
+          <input id="fp-nome" placeholder="ex.: Água mineral sem gás 500ml" maxlength="100">
+        </div>
+      </div>
+      <div class="form-linha">
+        <div class="u-flex-1">
+          <div class="rotulo-com-acao">
+            <label for="fp-categoria">Categoria</label>
+            <button type="button" class="btn-link-acao" data-click="abrirDialogCategoriasProdutos()">+ Gerenciar categorias</button>
+          </div>
+          <select id="fp-categoria">
+            <option value="">Selecione uma categoria...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-linha">
+        <div>
+          <label for="fp-preco-custo">Preço de custo (R$)</label>
+          <input type="number" id="fp-preco-custo" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div>
+          <label for="fp-preco-venda">Preço de venda / frigobar (R$)</label>
+          <input type="number" id="fp-preco-venda" min="0" step="0.01" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-linha">
+        <div class="u-flex-1">
+          <label for="fp-ativo">Status</label>
+          <select id="fp-ativo">
+            <option value="true">Ativo (visível nos lançamentos)</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+      <span id="msg-produto" class="aviso-ok"></span>
+    </div>
+
+    <div class="modal-acoes">
+      <button type="button" class="btn-cancelar" id="btn-cancelar-produto" data-click="fecharDialogProduto()">Cancelar</button>
+      <button class="btn-salvar" id="btn-salvar-produto" data-click="salvarProdutoCatalogo()">Salvar produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Gerenciador de Categorias de Produtos -->
+<div id="modal-categorias-produtos" class="modal-overlay oculto" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-categorias">
+  <div class="modal-caixa modal-edicao modal-categorias-dialog">
+    <div class="topo-modal-dialog">
+      <div>
+        <h3 id="titulo-modal-categorias" class="u-m-0">Categorias de Produtos</h3>
+        <span class="sub-dialog-cat">Adicione, edite ou exclua categorias do catálogo</span>
+      </div>
+      <button type="button" class="btn-fechar-modal" data-click="fecharDialogCategoriasProdutos()" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="corpo-modal-categorias">
+      <!-- Formulário rápido para adicionar ou salvar edição de categoria -->
+      <form id="form-cadastrar-categoria" class="form-linha-categoria" onsubmit="event.preventDefault(); salvarCategoriaProduto();">
+        <input type="hidden" id="fc-id">
+        <div class="campo-add-cat">
+          <input type="text" id="fc-nome" placeholder="Nova categoria (ex: Tabacaria, Bebidas...)" maxlength="60">
+          <button type="button" class="btn-salvar" id="btn-salvar-categoria" data-click="salvarCategoriaProduto()">Adicionar</button>
+          <button type="button" class="btn-cancelar oculto" id="btn-cancelar-edicao-cat" data-click="cancelarEdicaoCategoriaProduto()">Cancelar edição</button>
+        </div>
+      </form>
+      <span id="msg-categoria" class="aviso-ok"></span>
+
+      <!-- Lista de Categorias cadastradas -->
+      <div class="lista-categorias-wrapper">
+        <table class="dados tabela-gestao-categorias">
+          <thead>
+            <tr>
+              <th>Nome da categoria</th>
+              <th class="n">Produtos vinculados</th>
+              <th class="n">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tab-categorias-produtos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-acoes">
+      <button type="button" class="btn-salvar" data-click="fecharDialogCategoriasProdutos()">Concluir</button>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <div class="menu-fundo" data-click="alternarMenu(false)"></div>
 
@@ -137,9 +255,11 @@
     <span class="grupo-menu">Gestão</span>
     <button id="aba-funcionarios" data-click="abrir('funcionarios')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.8a3.5 3.5 0 010 6.4M18 14a6 6 0 013.5 6"/></svg><span>Funcionários</span></button>
     <button id="aba-vencidos" data-click="abrir('vencidos')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/></svg><span>Produtos Vencidos</span></button>
+    <button id="aba-produtos" data-click="abrir('produtos')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg><span>Produtos</span></button>
     <button id="aba-revpar" data-click="abrir('revpar')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>RevPAR</span></button>
     <span class="grupo-menu">Sistema</span>
     <button id="aba-usuarios" class="oculto" data-click="abrir('usuarios')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Usuários e acessos</span></button>
+    <button id="aba-unidades" class="oculto" data-click="abrir('unidades')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg><span>Unidades</span></button>
     <button id="aba-historico-exclusoes" class="oculto" data-click="abrir('historico-exclusoes')"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Histórico de Exclusões</span></button>
     </div>
   </nav>
@@ -219,14 +339,14 @@
   </div>
 </div>
 
-<script src="core/modulos.js?v=20261001-23"></script>
-<script src="core/api.js?v=20261001-23"></script>
-<script src="core/estado.js?v=20261001-23"></script>
-<script src="core/ui.js?v=20261001-23"></script>
-<script src="core/views.js?v=20261001-23"></script>
-<script src="core/app.js?v=20261001-23"></script>
-<script src="core/erros.js?v=20261001-23"></script>
-<script src="core/acoes.js?v=20261001-23"></script>
-<script src="core/bootstrap.js?v=20261001-23"></script>
+<script src="core/modulos.js?v=20261002-2"></script>
+<script src="core/api.js?v=20261002-2"></script>
+<script src="core/estado.js?v=20261002-2"></script>
+<script src="core/ui.js?v=20261002-2"></script>
+<script src="core/views.js?v=20261002-2"></script>
+<script src="core/app.js?v=20261002-2"></script>
+<script src="core/erros.js?v=20261002-2"></script>
+<script src="core/acoes.js?v=20261002-2"></script>
+<script src="core/bootstrap.js?v=20261002-2"></script>
 </body>
 </html>

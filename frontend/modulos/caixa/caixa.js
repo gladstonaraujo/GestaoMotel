@@ -262,6 +262,12 @@ function limparCamposLancamento(){
 
 function desenharLancar(){
   if(document.getElementById('f-modo-despesa')) mudarModoDespesa();
+  // o formulário abre no turno em andamento (antes sempre abria em "Dia", e quem lançava
+  // à noite sem reparar gravava no turno errado); depois disso respeita a escolha da pessoa
+  if(!AppEstado.ui.turnoLancarIniciado){
+    document.getElementById('f-turno').value=turnoAtual();
+    AppEstado.ui.turnoLancarIniciado=true;
+  }
   document.getElementById('sub-lancar').textContent =
     `${nomeUnidade(unidadeAtual())} · ${dataBr(dataAtual())} — troque a unidade ou a data na barra acima.`;
 
@@ -440,6 +446,13 @@ async function apagarFotoComprovante(origem, indice){
   desenharComprovantes();
 }
 
+let filtroComprovanteAtual='todos';
+
+function selecionarFiltroComprovante(tipo){
+  filtroComprovanteAtual=tipo;
+  desenharComprovantes();
+}
+
 function desenharComprovantes(){
   const un=unidadeAtual(), datas=listaDatas();
   const setores=setoresComprovantesDoUsuario(usuario);
@@ -449,54 +462,108 @@ function desenharComprovantes(){
   const bateHoje = data => data===dataAtual();
 
   document.getElementById('sub-comprovantes').textContent = soHoje
-    ? `${nomeUnidade(un)} · fotos de ${dataBr(dataAtual())}, separadas por setor.`
-    : `${nomeUnidade(un)} · fotos anexadas nos últimos ${diasPeriodo()} dia(s), separadas por setor.`;
+    ? `${nomeUnidade(un)} · fotos de ${dataBr(dataAtual())}, com filtro por setor.`
+    : `${nomeUnidade(un)} · fotos anexadas nos últimos ${diasPeriodo()} dia(s), com filtro por setor.`;
 
-  // Lançamentos do dia a dia
-  document.getElementById('setor-comp-lancamentos').classList.toggle('oculto', !temSetor('lancamentos'));
-  if(temSetor('lancamentos')){
-    const movs=filtrar({unidade:un,datas: soHoje?[dataAtual()]:datas}).filter(l=>l.foto).slice().sort((a,b)=> a.data<b.data?1:-1);
-    document.getElementById('grade-comprovantes').innerHTML = movs.length
-      ? movs.map(l=>cartaoComprovanteHTML(l.foto,
-          `${nomeCategoria(l.categoria)} · ${dataBr(l.data)} · ${fmt(l.valor)}`,
-          `${l.tipo==='saida'?'−':''}${fmt(l.valor)}`,
-          `${nomeCategoria(l.categoria)} · ${dataBr(l.data)} · ${l.turno==='dia'?'Dia':'Noite'}`,
-          l.tipo==='entrada'?'verde':'vermelho',
-          `apagarFotoComprovante('lancamentos',${AppEstado.dados.lancamentos.indexOf(l)})`)).join('')
-      : `<div class="vazio">Nenhuma foto anexada ${soHoje?'hoje':'neste período'}.</div>`;
+  // Coleta os itens com foto de cada setor permitido
+  const itensPorSetor = {
+    lancamentos: temSetor('lancamentos')
+      ? filtrar({unidade:un, datas: soHoje?[dataAtual()]:datas}).filter(l=>l.foto).slice().sort((a,b)=> a.data<b.data?1:-1).map(l=>({
+          origem: 'lancamentos',
+          foto: l.foto,
+          legenda: `${nomeCategoria(l.categoria)} · ${dataBr(l.data)} · ${fmt(l.valor)}`,
+          valorTxt: `${l.tipo==='saida'?'−':''}${fmt(l.valor)}`,
+          meta: `${nomeCategoria(l.categoria)} · ${dataBr(l.data)} · ${l.turno==='dia'?'Dia':'Noite'}`,
+          classeValor: l.tipo==='entrada'?'verde':'vermelho',
+          onApagar: `apagarFotoComprovante('lancamentos',${AppEstado.dados.lancamentos.indexOf(l)})`
+        }))
+      : [],
+    boletos: temSetor('boletos')
+      ? AppEstado.dados.boletos.filter(b=>b.unidade===un && b.foto && (!soHoje || bateHoje(b.vencimento) || bateHoje(b.dataPagamento))).map(b=>({
+          origem: 'boletos',
+          foto: b.foto,
+          legenda: `${b.descricao} · ${fmt(b.valor)}`,
+          valorTxt: fmt(b.valor),
+          meta: `${b.descricao} · venc. ${dataBr(b.vencimento)}`,
+          classeValor: 'vermelho',
+          onApagar: `apagarFotoComprovante('boletos',${AppEstado.dados.boletos.indexOf(b)})`
+        }))
+      : [],
+    'boletos-admin': temSetor('boletos-admin')
+      ? AppEstado.dados.boletosAdmin.filter(b=>b.foto && (!soHoje || bateHoje(b.vencimento))).map(b=>({
+          origem: 'boletos-admin',
+          foto: b.foto,
+          legenda: `${b.descricao} · ${fmt(b.valor)}`,
+          valorTxt: fmt(b.valor),
+          meta: `${b.descricao} · venc. ${dataBr(b.vencimento)}`,
+          classeValor: 'vermelho',
+          onApagar: `apagarFotoComprovante('boletos-admin',${AppEstado.dados.boletosAdmin.indexOf(b)})`
+        }))
+      : [],
+    impostos: temSetor('impostos')
+      ? AppEstado.dados.contasFixas.filter(c=>c.unidade===un && c.foto && (!soHoje || bateHoje(c.vencimento) || bateHoje(c.dataPagamento))).map(c=>({
+          origem: 'impostos',
+          foto: c.foto,
+          legenda: `${nomeTipoConta(c.tipo)} · ${fmt(c.valor)}`,
+          valorTxt: fmt(c.valor),
+          meta: `${nomeTipoConta(c.tipo)} · ${c.descricao} · venc. ${dataBr(c.vencimento)}`,
+          classeValor: 'vermelho',
+          onApagar: `apagarFotoComprovante('impostos',${AppEstado.dados.contasFixas.indexOf(c)})`
+        }))
+      : []
+  };
+
+  const totalGeral = Object.values(itensPorSetor).reduce((acc,arr)=>acc+arr.length, 0);
+
+  // Opções de filtro que o usuário tem permissão para visualizar
+  const opcoesFiltro = [{ id: 'todos', nome: 'Todos', contagem: totalGeral }];
+  if(temSetor('lancamentos')) opcoesFiltro.push({ id: 'lancamentos', nome: 'Caixa / Lançamentos', contagem: itensPorSetor.lancamentos.length });
+  if(temSetor('boletos')) opcoesFiltro.push({ id: 'boletos', nome: 'Boletos e Pix', contagem: itensPorSetor.boletos.length });
+  if(temSetor('boletos-admin')) opcoesFiltro.push({ id: 'boletos-admin', nome: 'Boletos Administrativo', contagem: itensPorSetor['boletos-admin'].length });
+  if(temSetor('impostos')) opcoesFiltro.push({ id: 'impostos', nome: 'Impostos e Energia', contagem: itensPorSetor.impostos.length });
+
+  // Se o filtro atual não for válido para as permissões atuais, volta para 'todos'
+  if(!opcoesFiltro.some(o=>o.id===filtroComprovanteAtual)) filtroComprovanteAtual='todos';
+
+  // Renderiza a barra de pílulas de filtro
+  const elFiltros = document.getElementById('filtros-comprovantes');
+  if(elFiltros){
+    elFiltros.innerHTML = opcoesFiltro.map(op=>`
+      <button type="button" class="btn-filtro-pill ${op.id===filtroComprovanteAtual?'ativo':''}" data-click="selecionarFiltroComprovante('${op.id}')">
+        <span>${esc(op.nome)}</span>
+        <span class="badge-contagem">${op.contagem}</span>
+      </button>
+    `).join('');
   }
 
-  // Boletos e Pix
-  document.getElementById('setor-comp-boletos').classList.toggle('oculto', !temSetor('boletos'));
-  if(temSetor('boletos')){
-    const lista=AppEstado.dados.boletos.filter(b=>b.unidade===un && b.foto && (!soHoje || bateHoje(b.vencimento) || bateHoje(b.dataPagamento)));
-    document.getElementById('grade-comprovantes-boletos').innerHTML = lista.length
-      ? lista.map(b=>cartaoComprovanteHTML(b.foto, `${b.descricao} · ${fmt(b.valor)}`, fmt(b.valor),
-          `${b.descricao} · venc. ${dataBr(b.vencimento)}`, 'vermelho',
-          `apagarFotoComprovante('boletos',${AppEstado.dados.boletos.indexOf(b)})`)).join('')
-      : `<div class="vazio">Nenhum boleto com foto ${soHoje?'com vencimento ou pagamento hoje':'nesta unidade'}.</div>`;
+  // Itens filtrados para exibição
+  let listaExibida = [];
+  if(filtroComprovanteAtual==='todos'){
+    listaExibida = [
+      ...itensPorSetor.lancamentos,
+      ...itensPorSetor.boletos,
+      ...itensPorSetor['boletos-admin'],
+      ...itensPorSetor.impostos
+    ];
+  } else {
+    listaExibida = itensPorSetor[filtroComprovanteAtual] || [];
   }
 
-  // Boletos Administrativo (só quem tem o setor liberado, normalmente só o diretor)
-  document.getElementById('setor-comp-boletos-admin').classList.toggle('oculto', !temSetor('boletos-admin'));
-  if(temSetor('boletos-admin')){
-    const lista=AppEstado.dados.boletosAdmin.filter(b=>b.foto && (!soHoje || bateHoje(b.vencimento)));
-    document.getElementById('grade-comprovantes-boletos-admin').innerHTML = lista.length
-      ? lista.map(b=>cartaoComprovanteHTML(b.foto, `${b.descricao} · ${fmt(b.valor)}`, fmt(b.valor),
-          `${b.descricao} · venc. ${dataBr(b.vencimento)}`, 'vermelho',
-          `apagarFotoComprovante('boletos-admin',${AppEstado.dados.boletosAdmin.indexOf(b)})`)).join('')
-      : '<div class="vazio">Nenhum boleto administrativo com foto.</div>';
-  }
-
-  // Impostos e Energia
-  document.getElementById('setor-comp-impostos').classList.toggle('oculto', !temSetor('impostos'));
-  if(temSetor('impostos')){
-    const lista=AppEstado.dados.contasFixas.filter(c=>c.unidade===un && c.foto && (!soHoje || bateHoje(c.vencimento) || bateHoje(c.dataPagamento)));
-    document.getElementById('grade-comprovantes-impostos').innerHTML = lista.length
-      ? lista.map(c=>cartaoComprovanteHTML(c.foto, `${nomeTipoConta(c.tipo)} · ${fmt(c.valor)}`, fmt(c.valor),
-          `${nomeTipoConta(c.tipo)} · ${c.descricao} · venc. ${dataBr(c.vencimento)}`, 'vermelho',
-          `apagarFotoComprovante('impostos',${AppEstado.dados.contasFixas.indexOf(c)})`)).join('')
-      : '<div class="vazio">Nenhuma conta com foto nesta unidade.</div>';
+  const elGrade = document.getElementById('grade-comprovantes');
+  if(elGrade){
+    if(listaExibida.length){
+      elGrade.innerHTML = listaExibida.map(item=>cartaoComprovanteHTML(
+        item.foto,
+        item.legenda,
+        item.valorTxt,
+        item.meta,
+        item.classeValor,
+        item.onApagar
+      )).join('');
+    } else {
+      const nomeFiltro = opcoesFiltro.find(o=>o.id===filtroComprovanteAtual)?.nome || '';
+      elGrade.innerHTML = `<div class="vazio">Nenhum comprovante anexado ${filtroComprovanteAtual==='todos'?'':`em "${nomeFiltro}"`} ${soHoje?'hoje':'neste período'}.</div>`;
+    }
   }
 }
 

@@ -5,7 +5,7 @@
   <div class="painel u-mb-16">
     <h3>Dashboard de faltas e trocas</h3>
     <p class="secao-sub" id="sub-dashboard-funcionarios"></p>
-    <div class="kpis kpis-mes" id="grade-stats-funcionarios"></div>
+    <div class="kpis" id="grade-stats-funcionarios" aria-live="polite"></div>
 
     <div class="grade u-mt-16">
       <div class="painel painel-sem-borda">
@@ -208,7 +208,7 @@
   <div class="painel u-mb-16">
     <h3>Dashboard de produtos vencidos</h3>
     <p class="secao-sub" id="sub-dashboard-vencidos"></p>
-    <div class="kpis kpis-mes" id="grade-stats-vencidos"></div>
+    <div class="kpis" id="grade-stats-vencidos" aria-live="polite"></div>
     <div class="u-mt-16">
       <h4 class="titulo-dashboard">Produtos que mais vencem</h4>
       <div id="ranking-produtos-vencidos"></div>
@@ -219,8 +219,14 @@
     <h3 class="titulo-form">Registrar produto vencido/avariado/perdido</h3>
     <div class="form-linha">
       <div>
-        <label for="fv-produto">Produto</label>
-        <input id="fv-produto" placeholder="ex.: sabonete, preservativo, água mineral">
+        <label for="fv-produto">Produto (digite para buscar)</label>
+        <div class="campo-combo-busca">
+          <input id="fv-produto" list="lista-produtos-vencidos" placeholder="Buscar ou escolher produto..." autocomplete="off">
+          <span class="icone-busca-combo">
+            <svg class="icone" viewBox="0 0 24 24" width="15" height="15"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+        </div>
+        <datalist id="lista-produtos-vencidos"></datalist>
       </div>
       <div>
         <label for="fv-motivo-tipo">Motivo</label>
@@ -275,6 +281,77 @@
       </tr></thead>
       <tbody id="tab-vencidos"></tbody>
     </table>
+  </div>
+</section>
+
+<section id="tela-produtos" class="oculto">
+  <h2 class="secao">Cadastro de Produtos</h2>
+  <p class="secao-sub">Catálogo de itens para controle de frigobar, consumo do plantão e produtos vencidos.</p>
+
+  <div class="painel u-mb-16">
+    <div class="cabecalho-flex">
+      <div>
+        <h3 class="u-m-0">Itens cadastrados</h3>
+        <span class="secao-sub u-m-0" id="contagem-produtos-cadastrados"></span>
+      </div>
+      <div class="u-flex-gap-8">
+        <button type="button" class="btn-cancelar" data-click="abrirDialogCategoriasProdutos()">Gerenciar categorias</button>
+        <button type="button" class="btn-salvar" data-click="abrirDialogNovoProduto()">+ Novo produto</button>
+      </div>
+    </div>
+
+    <div class="barra-unidade barra-filtro-modulo barra-filtros-produtos">
+      <div class="filtro">
+        <label for="filtro-prod-busca">Buscar</label>
+        <input type="text" id="filtro-prod-busca" placeholder="Buscar por nome ou categoria..." data-input="filtrarProdutosCatalogo()">
+      </div>
+      <div class="filtro">
+        <label for="filtro-prod-status">Situação</label>
+        <select id="filtro-prod-status" data-change="filtrarProdutosCatalogo()">
+          <option value="todos">Todos</option>
+          <option value="ativo" selected>Somente Ativos</option>
+          <option value="inativo">Somente Inativos</option>
+        </select>
+      </div>
+      <div class="filtro">
+        <label for="filtro-prod-categoria">Categoria</label>
+        <select id="filtro-prod-categoria" data-change="filtrarProdutosCatalogo()">
+          <option value="todas">Todas as categorias</option>
+        </select>
+      </div>
+      <div class="filtro filtro-acoes-alinhadas">
+        <button type="button" class="btn-mini btn-limpar-filtros" id="btn-limpar-filtros-prod" data-click="limparFiltrosProdutosCatalogo()">Limpar filtros</button>
+      </div>
+    </div>
+
+    <div id="resumo-filtros-produtos" class="resumo-filtros-tabela oculto"></div>
+
+    <div class="u-mt-14">
+      <table class="dados">
+        <thead><tr>
+          <th>Produto</th><th>Categoria</th><th class="n">Preço de Custo</th><th class="n">Preço de Venda</th><th>Situação</th><th class="n">Ações</th>
+        </tr></thead>
+        <tbody id="tab-produtos-catalogo"></tbody>
+      </table>
+    </div>
+
+    <div id="paginacao-produtos" class="barra-paginacao oculto">
+      <div class="seletor-itens-pagina">
+        <label for="filtro-prod-itens-pagina">Exibir:</label>
+        <select id="filtro-prod-itens-pagina" data-change="mudarItensPorPaginaProdutos()">
+          <option value="10" selected>10 por página</option>
+          <option value="20">20 por página</option>
+          <option value="50">50 por página</option>
+          <option value="todos">Mostrar todos</option>
+        </select>
+      </div>
+      <div class="info-paginacao" id="info-paginacao-produtos"></div>
+      <div class="controles-paginacao">
+        <button type="button" class="btn-mini" id="btn-pag-prod-ant" data-click="mudarPaginaProdutos(-1)">Anterior</button>
+        <span class="pagina-atual-texto" id="texto-pagina-prod"></span>
+        <button type="button" class="btn-mini" id="btn-pag-prod-prox" data-click="mudarPaginaProdutos(1)">Próxima</button>
+      </div>
+    </div>
   </div>
 </section>
 

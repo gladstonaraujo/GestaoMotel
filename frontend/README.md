@@ -58,6 +58,8 @@ O núcleo está separado em:
 O `index.html` contém somente login, modais, cabeçalho, navegação e o contêiner
 principal. As 19 telas ficam nos arquivos `view.html` dos respectivos módulos.
 
+Consulte [`docs/design-system/PADRAO-KPIS.md`](../docs/design-system/PADRAO-KPIS.md) para o guia e especificação técnica dos cards e KPIs do sistema.
+
 ## Estado atual
 O sistema está **totalmente integrado com o back-end** — não guarda mais
 nada só em memória do navegador. Todas as áreas (caixa, boletos, contas

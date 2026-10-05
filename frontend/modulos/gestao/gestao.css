@@ -2,3 +2,124 @@
 .selo-status.vencido{background:var(--saida);color:#fff}
 .selo-status.avariado{background:var(--dia-fraca);color:var(--dia)}
 .selo-status.perdido{background:var(--noite-fraca);color:var(--noite)}
+
+/* Filtros da tabela de produtos */
+.barra-filtros-produtos{
+  margin-top:14px;margin-bottom:12px;padding:12px 14px;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--raio-sm);
+}
+.barra-filtros-produtos .filtro{
+  flex:1 1 160px;
+}
+.barra-filtros-produtos .filtro input,
+.barra-filtros-produtos .filtro select{
+  width:100%;
+}
+.barra-filtros-produtos .filtro-acoes-alinhadas{
+  flex:0 0 auto;align-self:flex-end;
+}
+.barra-filtros-produtos .btn-limpar-filtros{
+  height:36px;padding:0 12px;font-size:12px;
+}
+.resumo-filtros-tabela{
+  font-size:12.5px;color:var(--slate-2);margin-bottom:10px;padding:2px 2px;
+}
+
+/* Barra de paginação */
+.barra-paginacao{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--line);
+}
+.info-paginacao{
+  font-size:13px;color:var(--slate-2);font-weight:500;
+}
+.seletor-itens-pagina{
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate-2);font-weight:500;
+}
+.seletor-itens-pagina select{
+  padding:4px 8px;font-size:12.5px;min-width:130px;height:32px;
+}
+.controles-paginacao{
+  display:flex;align-items:center;gap:10px;
+}
+.pagina-atual-texto{
+  font-size:13px;font-weight:600;color:var(--ink);padding:0 4px;
+}
+
+/* Modal Dialog de Produtos */
+.modal-produto-dialog{
+  max-width:520px;
+}
+.topo-modal-dialog{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--line);
+}
+.topo-modal-dialog h3{
+  font-size:17px;font-weight:700;color:var(--ink);
+}
+.btn-fechar-modal{
+  background:none;border:0;color:var(--slate);font-size:18px;font-weight:600;
+  cursor:pointer;padding:4px 8px;border-radius:var(--raio-sm);transition:all .15s ease;
+}
+.btn-fechar-modal:hover{
+  background:var(--paper);color:var(--ink);
+}
+.corpo-modal-dialog{
+  display:flex;flex-direction:column;gap:14px;
+}
+.corpo-modal-dialog .form-linha{
+  margin-bottom:0;
+}
+
+/* Modal e Gestão de Categorias */
+.u-flex-gap-8{
+  display:flex;align-items:center;gap:8px;
+}
+.rotulo-com-acao{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;
+}
+.rotulo-com-acao label{
+  margin-bottom:0 !important;
+}
+.btn-link-acao{
+  background:none;border:none;color:var(--acento);font-size:12px;font-weight:600;
+  cursor:pointer;padding:0;text-decoration:none;transition:color .15s ease;
+}
+.btn-link-acao:hover{
+  text-decoration:underline;color:var(--acento-escuro);
+}
+.modal-categorias-dialog{
+  max-width:560px;
+}
+.sub-dialog-cat{
+  font-size:12px;color:var(--slate);display:block;margin-top:2px;
+}
+.corpo-modal-categorias{
+  display:flex;flex-direction:column;gap:14px;
+}
+.form-linha-categoria{
+  margin-bottom:4px;
+}
+.campo-add-cat{
+  display:flex;gap:8px;align-items:center;
+}
+.campo-add-cat input{
+  flex:1;
+}
+.campo-add-cat button{
+  white-space:nowrap;
+}
+.lista-categorias-wrapper{
+  max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--raio-sm);
+}
+.tabela-gestao-categorias{
+  width:100%;margin:0;border-collapse:collapse;
+}
+.tabela-gestao-categorias th,
+.tabela-gestao-categorias td{
+  padding:9px 12px;font-size:13px;
+}
+.tabela-gestao-categorias th{
+  background:var(--paper);position:sticky;top:0;z-index:1;
+}
+

@@ -17,7 +17,7 @@ async function entrar(){
     localStorage.setItem('token', dados.token);
     localStorage.setItem('usuario', JSON.stringify(dados.usuario));
     usuario = normalizarUsuarioApi(dados.usuario);
-    iniciarApp();
+    await iniciarApp();
   }catch(e){
     erro.textContent = e.message;
     erro.classList.remove('oculto');
@@ -62,13 +62,19 @@ function restaurarSessao(){
   }
 }
 
-function iniciarApp(){
+async function iniciarApp(){
+  try{
+    await carregarUnidades();
+  }catch(e){
+    if(usuario) sair(e.message);
+    return;
+  }
   document.getElementById('tela-login').style.display='none';
   document.getElementById('app').style.display='block';
   atualizarCabecalho();
   aplicarMenuRecolhido(lerPreferenciaDoMenu());
-  document.getElementById('sel-data').value=hoje();
-  const ordemPreferida = ['painel','lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','revpar','manutencao','boletos-admin','notas-fiscais','relatorio','rede'];
+  document.getElementById('sel-data').value=dataDoPlantao();
+  const ordemPreferida = ['painel','lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','produtos','revpar','manutencao','boletos-admin','notas-fiscais','relatorio','rede'];
   const primeiraAba = ordemPreferida.find(t=>abasDoUsuario(usuario).includes(t)) || 'vistoria';
   const rotaSolicitada=AppModulos.rotaAtual();
   abrir(podeAbrirTela(rotaSolicitada) ? rotaSolicitada : primeiraAba);
@@ -111,6 +117,7 @@ function atualizarCabecalho(){
   document.getElementById('aba-impostos').classList.toggle('oculto', !temAba('impostos'));
   document.getElementById('aba-funcionarios').classList.toggle('oculto', !temAba('funcionarios'));
   document.getElementById('aba-vencidos').classList.toggle('oculto', !temAba('vencidos'));
+  document.getElementById('aba-produtos').classList.toggle('oculto', !temAba('produtos'));
   document.getElementById('aba-revpar').classList.toggle('oculto', !temAba('revpar'));
   document.getElementById('aba-manutencao').classList.toggle('oculto', !temAba('manutencao'));
   document.getElementById('aba-boletos-admin').classList.toggle('oculto', !temAba('boletos-admin'));
@@ -121,14 +128,16 @@ function atualizarCabecalho(){
   // gestão de usuários: sempre exclusiva do administrador geral, não é configurável por aba
   document.getElementById('aba-usuarios').classList.toggle('oculto', usuario.papel!=='admin');
   document.getElementById('aba-historico-exclusoes').classList.toggle('oculto', usuario.papel!=='admin');
+  document.getElementById('aba-unidades').classList.toggle('oculto', usuario.papel!=='admin');
   atualizarGruposDoMenu();
 
-  // data: só gerente e diretor podem escolher outra data; funcionário e inspetor ficam presos ao dia de hoje
+  // data: só gerente e diretor podem escolher outra data; funcionário e inspetor ficam presos ao
+  // dia do plantão em andamento (de madrugada, o plantão da noite ainda é do dia anterior)
   const podeEditarData = usuario.papel==='admin' || usuario.papel==='gerente';
   const campoData=document.getElementById('sel-data');
   campoData.disabled = !podeEditarData;
   campoData.classList.toggle('sel-data-travada', !podeEditarData);
-  if(!podeEditarData) campoData.value=hoje();
+  if(!podeEditarData) campoData.value=dataDoPlantao();
   document.getElementById('aviso-data-travada').classList.toggle('oculto', podeEditarData);
   // Esta função pertence ao módulo Caixa, que pode ainda não ter sido carregado.
   window.atualizarVisibilidadeModoDespesa?.();
@@ -212,7 +221,7 @@ function atualizarGruposDoMenu(){
 
 function podeAbrirTela(tela){
   if(!usuario || !AppModulos.telas[tela]) return false;
-  if(tela==='usuarios' || tela==='historico-exclusoes') return usuario.papel==='admin';
+  if(tela==='usuarios' || tela==='unidades' || tela==='historico-exclusoes') return usuario.papel==='admin';
   if(tela==='rede' && unidadesDoUsuario().length<2) return false;
   return abasDoUsuario(usuario).includes(tela);
 }
@@ -229,6 +238,7 @@ function carregadorDeDados(nome){
     trocas: recarregarTrocas,
     vistorias: recarregarVistorias,
     produtosVencidos: recarregarProdutosVencidos,
+    produtos: recarregarProdutos,
     suites: recarregarSuitesConfig,
     revpar: recarregarRevpar,
     manutencoes: recarregarManutencoes,
@@ -245,13 +255,14 @@ function nomesDeDadosDaTela(tela){
     fechamento:['lancamentos'], rede:['lancamentos'],
     boletos:['boletos'], impostos:['contasFixas'],
     'boletos-admin':['boletosAdmin'], 'notas-fiscais':['notasFiscais'],
-    vistoria:['vistorias'], manutencao:['manutencoes'], 'consumo-plantao':['consumoPlantao'],
-    funcionarios:['funcionarios','faltas','trocas'], vencidos:['produtosVencidos'],
+    vistoria:['vistorias'], manutencao:['manutencoes'], 'consumo-plantao':['consumoPlantao','produtos'],
+    funcionarios:['funcionarios','faltas','trocas'], vencidos:['produtosVencidos','produtos'],
+    produtos:['produtos'],
     revpar:['suites','revpar'], usuarios:['usuarios'],
     'historico-exclusoes':['historicoExclusoes']
   };
   return tela==='relatorio'
-    ? ['lancamentos','boletos','boletosAdmin','contasFixas','notasFiscais','funcionarios','faltas','trocas','vistorias','produtosVencidos','suites','revpar','manutencoes','consumoPlantao','usuarios','historicoExclusoes']
+    ? ['lancamentos','boletos','boletosAdmin','contasFixas','notasFiscais','funcionarios','faltas','trocas','vistorias','produtosVencidos','produtos','suites','revpar','manutencoes','consumoPlantao','usuarios','historicoExclusoes']
     : (porTela[tela]||[]);
 }
 

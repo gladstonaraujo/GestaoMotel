@@ -4,13 +4,96 @@
 .item-pendente{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--paper);border:1px solid var(--line);border-radius:var(--raio-sm);margin-bottom:8px;font-size:13.5px}
 .item-pendente button{background:none;border:0;color:var(--saida);font-size:12.5px;font-weight:500;cursor:pointer;text-decoration:underline}
 
-.linha-quantidade-consumo{display:flex;align-items:center;gap:8px;margin:14px 0}
-.btn-qtd-consumo{
-  width:44px;height:44px;flex-shrink:0;border:1px solid var(--line-forte);background:#fff;border-radius:10px;
-  font-size:20px;font-weight:600;color:var(--ink);box-shadow:var(--sombra-1);transition:all .15s ease;
+.linha-contexto-consumo{
+  margin-bottom:18px;max-width:280px;
 }
-.btn-qtd-consumo:hover{border-color:var(--acento);color:var(--acento);background:var(--acento-fraca)}
-.linha-quantidade-consumo input[type=number]{width:72px;flex-shrink:0;text-align:center;padding:10px 6px;font-size:15px;font-weight:600}
+.linha-contexto-consumo label{
+  display:block;font-size:12.5px;font-weight:600;color:var(--slate-2);margin-bottom:6px;
+}
+
+.card-adicionar-item-consumo{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--raio);
+  padding:16px;margin-bottom:16px;
+}
+.grade-adicionar-produto{
+  display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:flex-end;
+}
+.coluna-produto-consumo{min-width:0}
+.coluna-produto-consumo label,
+.coluna-qtd-consumo label,
+.coluna-acao-item label{
+  display:block;font-size:12px;font-weight:600;color:var(--slate-2);margin-bottom:6px;
+}
+.rotulo-invisivel{user-select:none;pointer-events:none}
+
+.seletor-qtd-consumo{
+  display:inline-flex;align-items:center;height:42px;width:104px;flex-shrink:0;
+  background:var(--bg-input);border:1px solid var(--line-forte);
+  border-radius:var(--raio-sm);box-shadow:var(--sombra-1);overflow:hidden;
+}
+.btn-qtd-consumo{
+  width:32px;height:40px;flex-shrink:0;border:0;background:transparent;
+  font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background-color .15s ease,color .15s ease;
+}
+.btn-qtd-consumo:hover{background:var(--acento-fraca);color:var(--acento)}
+.seletor-qtd-consumo input:not([type=checkbox]):not([type=radio]):not([type=file]),
+.seletor-qtd-consumo input[type=number]{
+  width:40px !important;min-width:0 !important;max-width:40px !important;
+  height:40px !important;min-height:unset !important;padding:0 !important;
+  border:0 !important;border-left:1px solid var(--line) !important;border-right:1px solid var(--line) !important;
+  border-radius:0 !important;background:transparent !important;text-align:center !important;
+  font-size:14.5px !important;font-weight:700 !important;color:var(--ink) !important;
+  box-shadow:none !important;-moz-appearance:textfield;appearance:textfield;
+}
+.seletor-qtd-consumo input::-webkit-outer-spin-button,
+.seletor-qtd-consumo input::-webkit-inner-spin-button{
+  -webkit-appearance:none;margin:0;
+}
+
+.btn-adicionar-item-consumo{
+  height:42px;padding:0 18px;border:1px solid var(--line-forte);border-radius:var(--raio-sm);
+  background:var(--card);color:var(--ink);font-size:13.5px;font-weight:600;cursor:pointer;
+  box-shadow:var(--sombra-1);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  transition:all .15s ease;
+}
+.btn-adicionar-item-consumo:hover{
+  border-color:var(--acento);background:var(--acento-fraca);color:var(--acento);
+}
+.btn-adicionar-item-consumo .icone{stroke-width:2.2}
+
+#lista-itens-consumo-pendente:empty::before{
+  content:"Nenhum item adicionado ainda. Escolha um produto e clique em \"Adicionar item\".";
+  display:block;padding:12px 14px;border:1px dashed var(--line);border-radius:var(--raio-sm);
+  color:var(--slate);font-size:13px;font-style:italic;background:var(--bg-tabela-zebra);
+}
+
+.item-pendente{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 14px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--raio-sm);margin-bottom:6px;font-size:13.5px;
+  box-shadow:var(--sombra-1);
+}
+.item-pendente .item-info{display:flex;align-items:center;gap:8px}
+.item-pendente .item-tag-qtd{
+  background:var(--acento-fraca);color:var(--acento);
+  font-weight:700;font-size:12px;padding:2px 8px;border-radius:6px;
+}
+.item-pendente button{
+  background:none;border:0;color:var(--saida);font-size:12.5px;font-weight:500;
+  cursor:pointer;padding:4px 6px;border-radius:4px;transition:background-color .15s ease;
+}
+.item-pendente button:hover{background:var(--saida-fraca);text-decoration:none}
+
+@media (max-width:640px){
+  .grade-adicionar-produto{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .rotulo-invisivel{display:none}
+  .coluna-acao-item .btn-adicionar-item-consumo{width:100%;justify-content:center}
+}
 
 /* ---------- VISTORIA DE SUÍTES ---------- */
 .linha-checklist{padding:12px 4px;border-bottom:1px solid var(--line)}

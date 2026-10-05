@@ -1,12 +1,9 @@
 /* =========== DADOS BASE =========== */
-const UNIDADES = [
-  {id:'beirol1',  nome:'Beirol 1'},
-  {id:'beirol2',  nome:'Beirol 2'},
-  {id:'jardim',   nome:'Jardim'},
-  {id:'pacoval',  nome:'Pacoval'},
-  {id:'nova',     nome:'Nova Esperança'},
-  {id:'santana',  nome:'Santana'}
-];
+/* As unidades vêm da API (carregarUnidades, no login) — são cadastradas na tela "Unidades".
+   UNIDADES guarda só as ativas (seletores, checkboxes); UNIDADES_TODAS inclui as desativadas,
+   pra continuar mostrando o nome nos registros antigos. Ambas são preenchidas no próprio lugar. */
+const UNIDADES = [];
+const UNIDADES_TODAS = [];
 
 /* papel: funcionario | gerente | admin */
 /* Abas que o diretor pode marcar/desmarcar por usuário — Usuários e acessos fica de fora,
@@ -23,6 +20,7 @@ const TABS_DISPONIVEIS = [
   {id:'impostos',     nome:'Impostos e Energia'},
   {id:'funcionarios', nome:'Funcionários'},
   {id:'vencidos',     nome:'Produtos Vencidos'},
+  {id:'produtos',     nome:'Cadastro de Produtos'},
   {id:'revpar',       nome:'RevPAR'},
   {id:'boletos-admin', nome:'Boletos Administrativo'},
   {id:'notas-fiscais', nome:'Notas Fiscais'},
@@ -35,8 +33,8 @@ function abasPadraoPorPapel(papel){
   return {
     funcionario: ['lancar','consumo-plantao','vistoria'],
     inspetor:    ['vistoria'],
-    gerente:     ['lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','revpar','manutencao','rede'],
-    admin:       ['painel','lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','revpar','manutencao','boletos-admin','notas-fiscais','relatorio','rede']
+    gerente:     ['lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','produtos','revpar','manutencao','rede'],
+    admin:       ['painel','lancar','consumo-plantao','vistoria','extrato','comprovantes','boletos','fechamento','impostos','funcionarios','vencidos','produtos','revpar','manutencao','boletos-admin','notas-fiscais','relatorio','rede']
   }[papel] || [];
 }
 // se o usuário não tiver 'abas' definido explicitamente, cai no padrão do nível dele
@@ -97,7 +95,7 @@ function temPermissaoFinanceira(u, id){
 const AppEstado = {
   dados: {
     usuarios: [], lancamentos: [], boletos: [], contasFixas: [], funcionarios: [],
-    faltas: [], trocas: [], produtosVencidos: [], suitesConfig: [], revparRegistros: [],
+    faltas: [], trocas: [], produtosVencidos: [], produtos: [], suitesConfig: [], revparRegistros: [],
     manutencoes: [], boletosAdmin: [], consumosPlantao: [], historicoExclusoes: [],
     notasFiscais: [], vistorias: [], itensVistoria: [], itensVistoriaRapida: []
   },

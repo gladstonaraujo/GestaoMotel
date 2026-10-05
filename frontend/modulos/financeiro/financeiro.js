@@ -112,9 +112,10 @@ async function salvarBoleto(){
 
 async function marcarBoletoPago(i){
   const b=AppEstado.dados.boletos[i];
-  if(!await confirmarAcao(`Marcar "${b.descricao}" (${fmt(b.valor)}) como pago via Pix hoje?`)) return;
+  const forma=await escolherFormaPagamento(`Marcar "${b.descricao}" (${fmt(b.valor)}) como pago? A saída entra no caixa do plantão atual.`);
+  if(!forma) return;
   try{
-    await api('/boletos/'+b.id+'/marcar-pago', { method:'POST' });
+    await api('/boletos/'+b.id+'/marcar-pago', { method:'POST', body: JSON.stringify({ forma_pagamento: forma }) });
   }catch(e){
     avisar(e.message);
     return;
@@ -268,9 +269,10 @@ async function salvarImposto(){
 
 async function marcarImpostoPago(i){
   const c=AppEstado.dados.contasFixas[i];
-  if(!await confirmarAcao(`Marcar "${c.descricao}" (${fmt(c.valor)}) como paga hoje?`)) return;
+  const forma=await escolherFormaPagamento(`Marcar "${c.descricao}" (${fmt(c.valor)}) como paga? A saída entra no caixa do plantão atual.`);
+  if(!forma) return;
   try{
-    await api('/contas-fixas/'+c.id+'/marcar-pago', { method:'POST' });
+    await api('/contas-fixas/'+c.id+'/marcar-pago', { method:'POST', body: JSON.stringify({ forma_pagamento: forma }) });
   }catch(e){
     avisar(e.message);
     return;
@@ -279,16 +281,70 @@ async function marcarImpostoPago(i){
   desenhar();
 }
 
+function filtrarImpostos(){
+  desenharImpostos();
+}
+
+function limparFiltrosImpostos(){
+  const elBusca = document.getElementById('filtro-imp-busca');
+  const elStatus = document.getElementById('filtro-imp-status');
+  const elTipo = document.getElementById('filtro-imp-tipo');
+  const elComp = document.getElementById('filtro-imp-competencia');
+  if(elBusca) elBusca.value = '';
+  if(elStatus) elStatus.value = 'todos';
+  if(elTipo) elTipo.value = 'todos';
+  if(elComp) elComp.value = '';
+  desenharImpostos();
+}
+
 function desenharImpostos(){
   const un=unidadeAtual();
   const podeExcluir = temPermissaoFinanceira(usuario,'excluir_boletos');
   document.getElementById('titulo-impostos').textContent='Contas de '+nomeUnidade(un);
-  const lista=AppEstado.dados.contasFixas.filter(c=>c.unidade===un)
+
+  const filtroBusca = (document.getElementById('filtro-imp-busca')?.value || '').trim().toLowerCase();
+  const filtroStatus = document.getElementById('filtro-imp-status')?.value || 'todos';
+  const filtroTipo = document.getElementById('filtro-imp-tipo')?.value || 'todos';
+  const filtroComp = document.getElementById('filtro-imp-competencia')?.value || '';
+
+  const listaCompleta = AppEstado.dados.contasFixas.filter(c=>c.unidade===un)
     .map(c=>({...c, indiceReal:AppEstado.dados.contasFixas.indexOf(c)}))
     .sort((a,b)=> a.status===b.status ? (a.vencimento<b.vencimento?-1:1) : (a.status==='pendente'?-1:1));
 
+  const hojeStr = hoje();
+  const lista = listaCompleta.filter(c=>{
+    const atrasado = c.status==='pendente' && c.vencimento < hojeStr;
+    const statusCalculado = c.status==='pago' ? 'pago' : atrasado ? 'atrasado' : 'pendente';
+
+    if(filtroStatus !== 'todos' && statusCalculado !== filtroStatus) return false;
+    if(filtroTipo !== 'todos' && c.tipo !== filtroTipo) return false;
+    if(filtroComp && c.competencia !== filtroComp) return false;
+    if(filtroBusca){
+      const texto = `${c.descricao || ''} ${nomeTipoConta(c.tipo) || ''}`.toLowerCase();
+      if(!texto.includes(filtroBusca)) return false;
+    }
+    return true;
+  });
+
+  const temFiltroAtivo = filtroBusca !== '' || filtroStatus !== 'todos' || filtroTipo !== 'todos' || filtroComp !== '';
+  const elResumo = document.getElementById('resumo-filtros-impostos');
+  if(elResumo){
+    if(temFiltroAtivo){
+      const totalValor = lista.reduce((acc, c)=> acc + (Number(c.valor) || 0), 0);
+      elResumo.textContent = `Exibindo ${lista.length} de ${listaCompleta.length} conta(s) filtrada(s) · Total: ${fmt(totalValor)}`;
+      elResumo.classList.remove('oculto');
+    } else {
+      elResumo.textContent = '';
+      elResumo.classList.add('oculto');
+    }
+  }
+
+  const msgVazio = temFiltroAtivo
+    ? 'Nenhuma conta encontrada com os filtros selecionados.'
+    : 'Nenhuma conta cadastrada para esta unidade.';
+
   document.getElementById('tab-impostos').innerHTML = lista.length ? lista.map(c=>{
-    const atrasado = c.status==='pendente' && c.vencimento < hoje();
+    const atrasado = c.status==='pendente' && c.vencimento < hojeStr;
     const selo = c.status==='pago'
       ? '<span class="selo-status pago">Paga</span>'
       : atrasado ? '<span class="selo-status atrasado">Atrasada</span>' : '<span class="selo-status pendente">Pendente</span>';
@@ -305,7 +361,7 @@ function desenharImpostos(){
         ${podeExcluir?`<button class="btn-mini" data-click="excluirContaFixa(${c.indiceReal})">Excluir</button>`:''}
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8" class="vazio">Nenhuma conta cadastrada para esta unidade.</td></tr>';
+  }).join('') : `<tr><td colspan="8" class="vazio">${msgVazio}</td></tr>`;
 }
 
 async function excluirContaFixa(i){

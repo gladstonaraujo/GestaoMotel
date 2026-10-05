@@ -180,13 +180,37 @@ function desenharDashboardFuncionarios(){
 
   document.getElementById('sub-dashboard-funcionarios').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
 
-  painel.innerHTML = `
-    ${cartaoKpi({rotulo:`Funcionários cadastrados`,valor:`${equipe.length}`})}
-    ${cartaoKpi({rotulo:`Faltas no período`,valor:`${faltasPeriodo.length}`,classeValor:`vermelho`})}
-    ${cartaoKpi({rotulo:`Faltas justificadas`,valor:`${justificadas}`,classeValor:`verde`})}
-    ${cartaoKpi({rotulo:`Não justificadas`,valor:`${naoJustificadas}`,classeValor:`vermelho`})}
-    ${cartaoKpi({rotulo:`Trocas de plantão registradas`,valor:`${trocasPeriodo.length}`})}
-  `;
+  painel.innerHTML = [
+    cartaoKpi({
+      rotulo:'Funcionários cadastrados',
+      valor:String(equipe.length),
+      destaque:true,
+      apoio:`equipe ativa em ${nomeUnidade(un)}`
+    }),
+    cartaoKpi({
+      rotulo:'Faltas no período',
+      valor:String(faltasPeriodo.length),
+      classeValor:faltasPeriodo.length ? 'negativo' : 'positivo',
+      apoio:`${justificadas} justificada(s) · ${naoJustificadas} sem justificativa`
+    }),
+    cartaoKpi({
+      rotulo:'Faltas justificadas',
+      valor:String(justificadas),
+      classeValor:'positivo',
+      apoio:faltasPeriodo.length ? `${Math.round((justificadas / faltasPeriodo.length) * 100)}% do total de faltas` : 'nenhuma ocorrência'
+    }),
+    cartaoKpi({
+      rotulo:'Não justificadas',
+      valor:String(naoJustificadas),
+      classeValor:naoJustificadas > 0 ? 'negativo' : 'positivo',
+      apoio:naoJustificadas > 0 ? 'requer atenção da gerência' : 'sem faltas pendentes'
+    }),
+    cartaoKpi({
+      rotulo:'Trocas de plantão',
+      valor:String(trocasPeriodo.length),
+      apoio:'turnos alternados no período'
+    })
+  ].join('');
 
   const contagemPorPessoa={};
   faltasPeriodo.forEach(f=>{
@@ -486,13 +510,35 @@ function desenharDashboardVencidos(){
   const totalPrejuizo=lista.reduce((s,p)=>s+p.prejuizo,0);
   const porVencido=lista.filter(p=>p.motivoTipo==='vencido').length;
 
+  const porAvariado=lista.filter(p=>p.motivoTipo==='avariado').length;
+  const porPerdido=lista.filter(p=>p.motivoTipo==='perdido').length;
+
   document.getElementById('sub-dashboard-vencidos').textContent = `${nomeUnidade(un)} · últimos 30 dias`;
-  painel.innerHTML = `
-    ${cartaoKpi({rotulo:`Registros no período`,valor:`${lista.length}`})}
-    ${cartaoKpi({rotulo:`Itens perdidos (quantidade)`,valor:`${totalItens}`})}
-    ${cartaoKpi({rotulo:`Prejuízo estimado`,valor:`${fmt(totalPrejuizo)}`,classeValor:`vermelho`})}
-    ${cartaoKpi({rotulo:`Por vencimento`,valor:`${porVencido}`})}
-  `;
+  painel.innerHTML = [
+    cartaoKpi({
+      rotulo:'Prejuízo estimado',
+      valor:fmt(totalPrejuizo),
+      destaque:true,
+      classeValor:totalPrejuizo > 0 ? 'negativo' : 'positivo',
+      apoio:totalPrejuizo > 0 ? `${totalItens} item(ns) perdido(s)` : 'sem perdas no período'
+    }),
+    cartaoKpi({
+      rotulo:'Itens perdidos',
+      valor:String(totalItens),
+      classeValor:totalItens > 0 ? 'negativo' : 'positivo',
+      apoio:`${lista.length} ocorrência(s) registrada(s)`
+    }),
+    cartaoKpi({
+      rotulo:'Por vencimento',
+      valor:String(porVencido),
+      apoio:lista.length ? `${Math.round((porVencido / lista.length) * 100)}% das ocorrências` : 'nenhuma perda'
+    }),
+    cartaoKpi({
+      rotulo:'Avariados / Perdidos',
+      valor:String(porAvariado + porPerdido),
+      apoio:`${porAvariado} avariado(s) · ${porPerdido} perdido(s)`
+    })
+  ].join('');
 
   const contagemProduto={};
   lista.forEach(p=>{
@@ -507,6 +553,14 @@ function desenharDashboardVencidos(){
 
 function desenharProdutosVencidos(){
   desenharDashboardVencidos();
+  const datalist = document.getElementById('lista-produtos-vencidos');
+  if(datalist){
+    const prods = (AppEstado.dados.produtos||[]).filter(p=>p.ativo);
+    datalist.innerHTML = prods.map(p => {
+      const precoTxt = p.precoCusto > 0 ? ` (Custo R$ ${p.precoCusto.toFixed(2)})` : '';
+      return `<option value="${esc(p.nome)}">${esc(p.categoria || 'Geral')}${precoTxt}</option>`;
+    }).join('');
+  }
   const un=unidadeAtual();
   const lista=AppEstado.dados.produtosVencidos.filter(p=>p.unidade===un)
     .slice().sort((a,b)=> a.registradoEm<b.registradoEm?1:-1);
@@ -524,6 +578,389 @@ function desenharProdutosVencidos(){
       <td class="n"><button class="btn-mini" data-click="excluirProdutoVencido('${escArg(p.id)}')">Excluir</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="8" class="vazio">Nenhum produto vencido registrado nesta unidade.</td></tr>';
+}
+
+/* =========== CATÁLOGO DE PRODUTOS =========== */
+function popularSelectCategoriasFormProduto(categoriaSelecionada = ''){
+  const sel = document.getElementById('fp-categoria');
+  if(!sel) return;
+  const listaCats = (AppEstado.dados.categoriasProdutos || []).map(c => c.nome);
+  // Se houver alguma categoria existente em produtos que não está na tabela, inclui também
+  (AppEstado.dados.produtos || []).forEach(p => {
+    if(p.categoria && !listaCats.includes(p.categoria)) listaCats.push(p.categoria);
+  });
+  listaCats.sort();
+
+  sel.innerHTML = '<option value="">Selecione uma categoria...</option>' +
+    listaCats.map(c => `<option value="${escArg(c)}">${esc(c)}</option>`).join('');
+
+  if(categoriaSelecionada && listaCats.includes(categoriaSelecionada)){
+    sel.value = categoriaSelecionada;
+  } else if(categoriaSelecionada){
+    sel.innerHTML += `<option value="${escArg(categoriaSelecionada)}">${esc(categoriaSelecionada)}</option>`;
+    sel.value = categoriaSelecionada;
+  } else {
+    sel.value = '';
+  }
+}
+
+function abrirDialogNovoProduto(){
+  limparFormProduto();
+  popularSelectCategoriasFormProduto('');
+  const modal = document.getElementById('modal-produto');
+  modal?.classList.remove('oculto');
+  setTimeout(() => document.getElementById('fp-nome')?.focus(), 50);
+}
+
+function fecharDialogProduto(){
+  document.getElementById('modal-produto')?.classList.add('oculto');
+  limparFormProduto();
+}
+
+function limparFormProduto(){
+  document.getElementById('fp-id').value = '';
+  document.getElementById('fp-nome').value = '';
+  document.getElementById('fp-categoria').value = '';
+  document.getElementById('fp-preco-custo').value = '';
+  document.getElementById('fp-preco-venda').value = '';
+  document.getElementById('fp-ativo').value = 'true';
+  document.getElementById('titulo-form-produto').textContent = 'Adicionar novo produto';
+  document.getElementById('btn-salvar-produto').textContent = 'Salvar produto';
+  document.getElementById('msg-produto').textContent = '';
+}
+
+function editarProdutoCatalogo(id){
+  const p = (AppEstado.dados.produtos||[]).find(x => x.id === id);
+  if(!p) return;
+  document.getElementById('fp-id').value = p.id;
+  document.getElementById('fp-nome').value = p.nome;
+  popularSelectCategoriasFormProduto(p.categoria || '');
+  document.getElementById('fp-preco-custo').value = p.precoCusto ? p.precoCusto.toFixed(2) : '';
+  document.getElementById('fp-preco-venda').value = p.precoVenda ? p.precoVenda.toFixed(2) : '';
+  document.getElementById('fp-ativo').value = p.ativo ? 'true' : 'false';
+
+  document.getElementById('titulo-form-produto').textContent = 'Editar produto: ' + p.nome;
+  document.getElementById('btn-salvar-produto').textContent = 'Atualizar produto';
+  document.getElementById('msg-produto').textContent = '';
+
+  const modal = document.getElementById('modal-produto');
+  modal?.classList.remove('oculto');
+  setTimeout(() => document.getElementById('fp-nome')?.focus(), 50);
+}
+
+/* ================= GERENCIADOR DE CATEGORIAS ================= */
+function abrirDialogCategoriasProdutos(){
+  cancelarEdicaoCategoriaProduto();
+  desenharTabelaCategoriasModal();
+  document.getElementById('modal-categorias-produtos')?.classList.remove('oculto');
+  setTimeout(() => document.getElementById('fc-nome')?.focus(), 50);
+}
+
+function fecharDialogCategoriasProdutos(){
+  document.getElementById('modal-categorias-produtos')?.classList.add('oculto');
+  cancelarEdicaoCategoriaProduto();
+  popularSelectCategoriasFormProduto(document.getElementById('fp-categoria')?.value);
+  desenharProdutosCatalogo();
+}
+
+function cancelarEdicaoCategoriaProduto(){
+  document.getElementById('fc-id').value = '';
+  document.getElementById('fc-nome').value = '';
+  document.getElementById('btn-salvar-categoria').textContent = 'Adicionar';
+  document.getElementById('btn-cancelar-edicao-cat')?.classList.add('oculto');
+  document.getElementById('msg-categoria').textContent = '';
+}
+
+function desenharTabelaCategoriasModal(){
+  const tbody = document.getElementById('tab-categorias-produtos');
+  if(!tbody) return;
+  const lista = AppEstado.dados.categoriasProdutos || [];
+
+  if(!lista.length){
+    tbody.innerHTML = '<tr><td colspan="3" class="vazio">Nenhuma categoria cadastrada. Adicione acima.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map(c => {
+    const qtdProds = c.total_produtos || 0;
+    const podeExcluir = qtdProds === 0;
+    return `<tr>
+      <td><strong>${esc(c.nome)}</strong></td>
+      <td class="n">${qtdProds} produto(s)</td>
+      <td class="n">
+        <button type="button" class="btn-mini" data-click="editarCategoriaProdutoCatalogo('${escArg(c.id)}', '${escArg(c.nome)}')">Editar</button>
+        ${podeExcluir
+          ? `<button type="button" class="btn-mini" data-click="excluirCategoriaProdutoCatalogo('${escArg(c.id)}', '${escArg(c.nome)}')">Excluir</button>`
+          : `<span class="tracinho" title="Não pode excluir: possui produtos vinculados">—</span>`
+        }
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editarCategoriaProdutoCatalogo(id, nome){
+  document.getElementById('fc-id').value = id;
+  const inpNome = document.getElementById('fc-nome');
+  inpNome.value = nome;
+  inpNome.focus();
+  document.getElementById('btn-salvar-categoria').textContent = 'Salvar alteração';
+  document.getElementById('btn-cancelar-edicao-cat')?.classList.remove('oculto');
+  document.getElementById('msg-categoria').textContent = '';
+}
+
+async function salvarCategoriaProduto(){
+  const id = document.getElementById('fc-id').value;
+  const nome = document.getElementById('fc-nome').value.trim();
+  const msg = document.getElementById('msg-categoria');
+
+  if(!nome){
+    msg.style.color = 'var(--saida)';
+    msg.textContent = 'Informe o nome da categoria.';
+    return;
+  }
+
+  try{
+    if(id){
+      await api('/produtos/categorias/'+id, {
+        method: 'PUT',
+        body: JSON.stringify({ nome })
+      });
+      msg.style.color = 'var(--entrada)';
+      msg.textContent = 'Categoria atualizada com sucesso!';
+    } else {
+      await api('/produtos/categorias', {
+        method: 'POST',
+        body: JSON.stringify({ nome })
+      });
+      msg.style.color = 'var(--entrada)';
+      msg.textContent = 'Categoria adicionada com sucesso!';
+    }
+    await recarregarCategoriasProdutos();
+    await recarregarProdutos();
+    desenharTabelaCategoriasModal();
+    popularSelectCategoriasFormProduto(document.getElementById('fp-categoria')?.value);
+    cancelarEdicaoCategoriaProduto();
+    setTimeout(() => { if(msg) msg.textContent = ''; }, 3000);
+  }catch(e){
+    msg.style.color = 'var(--saida)';
+    msg.textContent = e.message;
+  }
+}
+
+async function excluirCategoriaProdutoCatalogo(id, nome){
+  const confirma = await confirmar(`Deseja realmente excluir a categoria "${nome}"?`);
+  if(!confirma) return;
+  try{
+    await api('/produtos/categorias/'+id, { method: 'DELETE' });
+    await recarregarCategoriasProdutos();
+    desenharTabelaCategoriasModal();
+    popularSelectCategoriasFormProduto(document.getElementById('fp-categoria')?.value);
+  }catch(e){
+    avisar(e.message);
+  }
+}
+
+async function alternarStatusProduto(id, novoStatus){
+  try{
+    await api('/produtos/'+id, {
+      method: 'PUT',
+      body: JSON.stringify({ ativo: novoStatus })
+    });
+    await recarregarProdutos();
+    desenharProdutosCatalogo();
+  }catch(e){
+    avisar(e.message);
+  }
+}
+
+async function salvarProdutoCatalogo(){
+  const id = document.getElementById('fp-id').value;
+  const nome = document.getElementById('fp-nome').value.trim();
+  const categoria = document.getElementById('fp-categoria').value.trim() || 'Geral';
+  const precoCusto = parseFloat(document.getElementById('fp-preco-custo').value) || 0;
+  const precoVenda = parseFloat(document.getElementById('fp-preco-venda').value) || 0;
+  const ativo = document.getElementById('fp-ativo').value === 'true';
+  const msg = document.getElementById('msg-produto');
+
+  if(!nome){
+    msg.style.color = 'var(--saida)';
+    msg.textContent = 'Informe o nome do produto.';
+    return;
+  }
+
+  try{
+    if(id){
+      await api('/produtos/'+id, {
+        method: 'PUT',
+        body: JSON.stringify({ nome, categoria, preco_custo: precoCusto, preco_venda: precoVenda, ativo })
+      });
+      msg.style.color = 'var(--entrada)';
+      msg.textContent = 'Produto atualizado com sucesso!';
+    } else {
+      await api('/produtos', {
+        method: 'POST',
+        body: JSON.stringify({ nome, categoria, preco_custo: precoCusto, preco_venda: precoVenda })
+      });
+      msg.style.color = 'var(--entrada)';
+      msg.textContent = 'Produto cadastrado com sucesso!';
+    }
+    await recarregarProdutos();
+    desenharProdutosCatalogo();
+    setTimeout(() => {
+      fecharDialogProduto();
+    }, 600);
+  }catch(e){
+    msg.style.color = 'var(--saida)';
+    msg.textContent = e.message;
+  }
+}
+
+let paginaAtualProdutos = 1;
+let itensPorPaginaProdutos = 10;
+
+function filtrarProdutosCatalogo(){
+  paginaAtualProdutos = 1;
+  desenharProdutosCatalogo();
+}
+
+function mudarItensPorPaginaProdutos(){
+  const val = document.getElementById('filtro-prod-itens-pagina')?.value;
+  itensPorPaginaProdutos = val === 'todos' ? 'todos' : (parseInt(val, 10) || 10);
+  paginaAtualProdutos = 1;
+  desenharProdutosCatalogo();
+}
+
+function mudarPaginaProdutos(delta){
+  paginaAtualProdutos += delta;
+  desenharProdutosCatalogo();
+}
+
+function limparFiltrosProdutosCatalogo(){
+  const elBusca = document.getElementById('filtro-prod-busca');
+  const elStatus = document.getElementById('filtro-prod-status');
+  const elCat = document.getElementById('filtro-prod-categoria');
+  const elQtd = document.getElementById('filtro-prod-itens-pagina');
+  if(elBusca) elBusca.value = '';
+  if(elStatus) elStatus.value = 'ativo';
+  if(elCat) elCat.value = 'todas';
+  if(elQtd) elQtd.value = '10';
+  itensPorPaginaProdutos = 10;
+  paginaAtualProdutos = 1;
+  desenharProdutosCatalogo();
+}
+
+function atualizarSelectCategoriasProdutos(categorias, selecionada){
+  const elCat = document.getElementById('filtro-prod-categoria');
+  if(!elCat) return;
+  const valorAtual = selecionada !== undefined ? selecionada : elCat.value;
+  elCat.innerHTML = '<option value="todas">Todas as categorias</option>' +
+    categorias.map(c => `<option value="${escArg(c)}">${esc(c)}</option>`).join('');
+  if(categorias.includes(valorAtual) || valorAtual === 'todas'){
+    elCat.value = valorAtual;
+  } else {
+    elCat.value = 'todas';
+  }
+}
+
+function desenharProdutosCatalogo(){
+  const listaCompleta = AppEstado.dados.produtos || [];
+  const contagemEl = document.getElementById('contagem-produtos-cadastrados');
+  if(contagemEl){
+    const ativos = listaCompleta.filter(p => p.ativo).length;
+    contagemEl.textContent = `${ativos} produto(s) ativo(s) de ${listaCompleta.length} cadastrado(s)`;
+  }
+
+  const tbody = document.getElementById('tab-produtos-catalogo');
+  if(!tbody) return;
+
+  // Atualiza opções do combo de categoria (tabela de categorias + produtos)
+  const catsCadastradas = (AppEstado.dados.categoriasProdutos || []).map(c => c.nome);
+  const categoriasUnicas = Array.from(new Set([
+    ...catsCadastradas,
+    ...listaCompleta.map(p => (p.categoria || 'Geral').trim()).filter(Boolean)
+  ])).sort();
+  atualizarSelectCategoriasProdutos(categoriasUnicas);
+
+  // Parâmetros de filtro e busca
+  const termoBusca = (document.getElementById('filtro-prod-busca')?.value || '').trim().toLowerCase();
+  const filtroStatus = document.getElementById('filtro-prod-status')?.value || 'ativo';
+  const filtroCategoria = document.getElementById('filtro-prod-categoria')?.value || 'todas';
+
+  const listaFiltrada = listaCompleta.filter(p => {
+    if(filtroStatus === 'ativo' && !p.ativo) return false;
+    if(filtroStatus === 'inativo' && p.ativo) return false;
+    if(filtroCategoria !== 'todas' && (p.categoria || 'Geral') !== filtroCategoria) return false;
+    if(termoBusca){
+      const texto = `${p.nome || ''} ${p.categoria || ''}`.toLowerCase();
+      if(!texto.includes(termoBusca)) return false;
+    }
+    return true;
+  });
+
+  const temFiltroAtivo = termoBusca !== '' || filtroStatus !== 'ativo' || filtroCategoria !== 'todas';
+  const elResumo = document.getElementById('resumo-filtros-produtos');
+  if(elResumo){
+    if(temFiltroAtivo){
+      elResumo.textContent = `Exibindo ${listaFiltrada.length} de ${listaCompleta.length} produto(s) localizado(s)`;
+      elResumo.classList.remove('oculto');
+    } else {
+      elResumo.textContent = '';
+      elResumo.classList.add('oculto');
+    }
+  }
+
+  if(!listaFiltrada.length){
+    const msgVazio = listaCompleta.length === 0
+      ? 'Nenhum produto cadastrado no catálogo.'
+      : 'Nenhum produto encontrado com os filtros selecionados.';
+    tbody.innerHTML = `<tr><td colspan="6" class="vazio">${msgVazio}</td></tr>`;
+    document.getElementById('paginacao-produtos')?.classList.add('oculto');
+    return;
+  }
+
+  // Paginação
+  const porPagina = itensPorPaginaProdutos === 'todos' ? listaFiltrada.length : itensPorPaginaProdutos;
+  const totalPaginas = Math.max(1, Math.ceil(listaFiltrada.length / porPagina));
+  if(paginaAtualProdutos > totalPaginas) paginaAtualProdutos = totalPaginas;
+  if(paginaAtualProdutos < 1) paginaAtualProdutos = 1;
+
+  const inicio = (paginaAtualProdutos - 1) * porPagina;
+  const fim = Math.min(inicio + porPagina, listaFiltrada.length);
+  const paginaItens = listaFiltrada.slice(inicio, fim);
+
+  tbody.innerHTML = paginaItens.map(p => `
+    <tr>
+      <td><strong>${esc(p.nome)}</strong></td>
+      <td><span class="selo neutro">${esc(p.categoria||'Geral')}</span></td>
+      <td class="n num">${p.precoCusto > 0 ? fmt(p.precoCusto) : '—'}</td>
+      <td class="n num">${p.precoVenda > 0 ? fmt(p.precoVenda) : '—'}</td>
+      <td>
+        <span class="selo-status ${p.ativo ? 'pago' : 'atrasado'}">
+          ${p.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td class="n">
+        <button class="btn-mini" data-click="editarProdutoCatalogo('${escArg(p.id)}')">Editar</button>
+        <button class="btn-mini" data-click="alternarStatusProduto('${escArg(p.id)}', ${!p.ativo})">
+          ${p.ativo ? 'Inativar' : 'Ativar'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Atualiza controles da barra de paginação abaixo da tabela
+  const pagEl = document.getElementById('paginacao-produtos');
+  if(pagEl){
+    pagEl.classList.remove('oculto');
+    const infoEl = document.getElementById('info-paginacao-produtos');
+    if(infoEl) infoEl.textContent = `Mostrando ${inicio + 1}–${fim} de ${listaFiltrada.length} produto(s)`;
+    const txtPag = document.getElementById('texto-pagina-prod');
+    if(txtPag) txtPag.textContent = `Página ${paginaAtualProdutos} de ${totalPaginas}`;
+    const btnAnt = document.getElementById('btn-pag-prod-ant');
+    const btnProx = document.getElementById('btn-pag-prod-prox');
+    if(btnAnt) btnAnt.disabled = paginaAtualProdutos <= 1;
+    if(btnProx) btnProx.disabled = paginaAtualProdutos >= totalPaginas;
+  }
 }
 
 /* =========== CONFIGURAÇÃO DE SUÍTES =========== */
