@@ -121,7 +121,7 @@ function desenharPainel(){
   document.getElementById('titulo-painel').textContent=nomeUnidade(un);
   const per=diasPeriodo();
   document.getElementById('sub-painel').textContent =
-    per===1 ? 'Movimento de '+dataBr(dataAtual())
+    per===1 ? 'Movimento de '+dataBr(datas[0])
             : `De ${dataBr(datas[0])} a ${dataBr(datas[datas.length-1])} · ${per} dias`;
 
   desenharKpisPainel(un,datas,per);
@@ -886,12 +886,16 @@ async function copiarRelatorio(){
 }
 
 function desenharRede(){
-  const ids=unidadesDoUsuario();
-  if(ids.length<2) return;
+  const todas=unidadesDoUsuario();
+  if(todas.length<2) return;
+  // seletor "Unidade" da barra: "Todas as unidades" compara a rede inteira; uma unidade mostra só ela
+  const escolhida=document.getElementById('sel-unidade').value;
+  const ids = todas.includes(escolhida) ? [escolhida] : todas;
   const datas=listaDatas();
+  const periodo = datas.length===1 ? 'Comparação em '+dataBr(datas[0])
+    : `De ${dataBr(datas[0])} a ${dataBr(datas[datas.length-1])} · ${datas.length} dias`;
   document.getElementById('sub-rede').textContent =
-    diasPeriodo()===1 ? 'Comparação em '+dataBr(dataAtual())
-      : `De ${dataBr(datas[0])} a ${dataBr(datas[datas.length-1])}`;
+    (ids.length===1 ? nomeUnidade(ids[0])+' · ' : 'Todas as unidades · ')+periodo;
 
   const dados=ids.map(id=>{
     const m=filtrar({unidade:id,datas});
@@ -912,7 +916,7 @@ function desenharRede(){
       <td class="n num">${fmt(d.din)}</td>
     </tr>`).join('') +
     `<tr class="separador-superior">
-      <td class="neutro-forte">Total da rede</td>
+      <td class="neutro-forte">${ids.length===1?'Total':'Total da rede'}</td>
       <td class="n verde num">${fmt(tot.e)}</td>
       <td class="n vermelho num">${fmt(tot.s)}</td>
       <td class="n neutro-forte num">${fmt(tot.saldo)}</td>

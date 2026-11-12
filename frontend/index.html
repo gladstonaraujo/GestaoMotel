@@ -318,11 +318,20 @@
     </div>
     <div class="filtro">
       <label for="sel-periodo">Período do painel</label>
-      <select id="sel-periodo" data-change="desenhar()">
+      <select id="sel-periodo" data-change="mudarPeriodoPainel()">
         <option value="1">Somente o dia selecionado</option>
         <option value="7" selected>Últimos 7 dias</option>
         <option value="30">Últimos 30 dias</option>
+        <option value="custom">Personalizado (data inicial e final)</option>
       </select>
+    </div>
+    <div class="filtro oculto" id="bloco-periodo-de">
+      <label for="sel-periodo-de">Data inicial</label>
+      <input type="date" id="sel-periodo-de" data-change="desenhar()">
+    </div>
+    <div class="filtro oculto" id="bloco-periodo-ate">
+      <label for="sel-periodo-ate">Data final</label>
+      <input type="date" id="sel-periodo-ate" data-change="desenhar()">
     </div>
     <span id="aviso-data-travada" class="aviso-data-campo oculto">Só gerente e diretor mudam a data</span>
   </div>
@@ -339,14 +348,14 @@
   </div>
 </div>
 
-<script src="core/modulos.js?v=20261002-2"></script>
-<script src="core/api.js?v=20261002-2"></script>
-<script src="core/estado.js?v=20261002-2"></script>
-<script src="core/ui.js?v=20261002-2"></script>
-<script src="core/views.js?v=20261002-2"></script>
-<script src="core/app.js?v=20261002-2"></script>
-<script src="core/erros.js?v=20261002-2"></script>
-<script src="core/acoes.js?v=20261002-2"></script>
-<script src="core/bootstrap.js?v=20261002-2"></script>
+<script src="core/modulos.js?v=20261112-2"></script>
+<script src="core/api.js?v=20261112-2"></script>
+<script src="core/estado.js?v=20261112-2"></script>
+<script src="core/ui.js?v=20261112-2"></script>
+<script src="core/views.js?v=20261112-2"></script>
+<script src="core/app.js?v=20261112-2"></script>
+<script src="core/erros.js?v=20261112-2"></script>
+<script src="core/acoes.js?v=20261112-2"></script>
+<script src="core/bootstrap.js?v=20261112-2"></script>
 </body>
 </html>

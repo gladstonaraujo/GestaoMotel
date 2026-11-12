@@ -141,6 +141,36 @@ function atualizarCabecalho(){
   document.getElementById('aviso-data-travada').classList.toggle('oculto', podeEditarData);
   // Esta função pertence ao módulo Caixa, que pode ainda não ter sido carregado.
   window.atualizarVisibilidadeModoDespesa?.();
+  ajustarSeletorUnidadeParaTela(telaAtual);
+}
+
+// "Todas as unidades" só existe no Comparativo da rede. Nas outras telas o seletor precisa ter
+// sempre uma unidade de verdade (lançamento, extrato etc. são por unidade), então a opção é
+// tirada ao sair e o seletor volta para a unidade em que estava antes.
+const TODAS_UNIDADES='__todas__';
+function ajustarSeletorUnidadeParaTela(tela){
+  const sel=document.getElementById('sel-unidade');
+  if(!sel) return;
+  const opcao=sel.querySelector(`option[value="${TODAS_UNIDADES}"]`);
+  const ids=unidadesDoUsuario();
+  if(tela==='rede' && ids.length>1){
+    if(!opcao){
+      AppEstado.ui.unidadeForaDaRede=sel.value;
+      sel.insertAdjacentHTML('afterbegin', `<option value="${TODAS_UNIDADES}">Todas as unidades</option>`);
+      sel.value=AppEstado.ui.unidadeNaRede || TODAS_UNIDADES;
+    }
+    sel.disabled=false;
+    return;
+  }
+  if(opcao){
+    const escolhidaNaRede=sel.value;
+    AppEstado.ui.unidadeNaRede=escolhidaNaRede;
+    opcao.remove();
+    // escolheu uma unidade no comparativo? segue nela; estava em "todas"? volta pra de antes
+    const anterior = ids.includes(escolhidaNaRede) ? escolhidaNaRede : AppEstado.ui.unidadeForaDaRede;
+    sel.value = ids.includes(anterior) ? anterior : (ids[0]||'');
+  }
+  sel.disabled = ids.length===1;
 }
 
 /* =========== NAVEGAÇÃO =========== */
@@ -302,6 +332,7 @@ async function abrir(tela){
   document.body.dataset.modulo=grupo ? grupo.id : '';
   document.getElementById('titulo-tela').textContent=AppModulos.telas[tela].nome;
   document.getElementById('trilha-tela').textContent=grupo ? grupo.nome : '';
+  ajustarSeletorUnidadeParaTela(tela);
   alternarMenu(false);
   window.scrollTo({top:0});
   const novaRota='#/'+tela;
@@ -327,13 +358,43 @@ window.addEventListener('hashchange', ()=>{
 /* =========== FILTROS =========== */
 function unidadeAtual(){ return document.getElementById('sel-unidade').value; }
 function dataAtual(){ return document.getElementById('sel-data').value || hoje(); }
-function diasPeriodo(){ return parseInt(document.getElementById('sel-periodo').value,10); }
+const periodoPersonalizado = () => document.getElementById('sel-periodo').value==='custom';
+function diasPeriodo(){
+  return periodoPersonalizado() ? listaDatas().length : parseInt(document.getElementById('sel-periodo').value,10);
+}
 
+// Datas do período do painel, da mais antiga para a mais nova. No modo personalizado vale o
+// intervalo "Data inicial"–"Data final" (invertido, se a pessoa digitar ao contrário).
 function listaDatas(){
-  const n=diasPeriodo(), fim=dataAtual(), out=[];
+  if(periodoPersonalizado()){
+    let de=document.getElementById('sel-periodo-de').value || dataAtual();
+    let ate=document.getElementById('sel-periodo-ate').value || dataAtual();
+    if(de>ate) [de,ate]=[ate,de];
+    const out=[];
+    // limite de ~2 anos, pra uma data digitada errada (ex.: ano 0202) não travar a tela
+    for(let d=de; d<=ate && out.length<732; d=deslocarData(d,1)) out.push(d);
+    return out;
+  }
+  const n=parseInt(document.getElementById('sel-periodo').value,10), fim=dataAtual(), out=[];
   const d=new Date(fim+'T12:00:00');
   for(let i=0;i<n;i++){ out.push(new Date(d).toISOString().slice(0,10)); d.setDate(d.getDate()-1); }
   return out.reverse();
+}
+
+// Mostra/esconde as datas do período personalizado. Ao entrar nele, as datas começam com o
+// período que estava na tela (ex.: os últimos 7 dias), pra pessoa só ajustar.
+function mudarPeriodoPainel(){
+  const custom=periodoPersonalizado();
+  const de=document.getElementById('sel-periodo-de'), ate=document.getElementById('sel-periodo-ate');
+  if(custom && !de.value && !ate.value){
+    const anterior=AppEstado.ui.ultimoPeriodoPainel || 7;
+    ate.value=dataAtual();
+    de.value=deslocarData(dataAtual(), -(anterior-1));
+  }
+  if(!custom) AppEstado.ui.ultimoPeriodoPainel=parseInt(document.getElementById('sel-periodo').value,10);
+  document.getElementById('bloco-periodo-de').classList.toggle('oculto', !custom);
+  document.getElementById('bloco-periodo-ate').classList.toggle('oculto', !custom);
+  desenhar();
 }
 
 function filtrar({unidade,datas}){
