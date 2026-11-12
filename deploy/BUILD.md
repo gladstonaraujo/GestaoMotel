@@ -39,8 +39,10 @@ continua vindo do `node_modules`.
 | Código-fonte          | `npm start`              | `server.js`                                                |
 | Produção (empacotado) | `npm run start:prod`     | `dist/server.js`                                           |
 
-O front-end é servido pelo próprio Express: se existir `frontend/dist`, serve essa pasta (as telas são buscadas por rota, ex.: `#/vistoria`);
-se não existir, serve o código-fonte de `frontend/`. Por isso o `dist` precisa ficar ao lado
+O front-end é servido pelo próprio Express. Em produção (`dist/server.js` ou `NODE_ENV=production`)
+serve `frontend/dist`, se existir (as telas são buscadas por rota, ex.: `#/vistoria`); em
+desenvolvimento (`npm run dev` / `npm start`) serve sempre o código-fonte de `frontend/`, então
+basta recarregar a página para ver uma mudança no front, sem build. Por isso o `dist` precisa ficar ao lado
 de `backend/` (em `frontend/dist`). O `dist` sozinho **não** sobe o back-end: a API roda em
 um processo Node separado, com o Postgres, e o front-end chama `/api` na mesma origem.
 

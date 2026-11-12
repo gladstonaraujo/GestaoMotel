@@ -28,10 +28,14 @@ app.use('/uploads', express.static(path.join(RAIZ, 'uploads')));
 
 // O front-end (HTML/CSS/JS) é servido pelo próprio back-end — um processo só, uma porta só,
 // sem precisar de outro servidor (nem sofrer com CORS, já que tudo vem da mesma origem)
-// Em produção serve frontend/dist (gerado por `npm run build`); sem build, cai no código-fonte
+// Em produção (backend/dist/server.js ou NODE_ENV=production) serve frontend/dist, gerado por
+// `npm run build`. Em desenvolvimento (`npm start` / `npm run dev`) serve sempre o código-fonte,
+// pra mudança no front aparecer só recarregando a página, sem precisar de build.
 const fs = require('fs');
 const frontendDist = path.join(RAIZ, '..', 'frontend', 'dist');
-app.use(express.static(fs.existsSync(frontendDist) ? frontendDist : path.join(RAIZ, '..', 'frontend')));
+const emProducao = RAIZ !== __dirname || process.env.NODE_ENV === 'production';
+const usarDist = emProducao && fs.existsSync(frontendDist);
+app.use(express.static(usarDist ? frontendDist : path.join(RAIZ, '..', 'frontend')));
 
 // Rotas
 app.use('/api/uploads', require('./routes/uploads'));
