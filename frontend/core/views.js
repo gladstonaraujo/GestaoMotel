@@ -1,7 +1,7 @@
 /* Views, estilos e scripts são carregados somente ao entrar no domínio. */
 const modulosCarregados=new Set();
 const carregamentoDeModulos=new Map();
-const VERSAO_RECURSOS='20261004-2';
+const VERSAO_RECURSOS='20261112-2';
 
 function carregarRecursoScript(src){
   return new Promise((resolve,reject)=>{
@@ -35,7 +35,7 @@ async function carregarModuloDaTela(tela){
     const inicializadores={
       caixa:()=>{ mudarTipo('entrada'); ajustarParcelaAtual(); },
       operacao:()=>montarChecklistVistoria(),
-      financeiro:()=>montarUnidadesNotaFiscal(),
+      financeiro:()=>{ montarUnidadesNotaFiscal(); montarFormCompraConjunta(); },
       sistema:()=>limparFormUsuario()
     };
     inicializadores[modulo]?.();

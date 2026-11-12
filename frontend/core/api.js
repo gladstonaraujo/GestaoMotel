@@ -147,6 +147,7 @@ function boletoApiParaLocal(row){
     id: row.id,
     unidade: row.unidade_id,
     descricao: row.descricao,
+    tipo: row.tipo || 'outro',
     valor: parseFloat(row.valor),
     vencimento: row.vencimento,
     status: row.status,

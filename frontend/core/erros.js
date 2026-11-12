@@ -54,7 +54,7 @@ function protegido(fn, nome){
  'salvarLancamento','limparCamposLancamento','desenharLancar','desenharExtrato','desenharComprovantes','diasEntre',
  'calcularAlertas','irParaLancamento','desenharAlertas','montarChecklistVistoria','marcarItemVistoria',
  'prevejaFotoVistoria','removerFotoVistoria','renderizarFotosPendentesVistoria','salvarVistoria','desenharVistorias',
- 'apagar','alternarCompraConjunta','montarUnidadesConjunta','dividirValorConjunta','salvarBoleto','marcarBoletoPago',
+ 'apagar','irParaCadastroBoleto','mudarSituacaoBoleto','montarFormCompraConjunta','montarUnidadesConjunta','dividirValorConjunta','salvarBoleto','marcarBoletoPago',
  'desenharBoletos','ajustarParcelaAtual','recalcularValorParcela','salvarParcela','desenharFechamento',
  'montarCheckboxesUnidades','mudarPapelForm','limparFormUsuario','editarUsuario','excluirUsuario','salvarUsuario',
  'desenharUsuarios','desenharRede','alternarGrupoChecklist','desenharDashboardVistoria',

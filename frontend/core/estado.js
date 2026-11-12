@@ -139,6 +139,21 @@ const SAIDAS = [
   {id:'outras',     nome:'Outras despesas'}
 ];
 
+// Tipos de boleto — a mesma lista fica em backend/routes/boletos.js (TIPOS_BOLETO)
+const TIPOS_BOLETO = [
+  {id:'fornecedor', nome:'Fornecedor'},
+  {id:'energia',    nome:'Energia'},
+  {id:'agua',       nome:'Água'},
+  {id:'internet',   nome:'Internet'},
+  {id:'imposto',    nome:'Imposto'},
+  {id:'aluguel',    nome:'Aluguel'},
+  {id:'outro',      nome:'Outro'}
+];
+const nomeTipoBoleto = id => (TIPOS_BOLETO.find(t=>t.id===id)||TIPOS_BOLETO[TIPOS_BOLETO.length-1]).nome;
+
+// Funcionário e inspetor só olham os últimos 7 dias (o backend aplica o mesmo limite)
+const DIAS_CONSULTA_FUNCIONARIO = 7;
+
 const ITENS_VISTORIA_PADRAO = [
   // ---- Quarto ----
   {id:'roupa_cama',    categoria:'quarto', nome:'Roupa de cama sem furos ou manchas'},

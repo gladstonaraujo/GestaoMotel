@@ -65,6 +65,17 @@ function atualizarVisibilidadeModoDespesa(){
   if(!bloco || !usuario) return;
   const mostra = AppEstado.ui.tipoAtual==='saida' && usuario.papel!=='funcionario';
   bloco.classList.toggle('oculto', !mostra);
+  // cadastrar boleto: só gerente e diretor (mesma regra da API)
+  const opcaoBoleto=document.getElementById('opcao-modo-boleto');
+  if(opcaoBoleto){
+    const podeBoleto = usuario.papel==='admin' || usuario.papel==='gerente';
+    opcaoBoleto.hidden = !podeBoleto;
+    opcaoBoleto.disabled = !podeBoleto;
+    if(!podeBoleto && document.getElementById('f-modo-despesa').value==='boleto'){
+      document.getElementById('f-modo-despesa').value='normal';
+      mudarModoDespesa();
+    }
+  }
   if(!mostra){
     document.getElementById('f-modo-despesa').value='normal';
     mudarModoDespesa();
@@ -83,12 +94,47 @@ function mudarModoDespesa(){
   const modo=document.getElementById('f-modo-despesa').value;
   document.getElementById('bloco-parcelada-lancar').classList.toggle('oculto', modo!=='parcelada');
   document.getElementById('bloco-rateio-lancar').classList.toggle('oculto', modo!=='rateada');
+  document.getElementById('bloco-boleto-lancar').classList.toggle('oculto', modo!=='boleto');
   const blocoCategoria=document.getElementById('f-categoria').closest('div');
-  if(blocoCategoria) blocoCategoria.classList.toggle('oculto', modo==='parcelada');
-  document.getElementById('lbl-valor').textContent = modo==='rateada' ? 'Valor de '+nomeUnidade(unidadeAtual())+' (R$)' : 'Valor (R$)';
+  if(blocoCategoria) blocoCategoria.classList.toggle('oculto', modo==='parcelada' || modo==='boleto');
+  document.getElementById('lbl-valor').textContent = modo==='rateada' ? 'Valor de '+nomeUnidade(unidadeAtual())+' (R$)'
+    : modo==='boleto' ? 'Valor do boleto (R$)' : 'Valor (R$)';
   const txtUn=document.getElementById('txt-unidade-rateio');
   if(txtUn) txtUn.textContent = nomeUnidade(unidadeAtual());
   if(modo==='parcelada'){ ajustarParcelaAtualLancar(); }
+
+  // boleto: o turno não é escolhido — se for pago agora, a saída cai no turno em andamento
+  const selTurno=document.getElementById('f-turno');
+  selTurno.disabled = modo==='boleto';
+  if(modo==='boleto'){
+    selTurno.value=turnoAtual();
+    const selTipo=document.getElementById('f-bol-tipo');
+    if(!selTipo.options.length){
+      selTipo.innerHTML=TIPOS_BOLETO.map(t=>`<option value="${t.id}">${esc(t.nome)}</option>`).join('');
+    }
+  }
+  mudarSituacaoBoleto();
+}
+
+function mudarSituacaoBoleto(){
+  const modo=document.getElementById('f-modo-despesa')?.value;
+  const blocoForma=document.getElementById('bloco-forma-pagamento-saida');
+  if(modo!=='boleto'){
+    // fora do modo boleto, quem decide é a regra normal da categoria
+    atualizarDicaCategoria();
+    return;
+  }
+  const pagoAgora=document.getElementById('f-bol-situacao').value==='pago';
+  blocoForma.classList.toggle('oculto', !pagoAgora);
+  document.getElementById('f-forma-pagamento-saida').disabled=false;
+  document.getElementById('lbl-obs').textContent='Descrição do boleto (obrigatório)';
+  document.getElementById('f-obs').placeholder='ex.: enxoval — fornecedor X, conta de energia de outubro';
+  document.getElementById('dica-obs').classList.add('oculto');
+  const lblFoto=document.getElementById('lbl-foto');
+  if(lblFoto) lblFoto.textContent='Foto do boleto (opcional)';
+  document.getElementById('dica-boleto-lancar').textContent = pagoAgora
+    ? `A saída entra no caixa do plantão de ${dataBr(dataDoPlantao())}, turno ${turnoAtual()==='dia'?'Dia':'Noite'} (o turno em andamento). Em dinheiro, diminui o dinheiro do caixa físico.`
+    : 'O boleto fica pendente na tela Boletos e Pix. Quando for pago, marque lá — a saída entra no caixa do turno em que foi pago.';
 }
 
 function ajustarParcelaAtualLancar(){
@@ -110,9 +156,14 @@ function recalcularValorParcelaLancar(){
 
 async function salvarLancamento(){
   const msg=document.getElementById('msg-lanc');
+  // funcionário e inspetor sempre lançam no plantão em andamento (a tela pode ter ficado aberta
+  // desde o plantão anterior, então a data é recalculada na hora de salvar)
+  const ehGestor = usuario.papel==='admin' || usuario.papel==='gerente';
+  if(!ehGestor) document.getElementById('sel-data').value=dataDoPlantao();
   const dataEscolhida=dataAtual();
   const registradoEm=hoje();
-  const dataAlterada = dataEscolhida !== registradoEm;
+  // de madrugada o plantão da noite ainda é o do dia anterior — isso não conta como data alterada
+  const dataAlterada = dataEscolhida !== registradoEm && dataEscolhida !== dataDoPlantao();
   const turno=document.getElementById('f-turno').value;
   const obs=document.getElementById('f-obs').value.trim();
   const foto = AppEstado.ui.fotoPendente ? await enviarFoto(AppEstado.ui.fotoPendente.dataUrl) : null;
@@ -121,6 +172,47 @@ async function salvarLancamento(){
   const podeAnexarFoto = usuario.papel==='admin' || usuario.papel==='gerente';
   const formaPagamentoSaida = AppEstado.ui.tipoAtual==='saida'
     ? (document.getElementById('f-forma-pagamento-saida').value || 'dinheiro') : undefined;
+
+  /* ---- modo boleto: cadastra o boleto; se já foi pago, a saída entra no turno em andamento ---- */
+  if(modo==='boleto'){
+    const valor=parseFloat(document.getElementById('f-valor').value);
+    const vencimento=document.getElementById('f-bol-vencimento').value;
+    const pagoAgora=document.getElementById('f-bol-situacao').value==='pago';
+    if(!obs){
+      msg.style.color='var(--saida)';
+      msg.textContent='Descreva o boleto (ex.: "conta de energia de outubro").';
+      return;
+    }
+    if(!valor || valor<=0 || !vencimento){
+      msg.style.color='var(--saida)';
+      msg.textContent='Preencha o valor e o vencimento do boleto.';
+      return;
+    }
+    try{
+      await api('/boletos', { method:'POST', body: JSON.stringify({
+        unidade_id: unidadeAtual(), descricao: obs, valor, vencimento,
+        tipo: document.getElementById('f-bol-tipo').value,
+        foto_url: foto,
+        codigo_barras: document.getElementById('f-bol-codigo-barras').value.trim() || null,
+        pix_copia_cola: document.getElementById('f-bol-pix').value.trim() || null,
+        pago_agora: pagoAgora,
+        forma_pagamento: pagoAgora ? formaPagamentoSaida : undefined
+      }) });
+      await Promise.all([recarregarBoletos(), pagoAgora ? recarregarLancamentos() : null]);
+    }catch(e){
+      msg.style.color='var(--saida)';
+      msg.textContent=e.message;
+      return;
+    }
+    msg.style.color='var(--entrada)';
+    msg.textContent = pagoAgora
+      ? `Boleto "${obs}" cadastrado como pago — a saída de ${fmt(valor)} entrou no turno ${turnoAtual()==='dia'?'Dia':'Noite'} de ${dataBr(dataDoPlantao())}.`
+      : `Boleto "${obs}" cadastrado em ${nomeUnidade(unidadeAtual())}, vence em ${dataBr(vencimento)}. Marque como pago na tela Boletos e Pix.`;
+    limparCamposLancamento();
+    setTimeout(()=>{ msg.textContent=''; },7000);
+    desenhar();
+    return;
+  }
 
   /* ---- modo parcelada: uma única saída, categoria fixa 'parcelado' ---- */
   if(modo==='parcelada'){
@@ -252,6 +344,10 @@ function limparCamposLancamento(){
   document.getElementById('f-parc-valor-total').value='';
   document.getElementById('f-parc-parcelas').value='1';
   document.getElementById('f-rateio-valor-total').value='';
+  document.getElementById('f-bol-vencimento').value='';
+  document.getElementById('f-bol-situacao').value='pendente';
+  document.getElementById('f-bol-codigo-barras').value='';
+  document.getElementById('f-bol-pix').value='';
   if(document.getElementById('f-forma-pagamento-saida')) document.getElementById('f-forma-pagamento-saida').value='dinheiro';
   if(document.getElementById('f-modo-despesa')){
     document.getElementById('f-modo-despesa').value='normal';
@@ -268,13 +364,17 @@ function desenharLancar(){
     document.getElementById('f-turno').value=turnoAtual();
     AppEstado.ui.turnoLancarIniciado=true;
   }
-  document.getElementById('sub-lancar').textContent =
-    `${nomeUnidade(unidadeAtual())} · ${dataBr(dataAtual())} — troque a unidade ou a data na barra acima.`;
+  const ehGestor = usuario.papel==='admin' || usuario.papel==='gerente';
+  document.getElementById('sub-lancar').textContent = ehGestor
+    ? `${nomeUnidade(unidadeAtual())} · ${dataBr(dataAtual())} — troque a unidade ou a data na barra acima.`
+    : `${nomeUnidade(unidadeAtual())} · plantão de ${dataBr(dataDoPlantao())} — o lançamento entra sempre no plantão em andamento.`;
 
+  // Últimos 7 dias de plantão (o em andamento e os 6 anteriores) — funcionário e inspetor só
+  // enxergam isso (a API também limita); para gerente e diretor é só o recorte desta lista.
   // A API devolve do mais novo para o mais antigo (por unidade); ordena de novo porque a lista junta várias unidades.
-  const meus=AppEstado.dados.lancamentos.filter(l=>l.por===usuario.nome)
-    .sort((x,y)=>String(y.criadoEm||y.data).localeCompare(String(x.criadoEm||x.data)))
-    .slice(0,10);
+  const inicioJanela=deslocarData(dataDoPlantao(), -(DIAS_CONSULTA_FUNCIONARIO-1));
+  const meus=AppEstado.dados.lancamentos.filter(l=>l.por===usuario.nome && l.data>=inicioJanela)
+    .sort((x,y)=>String(y.criadoEm||y.data).localeCompare(String(x.criadoEm||x.data)));
   document.getElementById('tab-meus').innerHTML = meus.length ? meus.map(l=>`
     <tr>
       <td>${dataBr(l.data)}</td>
@@ -283,7 +383,7 @@ function desenharLancar(){
       <td>${esc(l.obs||'—')}</td>
       <td class="n num ${l.tipo==='entrada'?'verde':'vermelho'}">${l.tipo==='saida'?'−':''}${fmt(l.valor)}</td>
     </tr>`).join('')
-    : '<tr><td colspan="5" class="vazio">Você ainda não lançou nada. Use o formulário acima.</td></tr>';
+    : '<tr><td colspan="5" class="vazio">Você não lançou nada nos últimos 7 dias. Use o formulário acima.</td></tr>';
 
   const painelRateio=document.getElementById('painel-notas-rateadas');
   const podeVerRateio = usuario.papel==='admin' || usuario.papel==='gerente';
@@ -463,7 +563,7 @@ function desenharComprovantes(){
 
   document.getElementById('sub-comprovantes').textContent = soHoje
     ? `${nomeUnidade(un)} · fotos de ${dataBr(dataAtual())}, com filtro por setor.`
-    : `${nomeUnidade(un)} · fotos anexadas nos últimos ${diasPeriodo()} dia(s), com filtro por setor.`;
+    : `${nomeUnidade(un)} · fotos anexadas de ${dataBr(datas[0])} a ${dataBr(datas[datas.length-1])}, com filtro por setor.`;
 
   // Coleta os itens com foto de cada setor permitido
   const itensPorSetor = {

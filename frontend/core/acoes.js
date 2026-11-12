@@ -1,7 +1,7 @@
 /* Delegação declarativa de eventos, sem eval/new Function. */
 const ACOES_PERMITIDAS = new Set([
   'abrir','abrirLightbox','alternarMenu','alternarMenuUsuario','alternarTema','aplicarTema','adicionarItemConsumoPlantao','ajustarParcelaAtual',
-  'ajustarParcelaAtualLancar','ajustarQtdConsumo','alternarCompraConjunta',
+  'ajustarParcelaAtualLancar','ajustarQtdConsumo',
   'alternarGrupoChecklist','apagar','atualizarDicaCategoria','atualizarRotuloAtestado',
   'baixarPdfConsumoPlantao','baixarRelatorioResumido','cancelarLancamentoBoletoAdmin',
   'confirmarLancamentoBoletoAdmin','copiarCodigoBoleto','copiarRelatorio','desenhar',
@@ -13,7 +13,7 @@ const ACOES_PERMITIDAS = new Set([
   'excluirRevpar','alternarUnidadeAtiva','renomearUnidade','salvarUnidade','excluirTroca','excluirUsuario','fecharLightbox',
   'iniciarLancamentoBoletoAdmin','irParaLancamento','limparFormItemVistoria',
   'limparFormUsuario','marcarBoletoPago','marcarImpostoPago','marcarItemVistoria',
-  'mudarModoDespesa','mudarPapelForm','mudarPeriodoRelatorio','mudarTipo',
+  'mudarModoDespesa','mudarPeriodoPainel','mudarSituacaoBoleto','irParaCadastroBoleto','mudarPapelForm','mudarPeriodoRelatorio','mudarTipo',
   'prevejaFoto','prevejaFotoAtestado','prevejaFotoBoleto','prevejaFotoBoletoAdmin',
   'prevejaFotoImposto','prevejaFotoNotaFiscal','prevejaFotoParcela','prevejaFotoTroca',
   'prevejaFotoVencido','prevejaFotoVistoria','recalcularValorParcela',

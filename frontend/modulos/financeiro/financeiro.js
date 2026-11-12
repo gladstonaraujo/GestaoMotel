@@ -2,12 +2,23 @@
  * Boletos e Pix, impostos e energia, notas fiscais e boletos administrativos.
  */
 
-/* =========== AppEstado.dados.boletos E NOTAS (Pix) =========== */
-function alternarCompraConjunta(){
-  const on=document.getElementById('fb-conjunta').checked;
-  document.getElementById('bloco-conjunta').classList.toggle('oculto', !on);
-  document.getElementById('bloco-valor-simples').classList.toggle('oculto', on);
-  if(on) montarUnidadesConjunta();
+/* =========== BOLETOS E PIX =========== */
+// O cadastro de boleto de uma unidade fica em Lançar movimento (Saída → "Boleto (cadastrar)").
+// Aqui ficam a lista, o "marcar como pago" e a compra conjunta (boleto dividido entre unidades).
+async function irParaCadastroBoleto(){
+  await abrir('lancar');
+  mudarTipo('saida');
+  document.getElementById('f-modo-despesa').value='boleto';
+  mudarModoDespesa();
+  document.getElementById('f-valor').focus();
+}
+
+function montarFormCompraConjunta(){
+  const selTipo=document.getElementById('fb-tipo');
+  if(selTipo && !selTipo.options.length){
+    selTipo.innerHTML=TIPOS_BOLETO.map(t=>`<option value="${t.id}">${esc(t.nome)}</option>`).join('');
+  }
+  montarUnidadesConjunta();
 }
 
 function montarUnidadesConjunta(){
@@ -33,78 +44,49 @@ function dividirValorConjunta(){
 
 async function salvarBoleto(){
   const descricao=document.getElementById('fb-descricao').value.trim();
-  const conjunta=document.getElementById('fb-conjunta').checked;
+  const tipo=document.getElementById('fb-tipo').value;
   const codigoBarras=document.getElementById('fb-codigo-barras').value.trim();
   const pixCopiaCola=document.getElementById('fb-pix-copia-cola').value.trim();
   const msg=document.getElementById('msg-boleto');
 
+  const totalConjunto=parseFloat(document.getElementById('fb-valor-total-conjunta').value);
+  const vencimento=document.getElementById('fb-vencimento-conjunta').value;
+  const marcadas=[...document.querySelectorAll('.chk-unidade-conjunta:checked')].map(c=>c.value);
   if(!descricao){
     msg.style.color='var(--saida)';
-    msg.textContent='Preencha a descrição do boleto ou nota.';
+    msg.textContent='Preencha a descrição da compra conjunta.';
     return;
   }
-
-  if(conjunta){
-    const totalConjunto=parseFloat(document.getElementById('fb-valor-total-conjunta').value);
-    const vencimento=document.getElementById('fb-vencimento-conjunta').value;
-    const marcadas=[...document.querySelectorAll('.chk-unidade-conjunta:checked')].map(c=>c.value);
-    if(!totalConjunto || totalConjunto<=0 || !vencimento || marcadas.length===0){
-      msg.style.color='var(--saida)';
-      msg.textContent='Preencha o valor total, o vencimento e marque pelo menos uma unidade.';
-      return;
-    }
-    const foto = AppEstado.ui.fotoPendenteBoleto ? await enviarFoto(AppEstado.ui.fotoPendenteBoleto.dataUrl) : null;
-    const unidadesPayload = marcadas.map(uid=>({
-      unidade_id: uid,
-      valor: parseFloat(document.querySelector(`.valor-unidade-conjunta[data-unidade="${uid}"]`).value)||0
-    }));
-    try{
-      await api('/boletos/conjunta', { method:'POST', body: JSON.stringify({
-        descricao, vencimento, foto_url:foto, codigo_barras:codigoBarras||null, pix_copia_cola:pixCopiaCola||null,
-        unidades: unidadesPayload
-      }) });
-      await recarregarBoletos();
-    }catch(e){
-      msg.style.color='var(--saida)';
-      msg.textContent=e.message;
-      return;
-    }
-    msg.style.color='var(--entrada)';
-    msg.textContent=`Compra conjunta salva, dividida entre ${marcadas.length} unidade(s).`;
-  }else{
-    const valor=parseFloat(document.getElementById('fb-valor').value);
-    const vencimento=document.getElementById('fb-vencimento').value;
-    if(!valor || valor<=0 || !vencimento){
-      msg.style.color='var(--saida)';
-      msg.textContent='Preencha valor e vencimento.';
-      return;
-    }
-    try{
-      const fotoUrl = AppEstado.ui.fotoPendenteBoleto ? await enviarFoto(AppEstado.ui.fotoPendenteBoleto.dataUrl) : null;
-      await api('/boletos', { method:'POST', body: JSON.stringify({
-        unidade_id: unidadeAtual(), descricao, valor, vencimento,
-        foto_url: fotoUrl,
-        codigo_barras: codigoBarras||null, pix_copia_cola: pixCopiaCola||null
-      }) });
-      await recarregarBoletos();
-    }catch(e){
-      msg.style.color='var(--saida)';
-      msg.textContent=e.message;
-      return;
-    }
-    msg.style.color='var(--entrada)';
-    msg.textContent='Boleto/nota salvo. Marque como pago quando o Pix for feito.';
+  if(!totalConjunto || totalConjunto<=0 || !vencimento || marcadas.length===0){
+    msg.style.color='var(--saida)';
+    msg.textContent='Preencha o valor total, o vencimento e marque pelo menos uma unidade.';
+    return;
   }
+  const unidadesPayload = marcadas.map(uid=>({
+    unidade_id: uid,
+    valor: parseFloat(document.querySelector(`.valor-unidade-conjunta[data-unidade="${uid}"]`).value)||0
+  }));
+  try{
+    const foto = AppEstado.ui.fotoPendenteBoleto ? await enviarFoto(AppEstado.ui.fotoPendenteBoleto.dataUrl) : null;
+    await api('/boletos/conjunta', { method:'POST', body: JSON.stringify({
+      descricao, tipo, vencimento, foto_url:foto, codigo_barras:codigoBarras||null, pix_copia_cola:pixCopiaCola||null,
+      unidades: unidadesPayload
+    }) });
+    await recarregarBoletos();
+  }catch(e){
+    msg.style.color='var(--saida)';
+    msg.textContent=e.message;
+    return;
+  }
+  msg.style.color='var(--entrada)';
+  msg.textContent=`Compra conjunta salva, dividida entre ${marcadas.length} unidade(s).`;
 
   document.getElementById('fb-descricao').value='';
-  document.getElementById('fb-valor').value='';
-  document.getElementById('fb-vencimento').value='';
   document.getElementById('fb-valor-total-conjunta').value='';
   document.getElementById('fb-vencimento-conjunta').value='';
   document.getElementById('fb-codigo-barras').value='';
   document.getElementById('fb-pix-copia-cola').value='';
-  document.getElementById('fb-conjunta').checked=false;
-  alternarCompraConjunta();
+  montarUnidadesConjunta();
   removerFotoBoleto();
   setTimeout(()=>{ msg.textContent=''; },5000);
   desenharBoletos();
@@ -128,7 +110,7 @@ async function marcarBoletoPago(i){
 function desenharBoletos(){
   const un=unidadeAtual();
   const podeExcluir = temPermissaoFinanceira(usuario,'excluir_boletos');
-  document.getElementById('titulo-boletos').textContent='Boletos e notas de '+nomeUnidade(un);
+  document.getElementById('titulo-boletos').textContent='Boletos de '+nomeUnidade(un);
   const lista=AppEstado.dados.boletos.filter(b=>b.unidade===un)
     .map((b,idxFiltro)=>({...b, indiceReal:AppEstado.dados.boletos.indexOf(b)}))
     .sort((a,b)=> a.status===b.status ? (a.vencimento<b.vencimento?-1:1) : (a.status==='pendente'?-1:1));
@@ -149,6 +131,7 @@ function desenharBoletos(){
       : '<span class="tracinho">—</span>';
     return `<tr>
       <td>${dataBr(b.vencimento)}</td>
+      <td>${esc(nomeTipoBoleto(b.tipo))}</td>
       <td>${esc(b.descricao)}${subConjunta}</td>
       <td>${b.foto?`<img class="miniatura-tab" src="${esc(b.foto)}" alt="Boleto" data-click="abrirLightbox('${escArg(b.foto)}','${escArg(legenda)}')">`:'<span class="tracinho">—</span>'}</td>
       <td>${colCodigo}</td>
@@ -158,7 +141,7 @@ function desenharBoletos(){
         ${podeExcluir?`<button class="btn-mini" data-click="excluirBoleto(${b.indiceReal})">Excluir</button>`:''}
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="7" class="vazio">Nenhum boleto ou nota cadastrado para esta unidade.</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="vazio">Nenhum boleto cadastrado para esta unidade. Cadastre em Lançar movimento.</td></tr>';
 }
 
 async function excluirBoleto(i){

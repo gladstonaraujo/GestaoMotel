@@ -48,6 +48,7 @@
             <option value="normal">Normal (padrão)</option>
             <option value="parcelada">Parte de uma compra parcelada</option>
             <option value="rateada">Nota rateada entre unidades</option>
+            <option value="boleto" id="opcao-modo-boleto">Boleto (cadastrar)</option>
           </select>
         </div>
       </div>
@@ -78,6 +79,37 @@
           </div>
         </div>
         <p class="aviso-data-campo">Só o valor de <strong id="txt-unidade-rateio">—</strong> (campo Valor acima) entra no caixa e no fechamento desta unidade. As outras unidades não recebem nada automaticamente — o valor total acima é só pra referência.</p>
+      </div>
+
+      <div id="bloco-boleto-lancar" class="oculto">
+        <div class="form-linha">
+          <div>
+            <label for="f-bol-tipo">Tipo do boleto</label>
+            <select id="f-bol-tipo"></select>
+          </div>
+          <div>
+            <label for="f-bol-vencimento">Vencimento</label>
+            <input type="date" id="f-bol-vencimento">
+          </div>
+          <div>
+            <label for="f-bol-situacao">Situação</label>
+            <select id="f-bol-situacao" data-change="mudarSituacaoBoleto()">
+              <option value="pendente">A pagar — fica na lista de Boletos</option>
+              <option value="pago">Pago agora — sai do caixa do turno atual</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-linha">
+          <div>
+            <label for="f-bol-codigo-barras">Código de barras / linha digitável (opcional)</label>
+            <input id="f-bol-codigo-barras" placeholder="ex.: 34191.79001 01043.510047...">
+          </div>
+          <div>
+            <label for="f-bol-pix">Pix copia e cola (opcional)</label>
+            <input id="f-bol-pix" placeholder="cole aqui o código Pix, se houver">
+          </div>
+        </div>
+        <p class="aviso-data-campo" id="dica-boleto-lancar"></p>
       </div>
     </div>
 
@@ -112,7 +144,7 @@
   </div>
 
   <div class="painel u-mb-16">
-    <h3>Últimos lançamentos que você registrou</h3>
+    <h3>Seus lançamentos dos últimos 7 dias</h3>
     <table class="dados">
       <thead><tr>
         <th>Data</th><th>Turno</th><th>Categoria</th><th>Descrição</th><th class="n">Valor</th>
