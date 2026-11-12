@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade } = require('../middleware/auth');
-const { hoje: hojeBelem } = require('../utils/data');
+const { dataDoPlantao } = require('../utils/data');
 
 const router = express.Router();
 router.use(autenticar);
@@ -46,7 +46,7 @@ router.post('/', exigirUnidade, async (req, res) => {
     const { rows } = await client.query(
       `INSERT INTO vistorias (unidade_id, suite, data, turno, tipo_vistoria, observacao_geral, feito_por)
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [unidade_id, suite, data || hojeBelem(), turno, tipo_vistoria || 'completa', observacao_geral || null, req.usuario.id]
+      [unidade_id, suite, data || dataDoPlantao(), turno, tipo_vistoria || 'completa', observacao_geral || null, req.usuario.id]
     );
     const vistoriaId = rows[0].id;
     for (const item of itens) {

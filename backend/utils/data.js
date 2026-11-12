@@ -24,9 +24,22 @@ function dataDoPlantao(agora = new Date()) {
   return hoje(new Date(agora.getTime() - 24 * 60 * 60 * 1000)); // Belém não tem horário de verão
 }
 
+// Soma (ou subtrai) dias a uma data YYYY-MM-DD, sem passar por fuso.
+function deslocarData(data, dias) {
+  const d = new Date(`${data}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return d.toISOString().slice(0, 10);
+}
+
+// Funcionário e inspetor só olham os últimos 7 dias (o plantão em andamento e os 6 anteriores).
+const DIAS_CONSULTA_FUNCIONARIO = 7;
+function inicioConsultaFuncionario(agora = new Date()) {
+  return deslocarData(dataDoPlantao(agora), -(DIAS_CONSULTA_FUNCIONARIO - 1));
+}
+
 function turnoAtual(agora = new Date()) {
   const hora = horaAtual(agora);
   return hora >= INICIO_TURNO_DIA && hora < INICIO_TURNO_NOITE ? 'dia' : 'noite';
 }
 
-module.exports = { hoje, dataDoPlantao, turnoAtual };
+module.exports = { hoje, dataDoPlantao, turnoAtual, deslocarData, inicioConsultaFuncionario, DIAS_CONSULTA_FUNCIONARIO };

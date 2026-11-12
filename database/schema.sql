@@ -132,6 +132,7 @@ CREATE TABLE compras_conjuntas (
 CREATE TABLE boletos (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   unidade_id          TEXT NOT NULL REFERENCES unidades(id),
+  tipo                TEXT NOT NULL DEFAULT 'outro',  -- fornecedor, energia, agua, internet, imposto, aluguel, outro (lista em routes/boletos.js)
   descricao           TEXT NOT NULL,
   valor               NUMERIC(12,2) NOT NULL CHECK (valor > 0),
   vencimento          DATE NOT NULL,

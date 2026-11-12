@@ -23,3 +23,11 @@ test('a virada de plantão acontece às 08h e às 20h', () => {
   assert.equal(turnoAtual(new Date('2026-10-02T22:59:00Z')), 'dia');           // 19:59
   assert.equal(turnoAtual(new Date('2026-10-02T23:00:00Z')), 'noite');         // 20:00
 });
+
+test('funcionário consulta os últimos 7 dias contando o plantão em andamento', () => {
+  const { inicioConsultaFuncionario, deslocarData } = require('../utils/data');
+  assert.equal(inicioConsultaFuncionario(new Date('2026-10-10T15:00:00Z')), '2026-10-04'); // 12:00 de 10/10
+  // às 02h de 11/10 o plantão ainda é o de 10/10, então a janela não anda
+  assert.equal(inicioConsultaFuncionario(new Date('2026-10-11T05:00:00Z')), '2026-10-04');
+  assert.equal(deslocarData('2026-03-01', -1), '2026-02-28');
+});

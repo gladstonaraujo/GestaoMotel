@@ -2,15 +2,26 @@ const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade, exigirAcessoAoRegistro } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
-const { hoje: hojeBelem, dataDoPlantao } = require('../utils/data');
+const { hoje: hojeBelem, dataDoPlantao, inicioConsultaFuncionario } = require('../utils/data');
 const { dataValida, valorPositivo, texto, primeiroErro } = require('../utils/validar');
 
 const router = express.Router();
 router.use(autenticar);
 
+const ehGestor = usuario => ['gerente', 'admin'].includes(usuario.papel);
+
+// Funcionário e inspetor só enxergam os últimos 7 dias: o "de" nunca vai antes do início da janela.
+function inicioPermitido(usuario, de) {
+  const pedido = dataValida(de) ? de : '1900-01-01';
+  if (ehGestor(usuario)) return pedido;
+  const limite = inicioConsultaFuncionario();
+  return pedido > limite ? pedido : limite;
+}
+
 // Lista lançamentos de uma unidade num intervalo de datas (?unidade_id=&de=&ate=)
 router.get('/', exigirUnidade, async (req, res) => {
-  const { unidade_id, de, ate } = req.query;
+  const { unidade_id, ate } = req.query;
+  const de = inicioPermitido(req.usuario, req.query.de);
   const { rows } = await db.query(
     `SELECT l.*, u.nome AS lancado_por_nome, ue.nome AS editado_por_nome
      FROM lancamentos l
@@ -18,7 +29,7 @@ router.get('/', exigirUnidade, async (req, res) => {
      LEFT JOIN usuarios ue ON ue.id = l.editado_por
      WHERE l.unidade_id=$1 AND l.data BETWEEN $2 AND $3
      ORDER BY l.data DESC, l.criado_em DESC`,
-    [unidade_id, de || '1900-01-01', ate || '2999-12-31']
+    [unidade_id, de, dataValida(ate) ? ate : '2999-12-31']
   );
   res.json(rows);
 });
@@ -46,7 +57,7 @@ router.post('/', exigirUnidade, async (req, res) => {
   // como "hoje" — de madrugada o plantão da noite ainda é o do dia anterior.
   const hoje = hojeBelem();
   const dataAlterada = data !== hoje && data !== dataDoPlantao();
-  if (dataAlterada && !['gerente', 'admin'].includes(req.usuario.papel)) {
+  if (dataAlterada && !ehGestor(req.usuario)) {
     return res.status(403).json({ erro: 'Só gerente e diretor podem lançar em outra data.' });
   }
   // regra: falta de caixa e retirada em espécie exigem observação; qualquer outra saída (gerente/admin) exige foto
@@ -132,6 +143,8 @@ router.delete('/:id', exigirAcessoAoRegistro('lancamentos'), async (req, res) =>
 // Resumo do dia — usado no destaque do Extrato
 router.get('/resumo-dia', exigirUnidade, async (req, res) => {
   const { unidade_id, data } = req.query;
+  if (!dataValida(data)) return res.status(400).json({ erro: 'Data inválida.' });
+  if (data < inicioPermitido(req.usuario, data)) return res.json([]);
   const { rows } = await db.query(
     `SELECT tipo, categoria_id, SUM(valor)::numeric(12,2) AS total, COUNT(*)::int AS qtd
      FROM lancamentos WHERE unidade_id=$1 AND data=$2

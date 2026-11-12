@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { autenticar, exigirUnidade, exigirAcessoAoRegistro } = require('../middleware/auth');
 const { registrarExclusao } = require('./historicoExclusoes');
-const { hoje: hojeBelem } = require('../utils/data');
+const { dataDoPlantao } = require('../utils/data');
 
 const router = express.Router();
 router.use(autenticar);
@@ -25,7 +25,7 @@ router.post('/', exigirUnidade, async (req, res) => {
   }
   const { rows } = await db.query(
     'INSERT INTO consumos_plantao (unidade_id, turno, data, criado_por) VALUES ($1,$2,$3,$4) RETURNING *',
-    [unidade_id, turno, data || hojeBelem(), req.usuario.id]
+    [unidade_id, turno, data || dataDoPlantao(), req.usuario.id]
   );
   for (const it of itens) {
     await db.query(
