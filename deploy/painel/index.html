@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publicar no servidor</title>
+<style>
+:root{
+  --ink:#1B2233; --ink-2:#2A3349; --slate:#667085; --slate-2:#475467;
+  --paper:#F4F5F8; --card:#FFFFFF; --line:#E4E7EC; --line-forte:#D0D5DD;
+  --bg-input:#FFFFFF; --bg-input-desabilitado:#F2F4F7; --bg-pill:#EEF0F4; --cor-placeholder:#98A2B3;
+  --entrada:#067647; --entrada-fraca:#E7F6EE; --saida:#C9302C; --saida-fraca:#FDEDEC;
+  --acento:#3347B0; --acento-escuro:#27388F; --acento-fraca:#EDF0FF;
+  --dia:#B54708; --dia-fraca:#FEF3E2;
+  --console-bg:#0F1524; --console-ink:#D6DBE6; --console-dim:#8A93A6;
+  --raio:12px; --raio-sm:8px;
+  --sombra-1:0 1px 2px rgba(16,24,40,.05);
+  --sombra-2:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04);
+  --sombra-3:0 12px 32px -8px rgba(16,24,40,.18),0 4px 8px -4px rgba(16,24,40,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme:dark;
+    --ink:#F3F4F6; --ink-2:#E5E7EB; --slate:#9CA3AF; --slate-2:#D1D5DB;
+    --paper:#0B0F19; --card:#111827; --line:#1F2937; --line-forte:#374151;
+    --bg-input:#1F2937; --bg-input-desabilitado:#111827; --bg-pill:#1F2937; --cor-placeholder:#6B7280;
+    --entrada:#10B981; --entrada-fraca:rgba(16,185,129,.15); --saida:#EF4444; --saida-fraca:rgba(239,68,68,.15);
+    --acento:#6366F1; --acento-escuro:#4F46E5; --acento-fraca:rgba(99,102,241,.16);
+    --dia:#F59E0B; --dia-fraca:rgba(245,158,11,.15);
+    --console-bg:#070A12; --console-ink:#D6DBE6; --console-dim:#7C8597;
+  }
+  .logo-claro{display:none}
+  .logo-escuro{display:block !important}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font:14px/1.5 "Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+
+/* topo */
+.topo{display:flex;align-items:center;gap:14px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--card)}
+.topo img{height:34px;width:auto}
+.logo-escuro{display:none}
+.topo h1{font-size:17px;font-weight:650;margin:0;letter-spacing:-.01em}
+.topo p{margin:0;color:var(--slate);font-size:12.5px}
+.topo .espaco{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg-pill);color:var(--slate-2)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.8}
+.pill.ok{background:var(--entrada-fraca);color:var(--entrada)}
+.pill.erro{background:var(--saida-fraca);color:var(--saida)}
+.pill.andamento{background:var(--acento-fraca);color:var(--acento)}
+.pill.aviso{background:var(--dia-fraca);color:var(--dia)}
+
+/* layout */
+.conteudo{max-width:1240px;margin:0 auto;padding:24px 32px 48px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:20px;align-items:start}
+.coluna{display:grid;gap:20px;min-width:0}
+@media (max-width:960px){ .conteudo{grid-template-columns:1fr;padding:16px} .topo{padding:14px 16px} }
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--raio);box-shadow:var(--sombra-2);padding:20px}
+.card h2{font-size:14px;font-weight:650;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.card .sub{color:var(--slate);font-size:12.5px;margin:0 0 16px}
+.num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--acento-fraca);color:var(--acento);font-size:11px;font-weight:700}
+
+/* formulário */
+.campo{display:grid;gap:6px;margin-bottom:14px}
+.campo label,.rotulo{font-size:12.5px;font-weight:600;color:var(--slate-2)}
+.linha{display:flex;gap:10px}
+.linha>.campo{flex:1;min-width:0}
+.linha>.campo.estreito{flex:0 0 96px}
+input[type=text],input[type=password],input[type=number]{
+  width:100%;height:38px;padding:0 12px;border:1px solid var(--line-forte);border-radius:var(--raio-sm);
+  background:var(--bg-input);outline:none;transition:border-color .15s,box-shadow .15s;
+}
+input::placeholder{color:var(--cor-placeholder)}
+input:focus{border-color:var(--acento);box-shadow:0 0 0 3px var(--acento-fraca)}
+input:disabled{background:var(--bg-input-desabilitado);color:var(--slate)}
+.com-botao{display:flex;gap:8px}
+.com-botao input{flex:1;min-width:0}
+.senha{position:relative}
+.senha input{padding-right:64px}
+.senha button{position:absolute;right:4px;top:4px;height:30px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--acento);font-size:12px;font-weight:600;cursor:pointer}
+.senha button:hover{background:var(--acento-fraca)}
+.dica{font-size:12px;color:var(--slate);margin:-6px 0 14px}
+details.extra{margin:-4px 0 14px}
+details.extra summary{cursor:pointer;font-size:12.5px;color:var(--acento);font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.extra summary::-webkit-details-marker{display:none}
+details.extra summary::before{content:"›";display:inline-block;transition:transform .15s;font-size:15px;line-height:1}
+details.extra[open] summary::before{transform:rotate(90deg)}
+details.extra .campo{margin:10px 0 0}
+
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+.check:first-of-type{border-top:0}
+.check input{margin:2px 0 0;width:16px;height:16px;accent-color:var(--acento);flex:none}
+.check strong{display:block;font-weight:600;font-size:13.5px}
+.check span{display:block;color:var(--slate);font-size:12.5px}
+.check.alerta strong{color:var(--dia)}
+.bloco-dist{margin:0 0 6px 26px;padding:14px;border-radius:var(--raio-sm);background:var(--paper)}
+.bloco-dist .campo{margin-bottom:12px}
+.rotulo-dica{font-weight:400;color:var(--slate)}
+.estado-dist{font-size:12px;color:var(--slate);min-height:18px}
+.estado-dist.ok{color:var(--entrada)}
+.estado-dist.erro{color:var(--saida)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 14px;border-radius:var(--raio-sm);border:1px solid var(--line-forte);background:var(--card);font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,transform .05s}
+.btn:hover:not(:disabled){background:var(--bg-pill)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.primario{background:var(--acento);border-color:var(--acento);color:#fff;height:44px;font-size:15px;width:100%}
+.btn.primario:hover:not(:disabled){background:var(--acento-escuro)}
+.btn.pequeno{height:30px;padding:0 10px;font-size:12.5px}
+.btn .giro{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:giro .7s linear infinite}
+@keyframes giro{to{transform:rotate(360deg)}}
+
+.msg{border-radius:var(--raio-sm);padding:10px 12px;font-size:13px;margin:0 0 14px}
+.msg.erro{background:var(--saida-fraca);color:var(--saida)}
+.msg.aviso{background:var(--dia-fraca);color:var(--dia)}
+.msg.ok{background:var(--entrada-fraca);color:var(--entrada)}
+
+/* informações */
+.info{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:0 0 6px;padding:12px 14px;border-radius:var(--raio-sm);background:var(--paper);font-size:13px}
+.info dt{color:var(--slate)}
+.info dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.info code,.mono{font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:12.5px}
+.vazio{color:var(--slate);font-size:13px;margin:0}
+.lista-mig{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.lista-mig li{font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:12px;padding:3px 8px;border-radius:6px;background:var(--dia-fraca);color:var(--dia);width:max-content;max-width:100%;overflow-wrap:anywhere}
+
+/* etapas */
+.resultado{display:flex;gap:12px;align-items:flex-start;border-radius:var(--raio-sm);padding:14px 16px;margin:0 0 16px}
+.resultado.ok{background:var(--entrada-fraca);color:var(--entrada)}
+.resultado.erro{background:var(--saida-fraca);color:var(--saida)}
+.resultado strong{display:block;font-size:14.5px}
+.resultado span{font-size:13px;color:var(--ink-2)}
+.resultado .icone{font-size:20px;line-height:1.2}
+.etapas{list-style:none;margin:0;padding:0;display:grid}
+.etapa{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;padding:10px 0;position:relative}
+.etapa:not(:last-child)::after{content:"";position:absolute;left:13px;top:36px;bottom:-6px;width:2px;background:var(--line)}
+.etapa.ok:not(:last-child)::after{background:var(--entrada)}
+.etapa .marca{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line-forte);background:var(--card);color:var(--slate);font-size:12px;font-weight:700;position:relative;z-index:1}
+.etapa.andamento .marca{border-color:var(--acento);color:var(--acento)}
+.etapa.andamento .marca::before{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--acento);border-right-color:transparent;animation:giro .8s linear infinite}
+.etapa.ok .marca{background:var(--entrada);border-color:var(--entrada);color:#fff}
+.etapa.erro .marca{background:var(--saida);border-color:var(--saida);color:#fff}
+.etapa.pulada .marca{border-style:dashed}
+.etapa .titulo{font-weight:600;padding-top:3px}
+.etapa.pendente .titulo,.etapa.pulada .titulo{color:var(--slate)}
+.etapa .detalhe{font-size:12.5px;color:var(--slate);overflow-wrap:anywhere}
+.etapa.erro .detalhe{color:var(--saida)}
+.etapa .tempo{font-size:12px;color:var(--slate);padding-top:5px;font-variant-numeric:tabular-nums}
+.barra{height:4px;border-radius:4px;background:var(--line);margin-top:6px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--acento);width:0;transition:width .2s}
+
+/* registro */
+.cab-registro{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cab-registro h2{margin:0;flex:1}
+pre.console{margin:0;background:var(--console-bg);color:var(--console-ink);border-radius:var(--raio-sm);padding:14px 16px;height:380px;overflow:auto;font:12px/1.55 "Cascadia Mono",Consolas,ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+pre.console .dim{color:var(--console-dim)}
+pre.console .a-vermelho,pre.console .erro{color:#F87171}
+pre.console .a-verde{color:#34D399}
+pre.console .a-amarelo,pre.console .aviso{color:#FBBF24}
+pre.console .a-ciano{color:#67E8F9;font-weight:600}
+
+dialog{border:0;border-radius:var(--raio);padding:0;background:var(--card);color:var(--ink);box-shadow:var(--sombra-3);width:min(480px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(16,24,40,.45)}
+dialog .corpo{padding:22px 22px 8px}
+dialog h3{margin:0 0 4px;font-size:16px}
+dialog p{margin:0 0 14px;color:var(--slate);font-size:13px}
+dialog .acoes{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 20px}
+dialog .acoes .btn.primario{width:auto;height:38px;font-size:14px}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<header class="topo">
+  <img class="logo-claro" src="/logo.png" alt="" onerror="this.remove()">
+  <img class="logo-escuro" src="/logo-dark.png" alt="" onerror="this.remove()">
+  <div>
+    <h1>Publicar no servidor</h1>
+    <p>Build, envio, migrações do banco e reinício — tudo de uma vez</p>
+  </div>
+  <div class="espaco"></div>
+  <span id="estadoGeral" class="pill">Pronto</span>
+</header>
+
+<main class="conteudo">
+  <div class="coluna">
+    <form class="card" id="formServidor" autocomplete="off">
+      <h2><span class="num">1</span> Servidor</h2>
+      <p class="sub">Onde o sistema está instalado.</p>
+      <div class="linha">
+        <div class="campo"><label for="host">Endereço</label><input type="text" id="host" spellcheck="false"></div>
+        <div class="campo estreito"><label for="porta">Porta</label><input type="number" id="porta" min="1" max="65535"></div>
+      </div>
+      <div class="campo"><label for="usuario">Usuário</label><input type="text" id="usuario" spellcheck="false"></div>
+      <div class="campo"><label for="pastaRemota">Pasta do sistema no servidor</label><input type="text" id="pastaRemota" class="mono" spellcheck="false"></div>
+      <div class="campo">
+        <label for="senha">Senha do SSH</label>
+        <div class="senha"><input type="password" id="senha" autocomplete="current-password"><button type="button" data-mostrar="senha">Mostrar</button></div>
+      </div>
+      <p class="dica">Também é usada no sudo para reiniciar o serviço. Não é salva em lugar nenhum.</p>
+      <details class="extra">
+        <summary>A senha do sudo é diferente?</summary>
+        <div class="campo">
+          <label for="senhaSudo">Senha do sudo</label>
+          <div class="senha"><input type="password" id="senhaSudo" autocomplete="off"><button type="button" data-mostrar="senhaSudo">Mostrar</button></div>
+        </div>
+      </details>
+      <div id="msgServidor" class="msg" hidden></div>
+      <button type="button" class="btn" id="btnVerificar">Verificar servidor</button>
+    </form>
+
+    <section class="card">
+      <h2><span class="num">2</span> Projeto</h2>
+      <p class="sub">A pasta do projeto no seu computador. O build fica em <code>backend\dist</code> e <code>frontend\dist</code>.</p>
+      <div class="campo">
+        <label for="pasta">Pasta do projeto</label>
+        <div class="com-botao"><input type="text" id="pasta" class="mono" spellcheck="false"><button type="button" class="btn" id="btnEscolher">Escolher…</button></div>
+      </div>
+      <div id="msgProjeto" class="msg" hidden></div>
+      <dl class="info" id="infoProjeto" hidden></dl>
+
+      <div style="margin-top:10px">
+        <label class="check"><input type="checkbox" id="gerarBuild" checked><div><strong>Gerar o build agora</strong><span>Desmarque para escolher as pastas do dist que já está pronto.</span></div></label>
+        <div id="blocoDist" class="bloco-dist" hidden>
+          <div class="campo">
+            <label for="distBackend">Dist do backend <span class="rotulo-dica">pasta com o <code>server.js</code></span></label>
+            <div class="com-botao"><input type="text" id="distBackend" class="mono" spellcheck="false"><button type="button" class="btn" data-escolher="distBackend">Escolher…</button></div>
+            <div class="estado-dist" id="stDistBackend"></div>
+          </div>
+          <div class="campo">
+            <label for="distFrontend">Dist do frontend <span class="rotulo-dica">pasta com o <code>index.html</code></span></label>
+            <div class="com-botao"><input type="text" id="distFrontend" class="mono" spellcheck="false"><button type="button" class="btn" data-escolher="distFrontend">Escolher…</button></div>
+            <div class="estado-dist" id="stDistFrontend"></div>
+          </div>
+          <button type="button" class="btn pequeno" id="btnDistPadrao">Usar as pastas padrão do projeto</button>
+        </div>
+        <label class="check"><input type="checkbox" id="rodarTestes" checked><div><strong>Rodar os testes antes</strong><span>Se algum falhar, nada é enviado.</span></div></label>
+        <label class="check alerta" id="linhaAlteracoes" hidden><input type="checkbox" id="permitirAlteracoes"><div><strong>Publicar mesmo com alterações sem commit</strong><span id="txtAlteracoes"></span></div></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">3</span> Backup do banco</h2>
+      <p class="sub">O backup é sempre feito no servidor, antes de qualquer mudança.</p>
+      <label class="check"><input type="checkbox" id="baixarBackup" checked><div><strong>Guardar uma cópia neste computador</strong><span>Se o disco do servidor falhar, a cópia daqui continua salva.</span></div></label>
+      <div class="campo" id="campoPastaBackup" style="margin:6px 0 0">
+        <label for="pastaBackup">Pasta da cópia</label>
+        <div class="com-botao"><input type="text" id="pastaBackup" class="mono" spellcheck="false"><button type="button" class="btn" id="btnEscolherBackup">Escolher…</button></div>
+        <div class="estado-dist">A pasta é criada se não existir.</div>
+      </div>
+    </section>
+
+    <button type="button" class="btn primario" id="btnPublicar">Publicar no servidor</button>
+  </div>
+
+  <div class="coluna">
+    <section class="card" id="cardServidor" hidden>
+      <h2>Situação no servidor</h2>
+      <p class="sub" id="servidorQuando"></p>
+      <dl class="info" id="infoServidor"></dl>
+    </section>
+
+    <section class="card">
+      <h2>Progresso</h2>
+      <p class="sub" id="destino">Preencha os dados e clique em <strong>Publicar no servidor</strong>.</p>
+      <div id="resultado" class="resultado" hidden></div>
+      <ol class="etapas" id="etapas"></ol>
+    </section>
+
+    <section class="card">
+      <div class="cab-registro">
+        <h2>Registro</h2>
+        <button type="button" class="btn pequeno" id="btnCopiar">Copiar</button>
+      </div>
+      <pre class="console" id="console"><span class="dim">O registro detalhado aparece aqui durante a publicação.</span></pre>
+    </section>
+  </div>
+</main>
+
+<dialog id="confirmar">
+  <div class="corpo">
+    <h3>Publicar esta versão?</h3>
+    <p>O sistema fica fora do ar por alguns segundos durante o reinício.</p>
+    <dl class="info" id="resumo"></dl>
+  </div>
+  <div class="acoes">
+    <button type="button" class="btn" value="nao" id="btnCancelarConfirma">Cancelar</button>
+    <button type="button" class="btn primario" id="btnConfirmar">Publicar</button>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+const TOKEN = '__TOKEN__';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const CHAVE = 'painel-publicacao';
+const PADROES = { host: '38.246.78.129', porta: 4123, usuario: 'anderson', pastaRemota: '/home/anderson/GestaoMotel', gerarBuild: true, rodarTestes: true };
+
+const ETAPAS = [
+  ['codigo', 'Conferir o código'],
+  ['testes', 'Testes'],
+  ['build', 'Build (dist)'],
+  ['pacote', 'Montar o pacote'],
+  ['envio', 'Conectar e enviar'],
+  ['backup', 'Backup do banco'],
+  ['migracoes', 'Migrações do banco'],
+  ['arquivos', 'Trocar os arquivos'],
+  ['reinicio', 'Reiniciar e verificar'],
+  ['copia', 'Copiar o backup para este computador'],
+];
+
+let projeto = null;
+let situacao = null;
+let rodando = false;
+const inicioEtapa = {};
+
+// ------------------------------------------------------------ util
+async function api(caminho, corpo) {
+  const r = await fetch(caminho, {
+    method: corpo ? 'POST' : 'GET',
+    headers: { 'X-Token': TOKEN, 'Content-Type': 'application/json' },
+    body: corpo ? JSON.stringify(corpo) : undefined,
+  });
+  const dados = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(dados.erro || `Erro ${r.status}`);
+  return dados;
+}
+function mensagem(el, texto, tipo = 'erro') {
+  el.hidden = !texto;
+  el.className = `msg ${tipo}`;
+  el.textContent = texto || '';
+}
+const quando = (iso) => iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
+function ocupado(botao, sim, texto) {
+  if (sim) { botao.dataset.texto = botao.textContent; botao.innerHTML = `<span class="giro"></span>${esc(texto)}`; botao.disabled = true; }
+  else { botao.textContent = botao.dataset.texto || botao.textContent; botao.disabled = false; }
+}
+
+// ------------------------------------------------------------ preferências (sem senhas)
+const CAMPOS = ['host', 'porta', 'usuario', 'pastaRemota', 'pasta', 'distBackend', 'distFrontend', 'pastaBackup'];
+const CHECKS = ['gerarBuild', 'rodarTestes', 'baixarBackup'];
+function carregarPreferencias(pastaPadrao, pastaBackupPadrao) {
+  let salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch {}
+  const p = { ...PADROES, pasta: pastaPadrao, pastaBackup: pastaBackupPadrao, ...salvo };
+  if (!p.pastaBackup) p.pastaBackup = pastaBackupPadrao;
+  CAMPOS.forEach((c) => { $(c).value = p[c] ?? ''; });
+  CHECKS.forEach((c) => { $(c).checked = p[c] !== false; });
+}
+function salvarPreferencias() {
+  const p = {};
+  CAMPOS.forEach((c) => { p[c] = $(c).value.trim(); });
+  CHECKS.forEach((c) => { p[c] = $(c).checked; });
+  try { localStorage.setItem(CHAVE, JSON.stringify(p)); } catch {}
+}
+function dadosServidor() {
+  return {
+    host: $('host').value.trim(), porta: Number($('porta').value), usuario: $('usuario').value.trim(),
+    pastaRemota: $('pastaRemota').value.trim(), senha: $('senha').value, senhaSudo: $('senhaSudo').value,
+    pasta: $('pasta').value.trim(),
+  };
+}
+
+// ------------------------------------------------------------ projeto
+async function carregarProjeto() {
+  mensagem($('msgProjeto'), '');
+  try {
+    projeto = await api(`/api/projeto?pasta=${encodeURIComponent($('pasta').value.trim())}`);
+    $('pasta').value = projeto.pasta;
+    salvarPreferencias();
+  } catch (e) {
+    projeto = null;
+    $('infoProjeto').hidden = true;
+    $('linhaAlteracoes').hidden = true;
+    mensagem($('msgProjeto'), e.message);
+    return;
+  }
+  const g = projeto.git;
+  const linhas = [];
+  if (g) {
+    linhas.push(['Código', `<code>${esc(g.branch)}</code> · <code>${esc(g.commit)}</code> — ${esc(g.mensagem)}`]);
+    if (g.branch !== 'master') linhas.push(['Atenção', `<span style="color:var(--dia)">não é a branch master</span>`]);
+    linhas.push(['Alterações', g.alteracoes.length
+      ? `<span style="color:var(--dia)">${g.alteracoes.length} sem commit</span>`
+      : 'tudo commitado']);
+  } else {
+    linhas.push(['Código', 'pasta sem git']);
+  }
+  const d = projeto.dist;
+  linhas.push(['Build atual', d.backend && d.frontend ? `gerado em ${quando(d.backend)}` : '<span style="color:var(--dia)">ainda não gerado</span>']);
+  linhas.push(['Migrações', `${projeto.migracoes.length} no projeto`]);
+  $('infoProjeto').innerHTML = linhas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('infoProjeto').hidden = false;
+
+  if (!$('distBackend').value.trim() || !$('distFrontend').value.trim()) distPadrao();
+  else if (!$('blocoDist').hidden) { conferirDist('distBackend'); conferirDist('distFrontend'); }
+
+  const alteracoes = g ? g.alteracoes.length : 0;
+  $('linhaAlteracoes').hidden = !alteracoes;
+  if (!alteracoes) $('permitirAlteracoes').checked = false;
+  $('txtAlteracoes').textContent = alteracoes
+    ? `${alteracoes} arquivo(s) modificado(s) ou novo(s) vão junto, como estão agora.`
+    : '';
+  if (situacao) renderServidor();
+}
+
+// ------------------------------------------------------------ dist
+const TIPO_DIST = { distBackend: 'backend', distFrontend: 'frontend' };
+const ESTADO_DIST = { distBackend: 'stDistBackend', distFrontend: 'stDistFrontend' };
+async function conferirDist(campo) {
+  const el = $(ESTADO_DIST[campo]);
+  const valor = $(campo).value.trim();
+  if (!valor) { el.className = 'estado-dist erro'; el.textContent = 'Informe a pasta.'; return false; }
+  try {
+    const r = await api(`/api/dist?tipo=${TIPO_DIST[campo]}&pasta=${encodeURIComponent(valor)}`);
+    $(campo).value = r.pasta;
+    el.className = 'estado-dist ok';
+    el.textContent = `✓ gerado em ${quando(r.data)}`;
+    return true;
+  } catch (e) {
+    el.className = 'estado-dist erro';
+    el.textContent = e.message;
+    return false;
+  }
+}
+function distPadrao() {
+  if (!projeto) return;
+  $('distBackend').value = `${projeto.pasta}\\backend\\dist`;
+  $('distFrontend').value = `${projeto.pasta}\\frontend\\dist`;
+  salvarPreferencias();
+  if (!$('blocoDist').hidden) { conferirDist('distBackend'); conferirDist('distFrontend'); }
+}
+function atualizarBlocoDist() {
+  $('blocoDist').hidden = $('gerarBuild').checked;
+  if (!$('blocoDist').hidden) { conferirDist('distBackend'); conferirDist('distFrontend'); }
+}
+
+// ------------------------------------------------------------ servidor
+async function verificarServidor({ silencioso = false } = {}) {
+  const dados = dadosServidor();
+  if (!dados.senha) { if (!silencioso) mensagem($('msgServidor'), 'Informe a senha do SSH.'); $('senha').focus(); return null; }
+  mensagem($('msgServidor'), '');
+  ocupado($('btnVerificar'), true, 'Conectando…');
+  try {
+    situacao = await api('/api/testar', dados);
+    situacao.quando = new Date();
+    salvarPreferencias();
+    renderServidor();
+    return situacao;
+  } catch (e) {
+    situacao = null;
+    $('cardServidor').hidden = true;
+    mensagem($('msgServidor'), e.message);
+    return null;
+  } finally {
+    ocupado($('btnVerificar'), false);
+  }
+}
+function renderServidor() {
+  const s = situacao;
+  const servico = s.servico === 'active'
+    ? '<span class="pill ok">rodando</span>'
+    : `<span class="pill erro">${esc(s.servico)}</span>`;
+  let mig;
+  if (s.pendentes === null) mig = '<span style="color:var(--slate)">não foi possível ler o banco</span>';
+  else if (!s.pendentes.length) mig = 'nenhuma pendente';
+  else mig = `${s.pendentes.length} vão ser aplicadas${s.controleMigracoes === 'ausente' ? ' <span style="color:var(--slate)">(primeira publicação pelo painel: todas rodam de novo, sem problema)</span>' : ''}<ul class="lista-mig">${s.pendentes.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`;
+  $('infoServidor').innerHTML =
+    `<dt>Versão instalada</dt><dd>${s.versao ? esc(s.versao).replace(/\n/g, '<br>') : '<span style="color:var(--slate)">sem registro (publicada antes do painel)</span>'}</dd>` +
+    `<dt>Serviço</dt><dd>${servico}</dd>` +
+    `<dt>Migrações</dt><dd>${mig}</dd>`;
+  $('servidorQuando').textContent = `Verificado às ${s.quando.toLocaleTimeString('pt-BR', { timeStyle: 'short' })}`;
+  $('cardServidor').hidden = false;
+}
+
+// ------------------------------------------------------------ publicação
+function desenharEtapas() {
+  $('etapas').innerHTML = ETAPAS.map(([id, titulo], i) =>
+    `<li class="etapa pendente" id="et-${id}"><div class="marca">${i + 1}</div><div><div class="titulo">${titulo}</div><div class="detalhe"></div></div><div class="tempo"></div></li>`).join('');
+}
+function marcarEtapa(id, estado, detalhe) {
+  const li = $(`et-${id}`);
+  if (!li) return;
+  li.className = `etapa ${estado}`;
+  const i = ETAPAS.findIndex(([e]) => e === id);
+  li.querySelector('.marca').textContent = estado === 'ok' ? '✓' : estado === 'erro' ? '!' : estado === 'pulada' ? '–' : String(i + 1);
+  if (detalhe !== undefined) li.querySelector('.detalhe').textContent = detalhe || '';
+  if (estado === 'andamento') inicioEtapa[id] = Date.now();
+  if ((estado === 'ok' || estado === 'erro') && inicioEtapa[id]) {
+    const s = Math.round((Date.now() - inicioEtapa[id]) / 1000);
+    li.querySelector('.tempo').textContent = s < 60 ? `${s}s` : `${Math.floor(s / 60)}min ${s % 60}s`;
+  }
+  if (estado !== 'andamento') li.querySelector('.barra')?.remove();
+}
+function progresso(id, pct, verbo = 'enviando') {
+  const li = $(`et-${id}`);
+  if (!li) return;
+  let barra = li.querySelector('.barra');
+  if (!barra) { barra = document.createElement('div'); barra.className = 'barra'; barra.innerHTML = '<i></i>'; li.children[1].appendChild(barra); }
+  barra.firstChild.style.width = `${pct}%`;
+  li.querySelector('.detalhe').textContent = `${verbo}… ${pct}%`;
+}
+
+function abrirConfirmacao() {
+  const g = projeto && projeto.git;
+  const d = dadosServidor();
+  const itens = [
+    ['Versão', g ? `<code>${esc(g.commit)}</code> (${esc(g.branch)})${g.alteracoes.length ? ' <span style="color:var(--dia)">+ alterações sem commit</span>' : ''}` : 'pasta sem git'],
+    ['Destino', `<code>${esc(d.usuario)}@${esc(d.host)}</code><br><code>${esc(d.pastaRemota)}</code>`],
+    ['Build', $('gerarBuild').checked
+      ? 'gerar agora' + ($('rodarTestes').checked ? ', com testes' : '')
+      : `usar o dist pronto<br><code>${esc($('distBackend').value)}</code><br><code>${esc($('distFrontend').value)}</code>`],
+  ];
+  if (situacao && situacao.pendentes) {
+    itens.push(['Migrações', situacao.pendentes.length ? `${situacao.pendentes.length} a aplicar<ul class="lista-mig">${situacao.pendentes.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : 'nenhuma pendente']);
+  }
+  itens.push(['Backup', $('baixarBackup').checked
+    ? `no servidor e uma cópia em<br><code>${esc($('pastaBackup').value)}</code>`
+    : 'só no servidor']);
+  itens.push(['Segurança', 'volta a versão anterior se o sistema não subir']);
+  $('resumo').innerHTML = itens.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('confirmar').showModal();
+  $('btnConfirmar').focus();
+}
+
+async function publicar() {
+  $('confirmar').close();
+  const d = dadosServidor();
+  try {
+    await api('/api/publicar', {
+      ...d,
+      gerarBuild: $('gerarBuild').checked,
+      rodarTestes: $('rodarTestes').checked,
+      permitirAlteracoes: $('permitirAlteracoes').checked,
+      distBackend: $('gerarBuild').checked ? null : $('distBackend').value.trim(),
+      distFrontend: $('gerarBuild').checked ? null : $('distFrontend').value.trim(),
+      baixarBackup: $('baixarBackup').checked,
+      pastaBackup: $('pastaBackup').value.trim(),
+    });
+    salvarPreferencias();
+  } catch (e) {
+    mostrarResultado(false, e.message);
+  }
+}
+
+function mostrarResultado(ok, texto) {
+  const r = $('resultado');
+  r.className = `resultado ${ok ? 'ok' : 'erro'}`;
+  r.innerHTML = `<div class="icone">${ok ? '✓' : '!'}</div><div><strong>${ok ? 'Publicado com sucesso' : 'A publicação não terminou'}</strong><span>${esc(texto)}</span></div>`;
+  r.hidden = false;
+}
+
+function definirRodando(sim) {
+  rodando = sim;
+  document.querySelectorAll('input, #btnEscolher, #btnVerificar, [data-escolher], #btnDistPadrao, #btnEscolherBackup').forEach((el) => { el.disabled = sim; });
+  $('btnPublicar').disabled = sim;
+  if (sim) $('btnPublicar').innerHTML = '<span class="giro"></span>Publicando…';
+  else $('btnPublicar').textContent = 'Publicar no servidor';
+  const pill = $('estadoGeral');
+  if (sim) { pill.className = 'pill andamento'; pill.textContent = 'Publicando…'; }
+}
+
+// ------------------------------------------------------------ registro
+const CORES = { 31: 'vermelho', 32: 'verde', 33: 'amarelo', 36: 'ciano' };
+function ansiParaHtml(texto) {
+  let aberto = false;
+  const html = esc(texto).replace(/\x1b\[([0-9;]*)m/g, (_m, codigos) => {
+    let saida = aberto ? '</span>' : '';
+    aberto = false;
+    const cor = codigos.split(';').map(Number).map((n) => CORES[n]).find(Boolean);
+    if (cor) { saida += `<span class="a-${cor}">`; aberto = true; }
+    return saida;
+  }).replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+  return html + (aberto ? '</span>' : '');
+}
+let consoleLimpo = false;
+function escrever(texto, nivel) {
+  const c = $('console');
+  if (!consoleLimpo) { c.innerHTML = ''; consoleLimpo = true; }
+  const noFim = c.scrollHeight - c.scrollTop - c.clientHeight < 40;
+  const span = document.createElement('span');
+  if (nivel === 'erro' || nivel === 'aviso') span.className = nivel;
+  else if (nivel === 'saida') span.className = 'dim';
+  span.innerHTML = ansiParaHtml(texto);
+  c.appendChild(span);
+  if (noFim) c.scrollTop = c.scrollHeight;
+}
+
+// ------------------------------------------------------------ eventos do servidor local
+function conectarEventos() {
+  const fonte = new EventSource(`/api/eventos?token=${TOKEN}`);
+  fonte.onmessage = (m) => {
+    const ev = JSON.parse(m.data);
+    switch (ev.tipo) {
+      case 'estado':
+        if (ev.emAndamento) definirRodando(true);
+        break;
+      case 'inicio':
+        desenharEtapas();
+        $('resultado').hidden = true;
+        $('console').innerHTML = ''; consoleLimpo = true;
+        $('destino').innerHTML = `Publicando em <code>${esc(ev.destino)}</code>`;
+        definirRodando(true);
+        break;
+      case 'etapa': marcarEtapa(ev.id, ev.estado, ev.detalhe); break;
+      case 'progresso': progresso(ev.id, ev.pct, ev.verbo); break;
+      case 'detalhe': {
+        const el = $(`et-${ev.id}`)?.querySelector('.detalhe');
+        if (el) el.textContent = ev.acumular && el.textContent && !/pendente/.test(el.textContent) ? `${el.textContent}, ${ev.detalhe.replace(/^aplicada /, '')}` : ev.detalhe;
+        break;
+      }
+      case 'log': escrever(ev.texto, ev.nivel); break;
+      case 'fim':
+        definirRodando(false);
+        mostrarResultado(ev.ok, ev.mensagem);
+        $('estadoGeral').className = `pill ${ev.ok ? 'ok' : 'erro'}`;
+        $('estadoGeral').textContent = ev.ok ? 'Publicado' : 'Falhou';
+        carregarProjeto();
+        if (ev.ok && $('senha').value) verificarServidor({ silencioso: true });
+        break;
+    }
+  };
+  fonte.onerror = () => {
+    if (fonte.readyState === EventSource.CLOSED) {
+      $('estadoGeral').className = 'pill erro';
+      $('estadoGeral').textContent = 'Painel fechado';
+    }
+  };
+}
+
+// ------------------------------------------------------------ ligações
+document.querySelectorAll('[data-mostrar]').forEach((b) => b.addEventListener('click', () => {
+  const input = $(b.dataset.mostrar);
+  const mostrar = input.type === 'password';
+  input.type = mostrar ? 'text' : 'password';
+  b.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+}));
+$('btnVerificar').addEventListener('click', () => verificarServidor());
+$('btnEscolher').addEventListener('click', async () => {
+  ocupado($('btnEscolher'), true, 'Abrindo…');
+  try {
+    const r = await api('/api/escolher-pasta', { tipo: 'projeto', inicial: $('pasta').value.trim() });
+    if (r.pasta) { $('pasta').value = r.pasta; await carregarProjeto(); }
+  } catch (e) { mensagem($('msgProjeto'), e.message); }
+  finally { ocupado($('btnEscolher'), false); }
+});
+document.querySelectorAll('[data-escolher]').forEach((b) => b.addEventListener('click', async () => {
+  const campo = b.dataset.escolher;
+  ocupado(b, true, 'Abrindo…');
+  try {
+    const r = await api('/api/escolher-pasta', { tipo: campo, inicial: $(campo).value.trim() });
+    if (r.pasta) { $(campo).value = r.pasta; salvarPreferencias(); await conferirDist(campo); }
+  } catch (e) { $(ESTADO_DIST[campo]).className = 'estado-dist erro'; $(ESTADO_DIST[campo]).textContent = e.message; }
+  finally { ocupado(b, false); }
+}));
+['distBackend', 'distFrontend'].forEach((c) => $(c).addEventListener('change', () => { salvarPreferencias(); conferirDist(c); }));
+$('btnDistPadrao').addEventListener('click', distPadrao);
+$('pasta').addEventListener('change', carregarProjeto);
+CHECKS.forEach((c) => $(c).addEventListener('change', salvarPreferencias));
+$('gerarBuild').addEventListener('change', atualizarBlocoDist);
+$('baixarBackup').addEventListener('change', () => { $('campoPastaBackup').hidden = !$('baixarBackup').checked; });
+$('pastaBackup').addEventListener('change', salvarPreferencias);
+$('btnEscolherBackup').addEventListener('click', async () => {
+  const b = $('btnEscolherBackup');
+  ocupado(b, true, 'Abrindo…');
+  try {
+    const r = await api('/api/escolher-pasta', { tipo: 'backup', inicial: $('pastaBackup').value.trim() });
+    if (r.pasta) { $('pastaBackup').value = r.pasta; salvarPreferencias(); }
+  } finally { ocupado(b, false); }
+});
+['host', 'porta', 'usuario', 'pastaRemota'].forEach((c) => $(c).addEventListener('change', () => { situacao = null; $('cardServidor').hidden = true; salvarPreferencias(); }));
+$('formServidor').addEventListener('submit', (e) => { e.preventDefault(); verificarServidor(); });
+$('senha').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); verificarServidor(); } });
+
+$('btnPublicar').addEventListener('click', async () => {
+  if (rodando) return;
+  mensagem($('msgServidor'), '');
+  if (!projeto) { await carregarProjeto(); if (!projeto) return; }
+  if (!$('senha').value) { mensagem($('msgServidor'), 'Informe a senha do SSH.'); $('senha').focus(); return; }
+  if (projeto.git && projeto.git.alteracoes.length && !$('permitirAlteracoes').checked) {
+    mensagem($('msgProjeto'), 'Há alterações sem commit. Faça o commit ou marque "Publicar mesmo com alterações sem commit".', 'aviso');
+    $('linhaAlteracoes').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  if ($('baixarBackup').checked && !/^([A-Za-z]:[\\/]|\\\\)/.test($('pastaBackup').value.trim())) {
+    alert('Informe a pasta completa para a cópia do backup (ex: D:\\Backups\\GestaoMotel) ou desmarque a cópia.');
+    $('pastaBackup').focus();
+    return;
+  }
+  if (!situacao) {
+    ocupado($('btnPublicar'), true, 'Verificando o servidor…');
+    const s = await verificarServidor();
+    ocupado($('btnPublicar'), false);
+    if (!s) return;
+  }
+  abrirConfirmacao();
+});
+$('btnConfirmar').addEventListener('click', publicar);
+$('btnCancelarConfirma').addEventListener('click', () => $('confirmar').close());
+$('btnCopiar').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('console').innerText); $('btnCopiar').textContent = 'Copiado'; }
+  catch { $('btnCopiar').textContent = 'Não copiou'; }
+  setTimeout(() => { $('btnCopiar').textContent = 'Copiar'; }, 1500);
+});
+
+// ------------------------------------------------------------ início
+(async () => {
+  desenharEtapas();
+  const padrao = await api('/api/padrao');
+  carregarPreferencias(padrao.pasta, padrao.pastaBackup);
+  $('campoPastaBackup').hidden = !$('baixarBackup').checked;
+  conectarEventos();
+  await carregarProjeto();
+  atualizarBlocoDist();
+  (projeto ? $('senha') : $('pasta')).focus();
+})();
+</script>
+</body>
+</html>

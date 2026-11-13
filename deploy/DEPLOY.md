@@ -94,12 +94,58 @@
 
 ## Atualizando o sistema depois (nova versão do código)
 
-1. Pare o serviço: `sudo systemctl stop gestaomotel`
-2. Substitua os arquivos do projeto (menos `backend/.env`,
-   `backend/node_modules`, `backend/uploads` e `deploy/.senha-postgres-gerada`
-   — esses são específicos dessa instalação, não mexa)
-3. Se mudou alguma dependência: `cd backend && npm install`
-4. Reinicie: `sudo systemctl start gestaomotel`
+### Pelo painel (recomendado)
+
+Dois cliques em `deploy/painel/abrir-painel.cmd` (no seu Windows; precisa do Node.js).
+Abre uma página no navegador onde você informa o servidor, a senha do SSH e a pasta do
+projeto, e clica em **Publicar no servidor**. A senha também é usada no `sudo` (há um
+campo à parte se for diferente) e não é salva. O botão **Verificar servidor** mostra a
+versão instalada, se o serviço está rodando e quais migrações vão ser aplicadas.
+Desmarcando **Gerar o build agora**, aparecem os campos **Dist do backend** (pasta com o
+`server.js`) e **Dist do frontend** (pasta com o `index.html`), para enviar um build já pronto.
+
+O backup do banco é sempre feito no servidor (`deploy/backups/`). Com **Guardar uma cópia
+neste computador** marcado, o painel baixa esse arquivo no fim da publicação para a pasta
+escolhida (padrão: `Documentos\GestaoMotel-backups`). Se a atualização falhar depois do
+backup, a cópia é baixada mesmo assim.
+
+Na primeira conexão o painel guarda a impressão digital do servidor em
+`deploy/painel/.hosts-conhecidos.json`; se ela mudar, ele se recusa a conectar.
+
+### Pelo terminal
+
+Do seu computador (Windows, PowerShell 7), na raiz do projeto, com tudo commitado:
+
+```powershell
+.\deploy\atualizar-servidor.ps1
+```
+
+Ele roda os testes e o build, monta um pacote, envia por `scp` e roda
+`deploy/atualizar.sh` no servidor, que:
+
+1. Faz backup do banco em `deploy/backups/gestao_motel_antes-atualizacao_*.backup`
+2. Aplica as migrações de `database/migracoes/` que ainda não rodaram
+   (controle na tabela `migracoes_aplicadas`). Se uma falhar, para antes de
+   mexer nos arquivos
+3. Guarda a versão atual em `deploy/versoes-anteriores/` (as 3 últimas)
+4. Copia os arquivos novos — não mexe em `backend/.env`, `backend/uploads`,
+   `backend/node_modules`, backups nem `deploy/.senha-postgres-gerada`
+5. Roda `npm install --omit=dev` se o `package-lock.json` mudou
+6. Reinicia o serviço e confere `/api/saude`; se não responder, volta os
+   arquivos da versão anterior sozinho (as migrações não são desfeitas)
+
+Opções: `-Servidor` (padrão `anderson@38.246.78.129`), `-Porta` (4123),
+`-Pasta` (`/home/anderson/GestaoMotel`), `-PularTestes`, `-PermitirAlteracoes`
+(publica com alterações sem commit) e `-Sim` (não pede confirmação).
+Se o PowerShell bloquear o script: `pwsh -ExecutionPolicy Bypass -File deploy\atualizar-servidor.ps1`.
+
+Com chave SSH para o usuário do servidor, só a senha do `sudo` (para
+reiniciar o serviço) é pedida. Sem chave, a senha do SSH é pedida duas vezes.
+
+**Migrações novas** vão em `database/migracoes/AAAA-MM-DD-descricao.sql`
+(rodam em ordem de nome) e devem poder rodar mais de uma vez
+(`IF NOT EXISTS`, `ON CONFLICT DO NOTHING` etc.). Coloque a mesma mudança no
+`schema.sql`, para instalações novas.
 
 ## Se um dia precisar instalar num Windows em vez de Linux
 Veja `windows-instalar.ps1`, `windows-backup.ps1` e `windows-DEPLOY.md` —

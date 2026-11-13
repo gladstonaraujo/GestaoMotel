@@ -4,8 +4,8 @@ Mudanças significativas do sistema de gestão financeira da rede A2.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/), agrupado por data de publicação.
 
 Seções usadas: **Adicionado**, **Alterado**, **Corrigido**, **Segurança**, **Removido**.
-Quando houver migração de banco, ela aparece em **Banco de dados** com o comando para aplicar —
-os instaladores só rodam o `schema.sql` em banco novo, então migrações são aplicadas à mão.
+Quando houver migração de banco, ela aparece em **Banco de dados**. O `deploy/atualizar-servidor.ps1`
+aplica sozinho as que faltam; o comando `psql` de cada uma fica para aplicar à mão, se precisar.
 
 ## [Não publicado]
 
@@ -20,6 +20,13 @@ os instaladores só rodam o `schema.sql` em banco novo, então migrações são 
   para Comparativo da rede, Painel e Comprovantes.
 - **"Todas as unidades"** no seletor de unidade do Comparativo da rede (padrão da tela). Escolher
   uma unidade mostra só ela; a opção existe apenas nessa tela.
+- Script de atualização do servidor (`deploy/atualizar-servidor.ps1` + `deploy/atualizar.sh`): build,
+  envio, backup do banco, migrações pendentes, reinício do serviço e volta automática para a versão
+  anterior se o sistema não subir. As migrações aplicadas ficam registradas em `migracoes_aplicadas`.
+- **Painel de publicação** (`deploy/painel/abrir-painel.cmd`): página local com senha do SSH, pasta do
+  projeto, verificação do servidor (versão, serviço, migrações pendentes), progresso por etapa e registro.
+  Permite escolher as pastas de um dist já pronto e baixa uma cópia do backup do banco para uma pasta
+  configurável.
 
 ### Alterado
 - Tela **Boletos e Pix** passa a ter só a lista, o "Marcar como pago" e a compra conjunta; o

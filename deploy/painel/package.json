@@ -1,0 +1,13 @@
+{
+  "name": "gestaomotel-painel-deploy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel local (Windows) para publicar o sistema no servidor: build, envio, migrações e reinício",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "ssh2": "1.17.0"
+  }
+}
