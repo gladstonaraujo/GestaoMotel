@@ -92,6 +92,12 @@ else
   # pode ler), evitando erro de permissão quando o usuário "postgres" não consegue
   # atravessar a pasta home de quem extraiu o projeto (ex: /home/usuario com modo 750)
   sudo -u postgres psql -d gestao_motel < "$DATABASE/schema.sql" >/dev/null
+  # o schema.sql já contém o resultado de todas as migrações: registra como aplicadas
+  # para o deploy/atualizar.sh não rodá-las de novo
+  for f in "$DATABASE"/migracoes/*.sql; do
+    [ -e "$f" ] || continue
+    sudo -u postgres psql -d gestao_motel -q -c "INSERT INTO migracoes_aplicadas (arquivo) VALUES ('$(basename "$f")') ON CONFLICT DO NOTHING"
+  done
 fi
 
 # ---- 4. Arquivo .env ----

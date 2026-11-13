@@ -513,3 +513,13 @@ CREATE TABLE historico_exclusoes (
   criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_historico_exclusoes_data ON historico_exclusoes(criado_em);
+
+-- ============================================================
+-- MIGRAÇÕES APLICADAS (controle do deploy/atualizar.sh)
+-- Numa instalação nova o instalador registra aqui todas as migrações de
+-- database/migracoes/, porque este schema.sql já contém o resultado delas.
+-- ============================================================
+CREATE TABLE migracoes_aplicadas (
+  arquivo         TEXT PRIMARY KEY,
+  aplicada_em     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
