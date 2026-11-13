@@ -344,6 +344,14 @@ CREATE TABLE produtos (
 );
 CREATE UNIQUE INDEX idx_produtos_nome_lower ON produtos (lower(trim(nome)));
 
+-- Categorias de produtos (o produto guarda o nome da categoria em produtos.categoria)
+CREATE TABLE produtos_categorias (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome            TEXT NOT NULL,
+  criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX idx_produtos_categorias_nome_lower ON produtos_categorias (lower(trim(nome)));
+
 -- ============================================================
 -- PRODUTOS VENCIDOS, AVARIADOS OU PERDIDOS
 -- ============================================================

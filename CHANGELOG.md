@@ -40,10 +40,15 @@ os instaladores só rodam o `schema.sql` em banco novo, então migrações são 
 - Funcionário com a tela aberta desde o plantão anterior não consegue mais lançar na data antiga:
   a data é recalculada ao salvar.
 - Boleto não pode mais ser pago duas vezes com dois cliques simultâneos (geraria duas saídas no caixa).
+- Tela de **categorias de produtos** dava erro (`relation "produtos_categorias" does not exist`):
+  a tabela era usada pelo backend mas não existia no `schema.sql` nem em migração.
 
 ### Banco de dados
 - `2026-11-12-tipo-boleto.sql` — adiciona a coluna `tipo` em `boletos` (existentes ficam como "outro").
   `psql "<DATABASE_URL>" -f database/migracoes/2026-11-12-tipo-boleto.sql`
+- `2026-11-13-produtos-categorias.sql` — cria `produtos_categorias` e já cadastra as categorias
+  usadas pelos produtos existentes.
+  `psql "<DATABASE_URL>" -f database/migracoes/2026-11-13-produtos-categorias.sql`
 
 ## 2026-10-05
 
