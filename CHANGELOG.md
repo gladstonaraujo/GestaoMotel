@@ -49,6 +49,8 @@ aplica sozinho as que faltam; o comando `psql` de cada uma fica para aplicar à 
 - Boleto não pode mais ser pago duas vezes com dois cliques simultâneos (geraria duas saídas no caixa).
 - Tela de **categorias de produtos** dava erro (`relation "produtos_categorias" does not exist`):
   a tabela era usada pelo backend mas não existia no `schema.sql` nem em migração.
+- Enter no campo de **Nova categoria** de produtos usava um handler inline (`onsubmit`), fora do padrão
+  do front-end; passou a usar `data-submit`. Testes do front-end voltaram a passar (21 telas).
 
 ### Banco de dados
 - `2026-11-12-tipo-boleto.sql` — adiciona a coluna `tipo` em `boletos` (existentes ficam como "outro").

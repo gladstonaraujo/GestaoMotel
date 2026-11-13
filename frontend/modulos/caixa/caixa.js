@@ -629,7 +629,7 @@ function desenharComprovantes(){
   const elFiltros = document.getElementById('filtros-comprovantes');
   if(elFiltros){
     elFiltros.innerHTML = opcoesFiltro.map(op=>`
-      <button type="button" class="btn-filtro-pill ${op.id===filtroComprovanteAtual?'ativo':''}" data-click="selecionarFiltroComprovante('${op.id}')">
+      <button type="button" class="btn-filtro-pill ${op.id===filtroComprovanteAtual?'ativo':''}" data-click="selecionarFiltroComprovante('${escArg(op.id)}')">
         <span>${esc(op.nome)}</span>
         <span class="badge-contagem">${op.contagem}</span>
       </button>

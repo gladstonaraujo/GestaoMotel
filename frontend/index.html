@@ -193,7 +193,7 @@
 
     <div class="corpo-modal-categorias">
       <!-- Formulário rápido para adicionar ou salvar edição de categoria -->
-      <form id="form-cadastrar-categoria" class="form-linha-categoria" onsubmit="event.preventDefault(); salvarCategoriaProduto();">
+      <form id="form-cadastrar-categoria" class="form-linha-categoria" data-submit="salvarCategoriaProduto()">
         <input type="hidden" id="fc-id">
         <div class="campo-add-cat">
           <input type="text" id="fc-nome" placeholder="Nova categoria (ex: Tabacaria, Bebidas...)" maxlength="60">
